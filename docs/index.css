@@ -31,6 +31,10 @@
   padding-left: 10px;
 }
 
+.terminal-timeline .terminal-card {
+  white-space: pre-wrap;
+}
+
 .form-group-actions {
   width: 100%;
   display: flex;
