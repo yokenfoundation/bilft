@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "bun",
+      "runtime": "bun",
+      "request": "launch",
+      "name": "Debug",
+      "cwd": "${workspaceRoot}",
+      "program": "debug.ts",
+      "strictEnv": false,
+      "watchMode": true,
+      "stopOnEntry": false,
+      "noDebug": false,
+      "internalConsoleOptions": "openOnSessionStart"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+:root {
+  --background-color: var(--tg-theme-bg-color);
+  --block-background-color: #222225;
+  --code-bg-color: #3f3f44;
+  --display-h1-decoration: none;
+  --error-color: var(--tg-theme-destructive-text-color);
+  --font-color: var(--tg-theme-text-color);
+  --font-stack: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New,
+    monospace, serif;
+  --global-font-size: 15px;
+  --global-line-height: 1.4em;
+  --global-space: 10px;
+  --input-style: solid;
+  --invert-font-color: #222225;
+  --mono-font-stack: Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono,
+    Courier New, monospace, serif;
+  --page-width: 60em;
+  --primary-color: var(--tg-theme-accent-text-color);
+  --secondary-color: var(--tg-theme-subtitle-text-color);
+  --tertiary-color: var(--tg-theme-hint-color);
+}
+
+.form-group {
+  /* margin-bottom: calc(var(--global-line-height) / 2); */
+}
+
+.terminal-card > header {
+  font-size: calc(var(--global-font-size) / 10 * 9);
+  padding: 0.3em 0;
+  text-align: left;
+  padding-left: 10px;
+}
+
+.form-group-actions {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* justify-content: space-between; */
+  justify-content: flex-end;
+}
+
+.terminal-timeline {
+  padding-left: 20px;
+}
+
+.terminal-timeline::before {
+  left: 4.5px;
+  width: 1px;
+}
+
+.terminal-timeline .terminal-card::before {
+  margin-top: 12px;
+  border: 1px solid var(--secondary-color);
+  left: 0px;
+  width: 8px;
+  height: 8px;
+}
+
+.slider {
+  height: 2px;
+  display: block;
+  position: absolute;
+  left: -1px;
+  right: 0;
+  top: 0px;
+  overflow: hidden;
+  line-height: 2px;
+}
+
+.slider::after {
+  content: "";
+  width: 96px;
+  height: 2px;
+  background: var(--primary-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  animation: slide 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes slide {
+  0% {
+    left: 0;
+    transform: translateX(-1%);
+  }
+  100% {
+    left: 100%;
+    transform: translateX(-99%);
+  }
+}

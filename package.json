@@ -1,0 +1,28 @@
+{
+  "name": "bilft",
+  "version": "0.0.1",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "bun build source/index.ts --outdir ./docs --minify",
+    "build:debug": "bun build source/index.ts --outdir ./docs"
+  },
+  "dependencies": {
+    "@ton/core": "^0.56.3",
+    "@ton/crypto": "^3.2.0",
+    "@ton/ton": "^13.11.1",
+    "@twa-dev/types": "^7.0.0",
+    "axios": "^1.6.8",
+    "buffer": "^6.0.3",
+    "jquery": "^3.7.1",
+    "tonapi-sdk-js": "^1.0.7",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/uuid": "^9.0.8",
+    "@types/jquery": "^3.5.29",
+    "bun": "^1.0.36",
+    "typescript": "^5.0.0"
+  }
+}

@@ -3,7 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
     <title>BILFT</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.4/dist/terminal.min.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <link rel="stylesheet" href="/index.css" />
+    <script type="module" src="/index.js"></script>
   </head>
-  <body></body>
+  <body>
+    <div class="container" style="position: fixed; left: 0; right: 0; top: 0; z-index: 9999">
+      <div id="loading-indicator" class="slider"></div>
+    </div>
+    <div class="container" style="position: relative">
+      <div class="terminal-nav">
+        <header class="terminal-logo">
+          <div class="logo terminal-prompt">
+            <a id="iuser" href="" class="no-style">bilft@</a>
+          </div>
+        </header>
+      </div>
+      <section id="header-error" style="display: none">
+        <div id="alert" class="terminal-alert terminal-alert-error"></div>
+      </section>
+      <section>
+        <form id="send-data">
+          <div class="form-group">
+            <textarea id="textarea" placeholder="Your note here" cols="30" rows="5" name="content"></textarea>
+          </div>
+          <!-- <div class="form-group form-group-actions"> -->
+          <!-- <div><input type="checkbox" id="check" /><span> anonymously</span></div> -->
+          <!-- <button id="send" class="btn btn-default" role="button" type="button">Send</button> -->
+          <!-- </div> -->
+        </form>
+      </section>
+      <hr />
+      <section>
+        <div id="timeline" class="terminal-timeline"></div>
+      </section>
+      <section id="footer" style="display: none">
+        <div id="alert" class="terminal-alert" style="text-align: center; border: none">the end</div>
+      </section>
+      <section id="cursor" style="height: 1px"></section>
+    </div>
+  </body>
 </html>
