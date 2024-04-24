@@ -7812,7 +7812,7 @@ var ui;
       return `
       <div class="terminal-card" ${click}">
       <header>${note.author.name}</header>
-        <div>${note.content}</div>
+        <div class="terminal-card-content">${note.content}</div>
       </div>`;
     }
   };
