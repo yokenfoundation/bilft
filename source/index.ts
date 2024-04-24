@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       load(board.id, board.notes.next);
     });
   } catch (error) {
-    ui.error.show(error);
+    ui.error.show(error, false);
   } finally {
     ui.header.loading(false);
   }

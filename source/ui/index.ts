@@ -36,10 +36,13 @@ namespace ui {
 }
 
 namespace ui {
+  let _last_error_id: Timer | undefined;
   export const error = {
-    id: undefined,
-    show: (error?: string | any) => {
-      clearTimeout(error.id);
+    show: (error?: string | any, autohide: boolean = true) => {
+      if (_last_error_id) {
+        clearTimeout(_last_error_id);
+      }
+      _last_error_id = undefined;
 
       let message = "something wet wrong";
       if (error && typeof error === "string") {
@@ -51,11 +54,15 @@ namespace ui {
       jq("#header-error").find("#alert").text(message);
       jq("#header-error").show(0.21);
 
-      error.id = setTimeout(() => {
+      if (!autohide) {
+        return;
+      }
+
+      _last_error_id = setTimeout(() => {
         jq("#header-error").hide(0.21);
       }, 3000);
     },
-  } as { id: Timer | undefined; show: (text?: string | any) => void };
+  };
 }
 
 namespace ui {

@@ -7721,10 +7721,13 @@ var ui;
 })(ui || (ui = {}));
 var ui;
 (function(ui) {
+  let _last_error_id;
   ui.error = {
-    id: undefined,
-    show: (error2) => {
-      clearTimeout(error2.id);
+    show: (error2, autohide = true) => {
+      if (_last_error_id) {
+        clearTimeout(_last_error_id);
+      }
+      _last_error_id = undefined;
       let message = "something wet wrong";
       if (error2 && typeof error2 === "string") {
         message = error2;
@@ -7733,7 +7736,10 @@ var ui;
       }
       import_jquery.default("#header-error").find("#alert").text(message);
       import_jquery.default("#header-error").show(0.21);
-      error2.id = setTimeout(() => {
+      if (!autohide) {
+        return;
+      }
+      _last_error_id = setTimeout(() => {
         import_jquery.default("#header-error").hide(0.21);
       }, 3000);
     }
@@ -10055,7 +10061,7 @@ document.addEventListener("DOMContentLoaded", async function() {
       load(board.id, board.notes.next);
     });
   } catch (error) {
-    ui_default.error.show(error);
+    ui_default.error.show(error, false);
   } finally {
     ui_default.header.loading(false);
   }
