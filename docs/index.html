@@ -17,20 +17,38 @@
       <div id="loading-indicator" class="slider"></div>
     </div>
     <div class="container" style="position: relative">
-      <div class="terminal-nav">
-        <header class="terminal-logo">
-          <div class="logo terminal-prompt">
-            <a id="iuser" href="" class="no-style">bilft@</a>
-          </div>
-        </header>
-      </div>
       <section id="header-error" style="display: none">
         <div id="alert" class="terminal-alert terminal-alert-error"></div>
       </section>
+      <section id="header-profile">
+        <div class="terminal-nav">
+          <header class="terminal-logo">
+            <div class="logo terminal-prompt">
+              <a id="iuser" href="" class="no-style">bilft@</a>
+            </div>
+          </header>
+        </div>
+      </section>
+      <section id="header-profile-details">
+        <div id="header-profile-alert" class="terminal-alert">
+          <div class="terminal-media">
+            <div class="terminal-media-left">
+              <div class="terminal-avatarholder">
+                <img id="header-profile-avatar" width="50" height="50" alt="Avatar" />
+              </div>
+            </div>
+            <div class="terminal-media-body">
+              <div id="user-field-0" class="terminal-media-heading"></div>
+              <div id="user-field-1" class="terminal-media-content"></div>
+            </div>
+          </div>
+        </div>
+      </section>
       <section>
+        <header><h3>Write a note</h3></header>
         <form id="send-data">
           <div class="form-group">
-            <textarea id="textarea" placeholder="Your note here" cols="30" rows="5" name="content"></textarea>
+            <textarea id="textarea" placeholder="Text your note here" cols="30" rows="5" name="content"></textarea>
           </div>
           <!-- <div class="form-group form-group-actions"> -->
           <!-- <div><input type="checkbox" id="check" /><span> anonymously</span></div> -->
@@ -38,8 +56,8 @@
           <!-- </div> -->
         </form>
       </section>
-      <hr />
       <section>
+        <header><h3>Timeline</h3></header>
         <div id="timeline" class="terminal-timeline"></div>
       </section>
       <section id="footer" style="display: none">

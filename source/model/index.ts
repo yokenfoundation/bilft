@@ -19,7 +19,14 @@ namespace model {
   export type Board = {
     id: string;
     isme: boolean;
-    name: string;
+    name?: string;
+
+    profile?: {
+      photo?: string;
+      title: string;
+      description?: string;
+    };
+
     notes: NoteArray;
   };
 }

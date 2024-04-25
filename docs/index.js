@@ -7707,8 +7707,31 @@ var ui;
     update: (board) => {
       if (board.name) {
         import_jquery.default("#iuser").attr("href", `https://t.me/${board.name}`);
+        import_jquery.default("#header-profile-alert").on("click.route", () => {
+          telegram_default.openTelegramLink(`https://t.me/${board.name}`);
+        });
       } else {
         import_jquery.default("#iuser").attr("href", ``);
+        import_jquery.default("#header-profile-alert").off("click.route");
+      }
+      if (board.profile) {
+        const profile = board.profile;
+        if (profile.photo) {
+          import_jquery.default("#header-profile-avatar").attr("src", profile.photo);
+          import_jquery.default("#header-profile-avatar").show();
+        } else {
+          import_jquery.default("#header-profile-avatar").hide();
+        }
+        import_jquery.default("#user-field-0").text(profile.title);
+        if (profile.description) {
+          import_jquery.default("#user-field-1").text(profile.description);
+          import_jquery.default("#user-field-1").show();
+        } else {
+          import_jquery.default("#user-field-1").hide();
+        }
+        import_jquery.default("#header-profile-details").show();
+      } else {
+        import_jquery.default("#header-profile-details").hide();
       }
       if (board.isme) {
         import_jquery.default("#iuser").text(`bilft@me`);
@@ -7807,7 +7830,7 @@ var ui;
     noteHTML: (note) => {
       let click = "";
       if (note.author.url) {
-        click = `onclick="Telegram.WebApp.openTelegramLink('${note.author.url}')`;
+        click = `onclick="window.location.assign('${note.author.url}')`;
       }
       return `
       <div class="terminal-card" ${click}">

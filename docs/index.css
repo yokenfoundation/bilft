@@ -35,6 +35,10 @@
   white-space: pre-wrap;
 }
 
+#header-profile-alert {
+  margin-bottom: var(--global-line-height);
+}
+
 .form-group-actions {
   width: 100%;
   display: flex;

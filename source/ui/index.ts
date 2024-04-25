@@ -21,8 +21,32 @@ namespace ui {
     update: (board: model.Board) => {
       if (board.name) {
         jq("#iuser").attr("href", `https://t.me/${board.name}`);
+        jq("#header-profile-alert").on("click.route", () => {
+          WebApp.openTelegramLink(`https://t.me/${board.name}`);
+        });
       } else {
         jq("#iuser").attr("href", ``);
+        jq("#header-profile-alert").off("click.route");
+      }
+
+      if (board.profile) {
+        const profile = board.profile;
+        if (profile.photo) {
+          jq("#header-profile-avatar").attr("src", profile.photo);
+          jq("#header-profile-avatar").show();
+        } else {
+          jq("#header-profile-avatar").hide();
+        }
+        jq("#user-field-0").text(profile.title);
+        if (profile.description) {
+          jq("#user-field-1").text(profile.description);
+          jq("#user-field-1").show();
+        } else {
+          jq("#user-field-1").hide();
+        }
+        jq("#header-profile-details").show();
+      } else {
+        jq("#header-profile-details").hide();
       }
 
       if (board.isme) {
@@ -135,7 +159,7 @@ namespace ui {
     noteHTML: (note: model.Note): string => {
       let click = "";
       if (note.author.url) {
-        click = `onclick="Telegram.WebApp.openTelegramLink('${note.author.url}')`;
+        click = `onclick="window.location.assign('${note.author.url}')`;
       }
       return `
       <div class="terminal-card" ${click}">
