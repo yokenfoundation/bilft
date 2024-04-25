@@ -18,7 +18,15 @@ namespace ui {
     loading(flag: boolean) {
       jq("#loading-indicator").css("display", flag ? "block" : "none");
     },
-    update: (board: model.Board) => {
+    update: (board?: model.Board) => {
+      if (!board) {
+        jq("#iuser").attr("href", ``);
+        jq("#header-profile-alert").off("click.route");
+        jq("#header-profile-details").hide();
+        jq("#iuser").text(`bilft@`);
+        return;
+      }
+
       if (board.name) {
         jq("#iuser").attr("href", `https://t.me/${board.name}`);
         jq("#header-profile-alert").on("click.route", () => {
@@ -157,12 +165,8 @@ namespace ui {
 namespace ui {
   const _timeline = {
     noteHTML: (note: model.Note): string => {
-      let click = "";
-      if (note.author.url) {
-        click = `onclick="window.location.assign('${note.author.url}')`;
-      }
       return `
-      <div class="terminal-card" ${click}">
+      <div class="terminal-card" onclick="window._navigate('id${note.author.id}')">
       <header>${note.author.name}</header>
         <div class="terminal-card-content">${note.content}</div>
       </div>`;

@@ -7705,6 +7705,13 @@ var ui;
       import_jquery.default("#loading-indicator").css("display", flag ? "block" : "none");
     },
     update: (board) => {
+      if (!board) {
+        import_jquery.default("#iuser").attr("href", ``);
+        import_jquery.default("#header-profile-alert").off("click.route");
+        import_jquery.default("#header-profile-details").hide();
+        import_jquery.default("#iuser").text(`bilft@`);
+        return;
+      }
       if (board.name) {
         import_jquery.default("#iuser").attr("href", `https://t.me/${board.name}`);
         import_jquery.default("#header-profile-alert").on("click.route", () => {
@@ -7828,12 +7835,8 @@ var ui;
 (function(ui) {
   const _timeline = {
     noteHTML: (note) => {
-      let click = "";
-      if (note.author.url) {
-        click = `onclick="window.location.assign('${note.author.url}')`;
-      }
       return `
-      <div class="terminal-card" ${click}">
+      <div class="terminal-card" onclick="window._navigate('id${note.author.id}')">
       <header>${note.author.name}</header>
         <div class="terminal-card-content">${note.content}</div>
       </div>`;
@@ -10054,6 +10057,55 @@ var button = {
     });
   }
 };
+var stack = {
+  _stack: [],
+  assign: async (board) => {
+    ui_default.footer.text(undefined);
+    ui_default.header.update(undefined);
+    ui_default.timeline.clear();
+    ui_default.header.loading(true);
+    try {
+      const data3 = await api_default.board.resolve({ board });
+      ready(data3.id);
+      ui_default.header.update(data3);
+      ui_default.timeline.replace(data3.notes);
+      ui_default.cursor.onvisibleonce(() => {
+        if (!data3.notes.next) {
+          return;
+        }
+        load(data3.id, data3.notes.next);
+      });
+    } catch (error) {
+      ui_default.error.show(error, false);
+    } finally {
+      ui_default.header.loading(false);
+    }
+  },
+  button: () => {
+    if (stack._stack.length > 1) {
+      telegram_default.BackButton.show();
+    } else {
+      telegram_default.BackButton.hide();
+    }
+  },
+  push: async (board) => {
+    if (stack._stack.length > 0 && stack._stack[stack._stack.length - 1] === board) {
+      return;
+    }
+    stack._stack.push(board);
+    stack.assign(board);
+    stack.button();
+  },
+  pop: async () => {
+    if (stack._stack.length < 2) {
+      return;
+    }
+    stack._stack.pop();
+    const previous = stack._stack[stack._stack.length - 1];
+    await stack.assign(previous);
+    stack.button();
+  }
+};
 var state = undefined;
 document.addEventListener("DOMContentLoaded", async function() {
   if (state !== undefined) {
@@ -10061,30 +10113,33 @@ document.addEventListener("DOMContentLoaded", async function() {
   }
   state = "loading";
   ui_default.initialize();
-  ui_default.footer.text(undefined);
-  ui_default.header.loading(true);
+  window._navigate = (boad) => {
+    stack.push(boad).then(() => {
+    });
+  };
   telegram_default.ready();
+  telegram_default.BackButton.onClick(() => {
+    stack.pop().catch(() => {
+    });
+  });
   try {
     let id = telegram_default.initDataUnsafe.start_param;
-    const qp = new URLSearchParams(window.location.search);
-    const qpid = qp.get("id");
-    if (qpid) {
-      id = `id${qpid}`;
+    const searchParams = new URLSearchParams(window.location.search);
+    const searchParamsID = searchParams.get("id");
+    if (searchParamsID) {
+      id = `id${searchParamsID}`;
     }
-    const board = await api_default.board.resolve({ board: id });
-    ready(board.id);
-    ui_default.header.update(board);
-    ui_default.timeline.replace(board.notes);
-    ui_default.cursor.onvisibleonce(() => {
-      if (!board.notes.next) {
-        return;
+    if (!id) {
+      const _id = telegram_default.initDataUnsafe.user?.id;
+      if (_id) {
+        id = `id${_id}`;
+      } else {
+        throw new Error("Invalid user");
       }
-      load(board.id, board.notes.next);
-    });
+    }
+    await stack.push(id);
   } catch (error) {
     ui_default.error.show(error, false);
-  } finally {
-    ui_default.header.loading(false);
   }
   state = "ready";
 });

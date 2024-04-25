@@ -2,8 +2,8 @@ namespace model {
   export const _ = 0;
 
   export type NoteAuthor = {
+    id: string;
     name: string;
-    url?: string;
   };
 
   export type Note = {

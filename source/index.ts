@@ -4,6 +4,10 @@ import WebApp from "@/telegram/index";
 import ui from "./ui";
 import api from "./api";
 
+function route(url: string) {
+  WebApp.BackButton.show;
+}
+
 const button = {
   send: (board: string) => {
     ui.button.update("send");
@@ -107,6 +111,63 @@ function load(board: string, next: string) {
     });
 }
 
+const stack = {
+  _stack: [] as string[],
+  assign: async (board: string) => {
+    ui.footer.text(undefined);
+    ui.header.update(undefined);
+    ui.timeline.clear();
+
+    ui.header.loading(true);
+
+    try {
+      const data = await api.board.resolve({ board });
+      ready(data.id);
+
+      ui.header.update(data);
+      ui.timeline.replace(data.notes);
+      ui.cursor.onvisibleonce(() => {
+        if (!data.notes.next) {
+          return;
+        }
+        load(data.id, data.notes.next);
+      });
+    } catch (error) {
+      ui.error.show(error, false);
+    } finally {
+      ui.header.loading(false);
+    }
+  },
+  button: () => {
+    if (stack._stack.length > 1) {
+      WebApp.BackButton.show();
+    } else {
+      WebApp.BackButton.hide();
+    }
+  },
+  push: async (board: string) => {
+    if (stack._stack.length > 0 && stack._stack[stack._stack.length - 1] === board) {
+      return;
+    }
+
+    stack._stack.push(board);
+    stack.assign(board);
+    stack.button();
+  },
+  pop: async () => {
+    if (stack._stack.length < 2) {
+      return;
+    }
+
+    stack._stack.pop();
+
+    const previous = stack._stack[stack._stack.length - 1];
+    await stack.assign(previous);
+
+    stack.button();
+  },
+};
+
 let state: "loading" | "ready" | undefined = undefined;
 document.addEventListener("DOMContentLoaded", async function () {
   if (state !== undefined) {
@@ -116,34 +177,36 @@ document.addEventListener("DOMContentLoaded", async function () {
   state = "loading";
 
   ui.initialize();
-
-  ui.footer.text(undefined);
-  ui.header.loading(true);
+  (window as any)._navigate = (boad: string) => {
+    stack.push(boad).then(() => {});
+  };
 
   WebApp.ready();
+  WebApp.BackButton.onClick(() => {
+    stack.pop().catch(() => {});
+  });
+
   try {
     let id = WebApp.initDataUnsafe.start_param;
-    const qp = new URLSearchParams(window.location.search);
-    const qpid = qp.get("id");
-    if (qpid) {
-      id = `id${qpid}`;
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const searchParamsID = searchParams.get("id");
+    if (searchParamsID) {
+      id = `id${searchParamsID}`;
     }
 
-    const board = await api.board.resolve({ board: id });
-    ready(board.id);
-
-    ui.header.update(board);
-    ui.timeline.replace(board.notes);
-    ui.cursor.onvisibleonce(() => {
-      if (!board.notes.next) {
-        return;
+    if (!id) {
+      const _id = WebApp.initDataUnsafe.user?.id;
+      if (_id) {
+        id = `id${_id}`;
+      } else {
+        throw new Error("Invalid user");
       }
-      load(board.id, board.notes.next);
-    });
+    }
+
+    await stack.push(id);
   } catch (error) {
     ui.error.show(error, false);
-  } finally {
-    ui.header.loading(false);
   }
 
   state = "ready";
