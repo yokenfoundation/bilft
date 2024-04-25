@@ -7864,7 +7864,7 @@ var ui;
     },
     footer: (array) => {
       if (array.data.length == 0) {
-        ui.footer.text("No one has written an note yet. Be frist!");
+        ui.footer.text("No one has written an note yet. Be first!");
       } else if (array.next === undefined) {
         ui.footer.text("The end");
       } else {
