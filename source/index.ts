@@ -123,12 +123,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   WebApp.ready();
   try {
     let id = WebApp.initDataUnsafe.start_param;
-    if (!id) {
-      const qp = new URLSearchParams(window.location.search);
-      const qpid = qp.get("id");
-      if (qpid) {
-        id = `id${qpid}`;
-      }
+    const qp = new URLSearchParams(window.location.search);
+    const qpid = qp.get("id");
+    if (qpid) {
+      id = `id${qpid}`;
     }
 
     const board = await api.board.resolve({ board: id });

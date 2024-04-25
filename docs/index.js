@@ -10066,12 +10066,10 @@ document.addEventListener("DOMContentLoaded", async function() {
   telegram_default.ready();
   try {
     let id = telegram_default.initDataUnsafe.start_param;
-    if (!id) {
-      const qp = new URLSearchParams(window.location.search);
-      const qpid = qp.get("id");
-      if (qpid) {
-        id = `id${qpid}`;
-      }
+    const qp = new URLSearchParams(window.location.search);
+    const qpid = qp.get("id");
+    if (qpid) {
+      id = `id${qpid}`;
     }
     const board = await api_default.board.resolve({ board: id });
     ready(board.id);
