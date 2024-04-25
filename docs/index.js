@@ -7914,8 +7914,11 @@ var ui;
 var ui;
 (function(ui) {
   ui.cursor = {
+    cancel: () => {
+      import_jquery.default(window).off("resize.cursor scroll.cursor");
+    },
     onvisibleonce: (callback) => {
-      const handler = function() {
+      import_jquery.default(window).on("resize.cursor scroll.cursor", () => {
         const cursor2 = import_jquery.default("#cursor");
         if (!cursor2) {
           return;
@@ -7925,11 +7928,10 @@ var ui;
         const viewportTop = import_jquery.default(window).scrollTop();
         const viewportBottom = viewportTop + import_jquery.default(window).height();
         if (elementBottom > viewportTop && elementTop < viewportBottom) {
-          import_jquery.default(window).off("resize.cursor scroll.cursor");
+          ui.cursor.cancel();
           callback();
         }
-      };
-      import_jquery.default(window).on("resize.cursor scroll.cursor", handler);
+      });
     }
   };
 })(ui || (ui = {}));
@@ -10060,6 +10062,7 @@ var button = {
 var stack = {
   _stack: [],
   assign: async (board) => {
+    ui_default.cursor.cancel();
     ui_default.footer.text(undefined);
     ui_default.header.update(undefined);
     ui_default.timeline.clear();

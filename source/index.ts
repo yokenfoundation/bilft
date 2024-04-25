@@ -114,6 +114,7 @@ function load(board: string, next: string) {
 const stack = {
   _stack: [] as string[],
   assign: async (board: string) => {
+    ui.cursor.cancel();
     ui.footer.text(undefined);
     ui.header.update(undefined);
     ui.timeline.clear();

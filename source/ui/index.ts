@@ -246,8 +246,11 @@ namespace ui {
 
 namespace ui {
   export const cursor = {
+    cancel: () => {
+      jq(window).off("resize.cursor scroll.cursor");
+    },
     onvisibleonce: (callback: () => void) => {
-      const handler = function () {
+      jq(window).on("resize.cursor scroll.cursor", () => {
         const cursor = jq("#cursor");
         if (!cursor) {
           return;
@@ -260,12 +263,10 @@ namespace ui {
         const viewportBottom = viewportTop + jq(window).height()!;
 
         if (elementBottom > viewportTop && elementTop < viewportBottom) {
-          jq(window).off("resize.cursor scroll.cursor");
+          ui.cursor.cancel();
           callback();
         }
-      };
-
-      jq(window).on("resize.cursor scroll.cursor", handler);
+      });
     },
   };
 }
