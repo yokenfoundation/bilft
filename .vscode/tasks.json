@@ -2,19 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "bun:debug",
       "command": "bun",
-      "args": ["run", "build:debug"],
-      "presentation": {
-        "echo": true,
-        "reveal": "silent",
-        "focus": false,
-        "panel": "shared",
-        "showReuseMessage": true
-      },
-      "options": {
-        "cwd": "${workspaceRoot}"
-      }
+      "args": ["run", "debug"],
+      "isBackground": true
     }
   ]
 }

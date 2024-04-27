@@ -1,5 +1,5 @@
 namespace model {
-  export const _ = 0;
+  const _ = 0;
 
   export type NoteAuthor = {
     id: string;
@@ -16,18 +16,24 @@ namespace model {
     data: Note[];
   };
 
+  export type BoardProfile = {
+    photo?: string;
+    title: string;
+    description?: string;
+  };
+
   export type Board = {
     id: string;
     isme: boolean;
     name?: string;
-
-    profile?: {
-      photo?: string;
-      title: string;
-      description?: string;
-    };
-
+    profile?: BoardProfile;
     notes: NoteArray;
+  };
+
+  export type Error = {
+    error: {
+      message: string;
+    };
   };
 }
 

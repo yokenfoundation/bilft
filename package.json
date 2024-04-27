@@ -1,28 +1,55 @@
 {
   "name": "bilft",
-  "version": "0.0.1",
-  "module": "index.ts",
+  "version": "0.1.0",
+  "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun build source/index.ts --outdir ./docs --minify",
-    "build:debug": "bun build source/index.ts --outdir ./docs"
+    "debug": "bunx --bun vite",
+    "build": "tsc && vite build",
+    "lint": "eslint source --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "serve": "vite preview"
   },
   "dependencies": {
-    "@ton/core": "^0.56.3",
-    "@ton/crypto": "^3.2.0",
-    "@ton/ton": "^13.11.1",
-    "@twa-dev/types": "^7.0.0",
+    "@twa-dev/sdk": "^6.4.2",
     "axios": "^1.6.8",
-    "buffer": "^6.0.3",
-    "jquery": "^3.7.1",
-    "tonapi-sdk-js": "^1.0.7",
-    "zod": "^3.22.4"
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "terminal.css": "^0.7.5",
+    "use-local-storage": "^2.3.6"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/uuid": "^9.0.8",
-    "@types/jquery": "^3.5.29",
-    "bun": "^1.0.36",
-    "typescript": "^5.0.0"
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@typescript-eslint/eslint-plugin": "^7.7.1",
+    "@typescript-eslint/parser": "^7.7.1",
+    "eslint": "^9.1.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "styled-components": "^6.1.8",
+    "vite": "^5.2.10",
+    "vite-plugin-node-polyfills": "^0.21.0",
+    "vite-tsconfig-paths": "^4.3.2",
+    "react-scripts": "5.0.1",
+    "typescript": "^5.4.5"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
