@@ -4,7 +4,7 @@ import WebApp from "@twa-dev/sdk";
 import LoadingIndicator from "./components/loadingIndicator";
 import { useApplicationContext } from "./context/context";
 
-const Applicaiton: React.FunctionComponent = () => {
+const Application: React.FunctionComponent = () => {
   const context = useApplicationContext();
   useEffect(() => {
     WebApp.ready();
@@ -18,4 +18,4 @@ const Applicaiton: React.FunctionComponent = () => {
   );
 };
 
-export default Applicaiton;
+export default Application;
