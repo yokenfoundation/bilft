@@ -3,7 +3,11 @@
 export default {
   content: ["./index.html", "./source/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        inter: ["Inter Variable", "Inter", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 };

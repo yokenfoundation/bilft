@@ -1,3 +1,4 @@
+import "@fontsource-variable/inter";
 import "terminal.css";
 import "./index.css";
 
@@ -12,5 +13,5 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <ApplicationContextProvider>
       <Application />
     </ApplicationContextProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

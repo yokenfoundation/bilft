@@ -18,8 +18,8 @@ const Application: React.FunctionComponent = () => {
           className="w-12 aspect-square rounded-full object-cover"
         />
         <div className="flex flex-col">
-          <p className="font-bold text-[20px] leading-6">Jane</p>
-          <p className="text-[15px] leading-[22px]">Member since Jan 2021</p>
+          <p className="font-bold font-inter text-[20px] leading-6">Jane</p>
+          <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p>
         </div>
       </section>
       <LoadingIndicator context={context} hidden={!context.loading.active()} />
