@@ -7,6 +7,9 @@ export default {
       fontFamily: {
         inter: ["Inter Variable", "Inter", "sans-serif"],
       },
+      colors: {
+        accent: "#FF375F",
+      },
     },
   },
   plugins: [],
