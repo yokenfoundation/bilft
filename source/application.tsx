@@ -1,8 +1,28 @@
-import React, { useEffect } from "react";
+import React, { useEffect, type PropsWithChildren } from "react";
 import Profile from "./pages/profile";
 import WebApp from "@twa-dev/sdk";
 import LoadingIndicator from "./components/loadingIndicator";
 import { useApplicationContext } from "./context/context";
+import { clsxString, type StyleProps } from "./common";
+
+const UserStatus = (props: PropsWithChildren<StyleProps>) => (
+  <article className={clsxString("mx-4 mt-4 relative flex flex-col", props.className ?? "")}>
+    <svg
+      className="absolute text-accent left-0 top-0"
+      width="21"
+      height="20"
+      viewBox="0 0 21 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M0 0.04006C4.46481 4.16015 5.65964 5.81985 5.65964 19.9819C20.3365 16.2557 21.9956 13.836 19.8257 7.41852C11.0669 2.45015 2.95905 -0.37397 0 0.04006Z"
+        fill="currentColor"
+      />
+    </svg>
+    <div className="px-4 py-2 self-start rounded-3xl ml-1 bg-accent min-h-[38px]">{props.children}</div>
+  </article>
+);
 
 const Application: React.FunctionComponent = () => {
   const context = useApplicationContext();
@@ -23,28 +43,8 @@ const Application: React.FunctionComponent = () => {
             <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p>
           </div>
         </div>
-
-        <div className="mx-4 mt-4 relative">
-          <svg
-            className="absolute text-accent left-0 top-0"
-            width="21"
-            height="20"
-            viewBox="0 0 21 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M0 0.04006C4.46481 4.16015 5.65964 5.81985 5.65964 19.9819C20.3365 16.2557 21.9956 13.836 19.8257 7.41852C11.0669 2.45015 2.95905 -0.37397 0 0.04006Z"
-              fill="currentColor"
-            />
-          </svg>
-          <div className="px-4 py-2 rounded-3xl ml-1 bg-accent min-h-[48px]">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Molestias explicabo nam optio. Cumque minima eius
-            incidunt vero, animi, quia perspiciatis dignissimos ducimus itaque quis fugiat error maxime. Molestiae, iure
-            officia.
-          </div>
-        </div>
       </section>
+      <UserStatus>Hello</UserStatus>
       <LoadingIndicator context={context} hidden={!context.loading.active()} />
       <Profile context={context}></Profile>
     </main>
