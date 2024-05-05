@@ -9,34 +9,14 @@ import ProfileHeader from "@/components/profileHeader";
 import ProfileDetails from "@/components/profileDetails";
 import ProfileWriteForm from "@/components/profileWriteForm";
 import NotesTimeline from "@/components/notesTimeline";
+import { getProfileId } from "@/common";
 
 interface IProfile {
   context: ApplicationContext;
 }
 
-function _id() {
-  let id = WebApp.initDataUnsafe.start_param;
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const searchParamsID = searchParams.get("id");
-  if (searchParamsID) {
-    id = `id${searchParamsID}`;
-  }
-
-  if (!id) {
-    const _id = WebApp.initDataUnsafe.user?.id;
-    if (_id) {
-      id = `id${_id}`;
-    } else {
-      throw new Error("Invalid user");
-    }
-  }
-
-  return id;
-}
-
 const Profile: React.FC<IProfile> = (p) => {
-  const [id, setID] = useState(_id());
+  const [id, setID] = useState(getProfileId);
   const [data, fetch] = useMethod("/board/resolve", { value: id });
 
   let name: string | undefined;
@@ -60,7 +40,7 @@ const Profile: React.FC<IProfile> = (p) => {
     children.push(
       <section id="header-error">
         <div id="alert" className="terminal-alert terminal-alert-error"></div>
-      </section>
+      </section>,
     );
   } else if (data) {
     WebApp.expand();

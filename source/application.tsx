@@ -3,7 +3,9 @@ import Profile from "./pages/profile";
 import WebApp from "@twa-dev/sdk";
 import LoadingIndicator from "./components/loadingIndicator";
 import { useApplicationContext } from "./context/context";
-import { clsxString, type StyleProps } from "./common";
+import { clsxString, getProfileId, type StyleProps } from "./common";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { fetchMethodCurry, keysFactory } from "./api/api";
 
 const UserStatus = (props: PropsWithChildren<StyleProps>) => (
   <article className={clsxString("relative flex flex-col", props.className ?? "")}>
@@ -75,23 +77,35 @@ const Application: React.FunctionComponent = () => {
     WebApp.ready();
   }, []);
 
+  const boardQuery = useQuery(
+    keysFactory.board({
+      value: getProfileId(),
+    }),
+  );
+
+  const addNoteMutation = useMutation({
+    mutationFn: fetchMethodCurry("/board/createNote"),
+  });
+
   const [inputValue, setInputValue] = useState("");
   return (
     <main>
-      <section>
+      <section className="mt-6">
         <div className="px-6 py-4 flex flex-row gap-5 items-center">
           <img
-            src="https://img.freepik.com/free-photo/vertical-closeup-shot-grey-cat-staring-camera-with-its-green-eyes_181624-45908.jpg?size=626&ext=jpg&ga=GA1.1.553209589.1714435200&semt=ais"
+            alt="Avatar"
+            src={boardQuery.data?.profile?.photo}
             className="w-12 aspect-square rounded-full object-cover"
           />
           <div className="flex flex-col">
-            <p className="font-bold font-inter text-[20px] leading-6">Jane</p>
-            <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p>
+            <p className="font-bold font-inter text-[20px] leading-6">
+              {boardQuery.data?.profile?.title ?? boardQuery.data?.name}
+            </p>
+            {/* <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p> */}
           </div>
         </div>
 
-        <UserStatus className="mt-4 mx-4">Hello</UserStatus>
-
+        <UserStatus className="mt-4 mx-4">{boardQuery.data?.profile?.description}</UserStatus>
         <PostInput value={inputValue} onChange={setInputValue} />
       </section>
 

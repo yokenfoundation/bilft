@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.0.18",
+    "@tanstack/react-query": "^5.34.1",
     "@twa-dev/sdk": "^6.4.2",
     "axios": "^1.6.8",
     "react": "^18.3.0",
