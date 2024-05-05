@@ -1,3 +1,5 @@
+import type { DateString } from "@/common";
+
 namespace model {
   const _ = 0;
 
@@ -8,6 +10,7 @@ namespace model {
 
   export type Note = {
     author: NoteAuthor;
+    createdAt: DateString;
     content: string;
   };
 

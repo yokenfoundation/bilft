@@ -3,7 +3,7 @@ import Profile from "./pages/profile";
 import WebApp from "@twa-dev/sdk";
 import LoadingIndicator from "./components/loadingIndicator";
 import { useApplicationContext } from "./context/context";
-import { clsxString, getProfileId, type StyleProps } from "./common";
+import { clsxString, getProfileId, type DateString, type StyleProps } from "./common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { fetchMethodCurry, keysFactory } from "./api/api";
 
@@ -70,11 +70,25 @@ function PostInput(props: { value: string; onChange: (s: string) => void }) {
     </form>
   );
 }
+
+const formatPostDate = (createdAt: DateString) =>
+  new Date(createdAt).toLocaleDateString(undefined, {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+
+const formatPostTime = (createdAt: DateString) =>
+  new Date(createdAt).toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
 function BoardNote(
   props: PropsWithChildren<
     StyleProps & {
       name: string;
-      // postDate: string
+      createdAt: DateString;
       avatarUrl: string | null;
     }
   >,
@@ -91,7 +105,9 @@ function BoardNote(
         )}
         <div className="flex flex-col">
           <div className="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
-          {/* <div className="font-inter text-[13px] leading-4 text-[#AAA]">posted 20.02.2021 at 1:34 pm</div> */}
+          <div className="font-inter text-[13px] leading-4 text-[#AAA]">
+            posted {formatPostDate(props.createdAt)} at {formatPostTime(props.createdAt)}
+          </div>
         </div>
       </div>
 
@@ -146,6 +162,7 @@ const Application: React.FunctionComponent = () => {
           <BoardNote
             // TODO: use note id
             key={note.author.id + note.content}
+            createdAt={note.createdAt}
             // TODO: add avatar
             avatarUrl={null}
             name={note.author.name}

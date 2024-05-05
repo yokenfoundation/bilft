@@ -40,3 +40,10 @@ export function getProfileId() {
 
   return id;
 }
+
+declare const _symbol: unique symbol;
+export type Opaque<T, TTag> = T & {
+  [_symbol]: TTag;
+};
+
+export type DateString = Opaque<string, "DateString">;
