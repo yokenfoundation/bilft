@@ -75,7 +75,7 @@ function BoardNote(
     StyleProps & {
       name: string;
       // postDate: string
-      avatarUrl?: string;
+      avatarUrl: string | null;
     }
   >,
 ) {
@@ -84,7 +84,11 @@ function BoardNote(
       className={clsxString("mt-4 mx-4 bg-[#181818] px-2 pb-4 pt-3 rounded-3xl flex flex-col", props.className ?? "")}
     >
       <div className="flex gap-[10px] items-center">
-        <img className="w-10 aspect-square rounded-full object-cover" src={props.avatarUrl} />
+        {props.avatarUrl ? (
+          <img className="w-10 aspect-square rounded-full object-cover" src={props.avatarUrl} />
+        ) : (
+          <div className="w-10 aspect-square rounded-full bg-gray-400" />
+        )}
         <div className="flex flex-col">
           <div className="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
           {/* <div className="font-inter text-[13px] leading-4 text-[#AAA]">posted 20.02.2021 at 1:34 pm</div> */}
@@ -128,6 +132,7 @@ const Application: React.FunctionComponent = () => {
             <p className="font-bold font-inter text-[20px] leading-6">
               {boardQuery.data?.profile?.title ?? boardQuery.data?.name}
             </p>
+            {/* TODO: add date */}
             {/* <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p> */}
           </div>
         </div>
@@ -136,16 +141,27 @@ const Application: React.FunctionComponent = () => {
         <PostInput value={inputValue} onChange={setInputValue} />
       </section>
 
-      <BoardNote
-        avatarUrl={
-          "https://images.unsplash.com/photo-1608848461950-0fe51dfc41cb?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8MXx8fGVufDB8fHx8fA%3D%3D"
-        }
-        name="Alicia"
-      >
-        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Adipisci perspiciatis sed earum, sunt eligendi
-        architecto eveniet libero est deserunt aliquid nesciunt odio voluptatum veritatis reiciendis facere? Autem
-        quidem odit delectus?
-      </BoardNote>
+      {boardQuery.data && boardQuery.data?.notes.data.length > 0 ? (
+        boardQuery.data.notes.data.map((note) => (
+          <BoardNote
+            // TODO: use note id
+            key={note.author.id + note.content}
+            // TODO: add avatar
+            avatarUrl={null}
+            name={note.author.name}
+          >
+            {note.content}
+          </BoardNote>
+        ))
+      ) : (
+        <div className="p-8 flex flex-col items-center">
+          <img src="/assets/empty-notes.webp" className="w-32 aspect-square" alt="Questioning banana" />
+          <strong className="font-inter text-center font-medium text-[20px] leading-[25px] mt-6">
+            It's still empty
+          </strong>
+          <p className="text-[#AAA] font-inter text-center text-[17px] leading-[22px]">Be the first to post here!</p>
+        </div>
+      )}
 
       <LoadingIndicator context={context} hidden={!context.loading.active()} />
       <Profile context={context}></Profile>
