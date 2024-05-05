@@ -1,4 +1,4 @@
-import React, { useEffect, type PropsWithChildren } from "react";
+import React, { useEffect, useRef, type PropsWithChildren, useState } from "react";
 import Profile from "./pages/profile";
 import WebApp from "@twa-dev/sdk";
 import LoadingIndicator from "./components/loadingIndicator";
@@ -6,7 +6,7 @@ import { useApplicationContext } from "./context/context";
 import { clsxString, type StyleProps } from "./common";
 
 const UserStatus = (props: PropsWithChildren<StyleProps>) => (
-  <article className={clsxString("mx-4 mt-4 relative flex flex-col", props.className ?? "")}>
+  <article className={clsxString("relative flex flex-col", props.className ?? "")}>
     <svg
       className="absolute text-accent left-0 top-0"
       width="21"
@@ -24,12 +24,58 @@ const UserStatus = (props: PropsWithChildren<StyleProps>) => (
   </article>
 );
 
+function PostInput(props: { value: string; onChange: (s: string) => void }) {
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const isEmpty = props.value.length === 0;
+
+  return (
+    <form
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          inputRef.current?.focus();
+        }
+      }}
+      className="mt-4 p-4 bg-[#AAA] bg-opacity-[8%] border-[#AAA] border mx-4 border-opacity-15 rounded-3xl flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between"
+    >
+      <div
+        className='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"]'
+        data-value={props.value}
+      >
+        <textarea
+          placeholder="Text me here..."
+          rows={1}
+          onChange={(e) => {
+            props.onChange(e.target.value);
+          }}
+          ref={inputRef}
+          className="bg-transparent overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={isEmpty}
+        className="mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-[#FF375F] [&:disabled>svg>path]:fill-[#AAAAAA33]"
+      >
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
+            className="transition-[fill]"
+          />
+        </svg>
+      </button>
+    </form>
+  );
+}
+
 const Application: React.FunctionComponent = () => {
   const context = useApplicationContext();
   useEffect(() => {
     WebApp.ready();
   }, []);
 
+  const [inputValue, setInputValue] = useState("");
   return (
     <main>
       <section>
@@ -43,8 +89,12 @@ const Application: React.FunctionComponent = () => {
             <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p>
           </div>
         </div>
+
+        <UserStatus className="mt-4 mx-4">Hello</UserStatus>
+
+        <PostInput value={inputValue} onChange={setInputValue} />
       </section>
-      <UserStatus>Hello</UserStatus>
+
       <LoadingIndicator context={context} hidden={!context.loading.active()} />
       <Profile context={context}></Profile>
     </main>
