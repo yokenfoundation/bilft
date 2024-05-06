@@ -40,6 +40,7 @@ export function getProfileId() {
 
   return id;
 }
+export const getBoardId = () => getProfileId().slice(2);
 
 declare const _symbol: unique symbol;
 export type Opaque<T, TTag> = T & {

@@ -3,9 +3,10 @@ import Profile from "./pages/profile";
 import WebApp from "@twa-dev/sdk";
 import LoadingIndicator from "./components/loadingIndicator";
 import { useApplicationContext } from "./context/context";
-import { clsxString, getProfileId, type DateString, type StyleProps } from "./common";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { clsxString, getBoardId, getProfileId, type DateString, type StyleProps } from "./common";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchMethodCurry, keysFactory } from "./api/api";
+import type model from "./api/model";
 
 const UserStatus = (props: PropsWithChildren<StyleProps>) => (
   <article className={clsxString("relative flex flex-col", props.className ?? "")}>
@@ -26,7 +27,7 @@ const UserStatus = (props: PropsWithChildren<StyleProps>) => (
   </article>
 );
 
-function PostInput(props: { value: string; onChange: (s: string) => void }) {
+function PostInput(props: { value: string; onChange: (s: string) => void; onSubmit: () => void; isLoading: boolean }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const isEmpty = props.value.length === 0;
 
@@ -37,6 +38,11 @@ function PostInput(props: { value: string; onChange: (s: string) => void }) {
           inputRef.current?.focus();
         }
       }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        props.onSubmit();
+      }}
       className="mt-4 p-4 bg-[#AAA] bg-opacity-[8%] border-[#AAA] border mx-4 border-opacity-15 rounded-3xl flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between"
     >
       <div
@@ -46,6 +52,7 @@ function PostInput(props: { value: string; onChange: (s: string) => void }) {
         <textarea
           placeholder="Text me here..."
           rows={1}
+          value={props.value}
           onChange={(e) => {
             props.onChange(e.target.value);
           }}
@@ -54,18 +61,39 @@ function PostInput(props: { value: string; onChange: (s: string) => void }) {
         />
       </div>
       <button
-        type="submit"
-        disabled={isEmpty}
-        className="mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-[#FF375F] [&:disabled>svg>path]:fill-[#AAAAAA33]"
+        disabled={isEmpty || props.isLoading}
+        className="relative mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-[#FF375F] [&:disabled>svg>path]:fill-[#AAAAAA33] rounded-full overflow-hidden"
       >
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
-            className="transition-[fill]"
-          />
-        </svg>
+        {props.isLoading ? (
+          <div role="status">
+            <svg
+              aria-hidden="true"
+              className="inline w-7 h-7 animate-spin text-gray-600 fill-gray-300"
+              viewBox="0 0 100 101"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                fill="currentColor"
+              />
+              <path
+                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                fill="currentFill"
+              />
+            </svg>
+            <span className="sr-only">Loading...</span>
+          </div>
+        ) : (
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
+              className="transition-[fill]"
+            />
+          </svg>
+        )}
       </button>
     </form>
   );
@@ -130,11 +158,51 @@ const Application: React.FunctionComponent = () => {
     }),
   );
 
-  const addNoteMutation = useMutation({
-    mutationFn: fetchMethodCurry("/board/createNote"),
+  const notesQuery = useInfiniteQuery({
+    ...keysFactory.notes({
+      board: getProfileId(),
+    }),
+    select: ({ pages }) => pages.flatMap((it) => it.data),
   });
+  useEffect(() => {
+    WebApp.expand();
+  }, []);
+
+  const queryClient = useQueryClient();
 
   const [inputValue, setInputValue] = useState("");
+  const addNoteMutation = useMutation({
+    mutationFn: fetchMethodCurry("/board/createNote"),
+    onSettled: () => {
+      notesQuery.refetch();
+    },
+    onSuccess: (note: model.Note) => {
+      queryClient.setQueryData(
+        keysFactory.notes({
+          board: getProfileId(),
+        }).queryKey,
+        (data) => {
+          if (!data || data.pages.length < 1) {
+            return data;
+          }
+          const firstPage = data.pages[0];
+
+          return {
+            pageParams: data.pageParams,
+            pages: [
+              {
+                data: [note, ...firstPage.data],
+                next: firstPage.next,
+              },
+              ...data.pages.slice(1),
+            ],
+          };
+        },
+      );
+      setInputValue("");
+    },
+  });
+
   return (
     <main>
       <section className="mt-6">
@@ -154,11 +222,25 @@ const Application: React.FunctionComponent = () => {
         </div>
 
         <UserStatus className="mt-4 mx-4">{boardQuery.data?.profile?.description}</UserStatus>
-        <PostInput value={inputValue} onChange={setInputValue} />
+        <PostInput
+          isLoading={addNoteMutation.isPending}
+          onSubmit={() => {
+            if (!inputValue) {
+              return;
+            }
+
+            addNoteMutation.mutate({
+              board: getBoardId(),
+              content: inputValue,
+            });
+          }}
+          value={inputValue}
+          onChange={setInputValue}
+        />
       </section>
 
-      {boardQuery.data && boardQuery.data?.notes.data.length > 0 ? (
-        boardQuery.data.notes.data.map((note) => (
+      {notesQuery.data && notesQuery.data?.length > 0 ? (
+        notesQuery.data.map((note) => (
           <BoardNote
             // TODO: use note id
             key={note.author.id + note.content}

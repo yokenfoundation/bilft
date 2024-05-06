@@ -4,7 +4,7 @@ import axios from "axios";
 
 import { useState } from "react";
 import { useApplicationContext } from "@/context/context";
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 
 const instance = axios.create({
   // prod
@@ -21,7 +21,7 @@ type RequestResponse<Request, Response> = {
 type AvailableRequests = "/board/resolve" | "/board/createNote" | "/board/getNotes";
 type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
-  "/board/createNote": RequestResponse<{ board: string; content: string }, model.Board>;
+  "/board/createNote": RequestResponse<{ board: string; content: string }, model.Note>;
   "/board/getNotes": RequestResponse<{ board: string; next?: string }, model.NoteArray>;
 };
 
@@ -53,6 +53,17 @@ export const keysFactory = {
     queryOptions({
       queryFn: () => fetchMethod("/board/resolve", params),
       queryKey: ["board", params],
+    }),
+  notes: ({ board }: Omit<PickRequest<"/board/getNotes">, "next">) =>
+    infiniteQueryOptions({
+      queryKey: ["notes", board],
+      initialPageParam: undefined,
+      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+        fetchMethod("/board/getNotes", {
+          board,
+          next: pageParam,
+        }),
+      getNextPageParam: ({ next }) => next,
     }),
 };
 

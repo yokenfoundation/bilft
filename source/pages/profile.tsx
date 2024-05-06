@@ -43,7 +43,6 @@ const Profile: React.FC<IProfile> = (p) => {
       </section>,
     );
   } else if (data) {
-    WebApp.expand();
 
     children.push(<ProfileDetails profile={data.profile} context={p.context}></ProfileDetails>);
     children.push(<ProfileWriteForm id={idstr} context={p.context}></ProfileWriteForm>);
