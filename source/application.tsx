@@ -160,7 +160,7 @@ const Application: React.FunctionComponent = () => {
 
   const notesQuery = useInfiniteQuery({
     ...keysFactory.notes({
-      board: getProfileId(),
+      board: getBoardId(),
     }),
     select: ({ pages }) => pages.flatMap((it) => it.data),
   });
@@ -179,7 +179,7 @@ const Application: React.FunctionComponent = () => {
     onSuccess: (note: model.Note) => {
       queryClient.setQueryData(
         keysFactory.notes({
-          board: getProfileId(),
+          board: getBoardId(),
         }).queryKey,
         (data) => {
           if (!data || data.pages.length < 1) {
@@ -242,11 +242,9 @@ const Application: React.FunctionComponent = () => {
       {notesQuery.data && notesQuery.data?.length > 0 ? (
         notesQuery.data.map((note) => (
           <BoardNote
-            // TODO: use note id
-            key={note.author.id + note.content}
+            key={note.id}
             createdAt={note.createdAt}
-            // TODO: add avatar
-            avatarUrl={null}
+            avatarUrl={note.author.photo}
             name={note.author.name}
           >
             {note.content}

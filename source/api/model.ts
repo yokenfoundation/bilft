@@ -6,9 +6,11 @@ namespace model {
   export type NoteAuthor = {
     id: string;
     name: string;
+    photo: string;
   };
 
   export type Note = {
+    id: string;
     author: NoteAuthor;
     createdAt: DateString;
     content: string;
