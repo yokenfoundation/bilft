@@ -1,8 +1,5 @@
 import React, { useEffect, useRef, type PropsWithChildren, useState } from "react";
-import Profile from "./pages/profile";
 import WebApp from "@twa-dev/sdk";
-import LoadingIndicator from "./components/loadingIndicator";
-import { useApplicationContext } from "./context/context";
 import { clsxString, getBoardId, getProfileId, type DateString, type StyleProps } from "./common";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchMethodCurry, keysFactory } from "./api/api";
@@ -147,7 +144,6 @@ function BoardNote(
 }
 
 const Application: React.FunctionComponent = () => {
-  const context = useApplicationContext();
   useEffect(() => {
     WebApp.ready();
   }, []);
@@ -241,12 +237,7 @@ const Application: React.FunctionComponent = () => {
 
       {notesQuery.data && notesQuery.data?.length > 0 ? (
         notesQuery.data.map((note) => (
-          <BoardNote
-            key={note.id}
-            createdAt={note.createdAt}
-            avatarUrl={note.author.photo}
-            name={note.author.name}
-          >
+          <BoardNote key={note.id} createdAt={note.createdAt} avatarUrl={note.author.photo} name={note.author.name}>
             {note.content}
           </BoardNote>
         ))
@@ -259,9 +250,6 @@ const Application: React.FunctionComponent = () => {
           <p className="text-[#AAA] font-inter text-center text-[17px] leading-[22px]">Be the first to post here!</p>
         </div>
       )}
-
-      <LoadingIndicator context={context} hidden={!context.loading.active()} />
-      <Profile context={context}></Profile>
     </main>
   );
 };
