@@ -40,6 +40,13 @@ export function getProfileId() {
 
   return id;
 }
+export const getSelfUserId = () => {
+  const id = WebApp.initDataUnsafe.user?.id;
+  if (!id) {
+    throw new Error("Invalid user");
+  }
+  return id;
+};
 export const getBoardId = () => getProfileId().slice(2);
 
 declare const _symbol: unique symbol;

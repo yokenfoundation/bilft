@@ -1,10 +1,21 @@
-import { type PropsWithChildren, createComputed, createMemo, createSignal, For, onMount } from "solid-js";
+import {
+  type PropsWithChildren,
+  createComputed,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  onMount,
+  Switch,
+} from "solid-js";
 import WebApp from "@twa-dev/sdk";
 import { clsxString, getBoardId, getProfileId, type DateString, type StyleProps } from "./common";
 import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from "@tanstack/solid-query";
 import { fetchMethodCurry, keysFactory } from "./api/api";
 import type model from "./api/model";
 import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
+import { useNavigate } from "@solidjs/router";
 
 const UserStatus = (props: PropsWithChildren<StyleProps>) => (
   <article class={clsxString("relative flex flex-col", props.class ?? "")}>
@@ -151,6 +162,9 @@ export const Application = () => {
     WebApp.ready();
     WebApp.expand();
   });
+  onMount(() => {
+    console.log(history.state)
+  })
 
   const boardQuery = createQuery(() =>
     keysFactory.board({
@@ -166,6 +180,9 @@ export const Application = () => {
       }),
     ),
   );
+  createEffect(() => {
+    console.log("notes", notesQuery);
+  });
   const notes = createMemo(() => (notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : []));
 
   const queryClient = useQueryClient();
@@ -204,7 +221,7 @@ export const Application = () => {
   }));
 
   return (
-    <main class="py-6 bg-[#0F0F0F] text-white min-h-screen">
+    <main class="py-6 flex flex-col bg-[#0F0F0F] text-white min-h-screen">
       <section class="sticky z-10 top-0 bg-[#0F0F0F] px-6 py-4 flex flex-row gap-5 items-center">
         <img alt="Avatar" src={boardQuery.data?.profile?.photo} class="w-12 aspect-square rounded-full object-cover" />
         <div class="flex flex-col">
@@ -233,9 +250,23 @@ export const Application = () => {
         onChange={setInputValue}
       />
 
-      <section class="flex flex-col">
-        {notes()?.length > 0 ? (
-          <>
+      <section class="flex flex-col flex-1">
+        <Switch>
+          <Match when={notesQuery.isLoading}>
+            <div class="flex flex-1 w-full items-center justify-center">
+              <LoadingSvg class="fill-[#FF375F] w-8 text-transparent" />
+            </div>
+          </Match>
+          <Match when={notes().length === 0}>
+            <div class="p-8 flex flex-col items-center">
+              <img src="/assets/empty-notes.webp" class="w-32 aspect-square" alt="Questioning banana" />
+              <strong class="font-inter text-center font-medium text-[20px] leading-[25px] mt-6">
+                It's still empty
+              </strong>
+              <p class="text-[#AAA] font-inter text-center text-[17px] leading-[22px]">Be the first to post here!</p>
+            </div>
+          </Match>
+          <Match when={notes().length > 0}>
             <For each={notes()}>
               {(note) => (
                 <BoardNote createdAt={note.createdAt} avatarUrl={note.author.photo} name={note.author.name}>
@@ -271,14 +302,8 @@ export const Application = () => {
                 </svg>
               </button>
             ) : null}
-          </>
-        ) : (
-          <div class="p-8 flex flex-col items-center">
-            <img src="/assets/empty-notes.webp" class="w-32 aspect-square" alt="Questioning banana" />
-            <strong class="font-inter text-center font-medium text-[20px] leading-[25px] mt-6">It's still empty</strong>
-            <p class="text-[#AAA] font-inter text-center text-[17px] leading-[22px]">Be the first to post here!</p>
-          </div>
-        )}
+          </Match>
+        </Switch>
       </section>
     </main>
   );
