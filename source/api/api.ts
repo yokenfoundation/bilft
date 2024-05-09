@@ -2,7 +2,8 @@ import WebApp from "@twa-dev/sdk";
 import model from "./model";
 import axios from "axios";
 
-import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/solid-query";
+import { infiniteQueryOptions } from "@/queryClientTypes";
 
 const instance = axios.create({
   // prod
@@ -25,10 +26,6 @@ type RequestResponseMappings = {
 
 type PickRequest<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["request"];
 type PickResponse<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["response"];
-type PickMethodResult<T extends AvailableRequests> =
-  | (PickResponse<T> & { isError: false })
-  | (model.Error & { isError: true })
-  | undefined;
 
 export const fetchMethod = async <T extends AvailableRequests>(
   path: T,
@@ -48,10 +45,10 @@ export const fetchMethodCurry =
 
 export const keysFactory = {
   board: (params: PickRequest<"/board/resolve">) =>
-    queryOptions({
+    queryOptions(() => ({
       queryFn: () => fetchMethod("/board/resolve", params),
       queryKey: ["board", params],
-    }),
+    })),
   notes: ({ board }: Omit<PickRequest<"/board/getNotes">, "next">) =>
     infiniteQueryOptions({
       queryKey: ["notes", board],

@@ -1,14 +1,15 @@
-import React, { useEffect, useRef, type PropsWithChildren, useState } from "react";
+import { type PropsWithChildren, createComputed, createMemo, createSignal, For, onMount } from "solid-js";
 import WebApp from "@twa-dev/sdk";
 import { clsxString, getBoardId, getProfileId, type DateString, type StyleProps } from "./common";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from "@tanstack/solid-query";
 import { fetchMethodCurry, keysFactory } from "./api/api";
 import type model from "./api/model";
+import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
 
 const UserStatus = (props: PropsWithChildren<StyleProps>) => (
-  <article className={clsxString("relative flex flex-col", props.className ?? "")}>
+  <article class={clsxString("relative flex flex-col", props.class ?? "")}>
     <svg
-      className="absolute text-accent left-0 top-0"
+      class="absolute text-accent left-0 top-0"
       width="21"
       height="20"
       viewBox="0 0 21 20"
@@ -20,14 +21,14 @@ const UserStatus = (props: PropsWithChildren<StyleProps>) => (
         fill="currentColor"
       />
     </svg>
-    <div className="px-4 py-2 self-start rounded-3xl ml-1 bg-accent min-h-[38px]">{props.children}</div>
+    <div class="px-4 py-2 self-start rounded-3xl ml-1 bg-accent min-h-[38px]">{props.children}</div>
   </article>
 );
 
 const LoadingSvg = (props: StyleProps) => (
   <svg
     aria-hidden="true"
-    className={clsxString("inline aspect-square animate-spin", props.className ?? "")}
+    class={clsxString("inline aspect-square animate-spin", props.class ?? "")}
     viewBox="0 0 100 101"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -44,14 +45,14 @@ const LoadingSvg = (props: StyleProps) => (
 );
 
 function PostInput(props: { value: string; onChange: (s: string) => void; onSubmit: () => void; isLoading: boolean }) {
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const isEmpty = props.value.length === 0;
+  let inputRef!: HTMLTextAreaElement | undefined;
+  const isEmpty = () => props.value.length === 0;
 
   return (
     <form
       onClick={(e) => {
         if (e.target === e.currentTarget) {
-          inputRef.current?.focus();
+          inputRef?.focus();
         }
       }}
       onSubmit={(e) => {
@@ -59,39 +60,39 @@ function PostInput(props: { value: string; onChange: (s: string) => void; onSubm
         e.stopPropagation();
         props.onSubmit();
       }}
-      className="mt-4 p-4 bg-[#AAA] bg-opacity-[8%] border-[#AAA] border mx-4 border-opacity-15 rounded-3xl flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between"
+      class="mt-4 p-4 bg-[#AAA] bg-opacity-[8%] border-[#AAA] border mx-4 border-opacity-15 rounded-3xl flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between"
     >
       <div
-        className='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"]'
+        class='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"]'
         data-value={props.value}
       >
         <textarea
           placeholder="Text me here..."
           rows={1}
           value={props.value}
-          onChange={(e) => {
+          onInput={(e) => {
             props.onChange(e.target.value);
           }}
           ref={inputRef}
-          className="bg-transparent overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
+          class="bg-transparent overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
         />
       </div>
       <button
-        disabled={isEmpty || props.isLoading}
-        className="relative mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-[#FF375F] [&:disabled>svg>path]:fill-[#AAAAAA33] rounded-full overflow-hidden"
+        disabled={isEmpty() || props.isLoading}
+        class="relative mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-[#FF375F] [&:disabled>svg>path]:fill-[#AAAAAA33] rounded-full overflow-hidden"
       >
         {props.isLoading ? (
           <div role="status">
-            <LoadingSvg className="text-gray-600 w-7 fill-gray-300" />
-            <span className="sr-only">Loading...</span>
+            <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
+            <span class="sr-only">Loading...</span>
           </div>
         ) : (
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
-              fillRule="evenodd"
-              clipRule="evenodd"
+              fill-rule="evenodd"
+              clip-rule="evenodd"
               d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
-              className="transition-[fill]"
+              class="transition-[fill]"
             />
           </svg>
         )}
@@ -123,55 +124,54 @@ function BoardNote(
   >,
 ) {
   return (
-    <article
-      className={clsxString("mt-4 mx-4 bg-[#181818] px-2 pb-4 pt-3 rounded-3xl flex flex-col", props.className ?? "")}
-    >
-      <div className="flex gap-[10px] items-center">
+    <article class={clsxString("mt-4 mx-4 bg-[#181818] px-2 pb-4 pt-3 rounded-3xl flex flex-col", props.class ?? "")}>
+      <div class="flex gap-[10px] items-center">
         {props.avatarUrl ? (
-          <img className="w-10 aspect-square rounded-full object-cover" src={props.avatarUrl} />
+          <img class="w-10 aspect-square rounded-full object-cover" src={props.avatarUrl} />
         ) : (
-          <div className="w-10 aspect-square rounded-full bg-gray-400" />
+          <div class="w-10 aspect-square rounded-full bg-gray-400" />
         )}
-        <div className="flex flex-col">
-          <div className="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
-          <div className="font-inter text-[13px] leading-4 text-[#AAA]">
+        <div class="flex flex-col">
+          <div class="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
+          <div class="font-inter text-[13px] leading-4 text-[#AAA]">
             posted {formatPostDate(props.createdAt)} at {formatPostTime(props.createdAt)}
           </div>
         </div>
       </div>
 
-      <div className="mt-3 mb-4 bg-[#212121] h-[1px]" />
+      <div class="mt-3 mb-4 bg-[#212121] h-[1px]" />
 
-      <div className="px-2 font-inter text-[16px] leading-[21px]">{props.children}</div>
+      <div class="px-2 font-inter text-[16px] leading-[21px]">{props.children}</div>
     </article>
   );
 }
 
-const Application: React.FunctionComponent = () => {
-  useEffect(() => {
+export const Application = () => {
+  onMount(() => {
     WebApp.ready();
-  }, []);
+    WebApp.expand();
+  });
 
-  const boardQuery = useQuery(
+  const boardQuery = createQuery(() =>
     keysFactory.board({
       value: getProfileId(),
-    }),
+    })(),
   );
 
-  const notesQuery = useInfiniteQuery({
-    ...keysFactory.notes({
-      board: getBoardId(),
-    }),
-    select: ({ pages }) => pages.flatMap((it) => it.data),
-  });
-  useEffect(() => {
-    WebApp.expand();
-  }, []);
+  const notesQuery = createInfiniteQuery(() =>
+    infiniteQueryOptionsWithoutDataTag(
+      // @ts-expect-error
+      keysFactory.notes({
+        board: getBoardId(),
+      }),
+    ),
+  );
+  const notes = createMemo(() => (notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : []));
 
   const queryClient = useQueryClient();
 
-  const [inputValue, setInputValue] = useState("");
-  const addNoteMutation = useMutation({
+  const [inputValue, setInputValue] = createSignal("");
+  const addNoteMutation = createMutation(() => ({
     mutationFn: fetchMethodCurry("/board/createNote"),
     onSettled: () => {
       notesQuery.refetch();
@@ -201,26 +201,22 @@ const Application: React.FunctionComponent = () => {
       );
       setInputValue("");
     },
-  });
+  }));
 
   return (
-    <main className="py-6">
-      <section className="sticky z-10 top-0 bg-[#0F0F0F] px-6 py-4 flex flex-row gap-5 items-center">
-        <img
-          alt="Avatar"
-          src={boardQuery.data?.profile?.photo}
-          className="w-12 aspect-square rounded-full object-cover"
-        />
-        <div className="flex flex-col">
-          <p className="font-bold font-inter text-[20px] leading-6">
+    <main class="py-6 bg-[#0F0F0F] text-white min-h-screen">
+      <section class="sticky z-10 top-0 bg-[#0F0F0F] px-6 py-4 flex flex-row gap-5 items-center">
+        <img alt="Avatar" src={boardQuery.data?.profile?.photo} class="w-12 aspect-square rounded-full object-cover" />
+        <div class="flex flex-col">
+          <p class="font-bold font-inter text-[20px] leading-6">
             {boardQuery.data?.profile?.title ?? boardQuery.data?.name}
           </p>
           {/* TODO: add date */}
-          {/* <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p> */}
+          {/* <p class="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p> */}
         </div>
       </section>
 
-      <UserStatus className="mt-4 mx-4">{boardQuery.data?.profile?.description}</UserStatus>
+      <UserStatus class="mt-4 mx-4">{boardQuery.data?.profile?.description}</UserStatus>
       <PostInput
         isLoading={addNoteMutation.isPending}
         onSubmit={() => {
@@ -230,28 +226,30 @@ const Application: React.FunctionComponent = () => {
 
           addNoteMutation.mutate({
             board: getBoardId(),
-            content: inputValue,
+            content: inputValue(),
           });
         }}
-        value={inputValue}
+        value={inputValue()}
         onChange={setInputValue}
       />
 
-      <section className="flex flex-col">
-        {notesQuery.data && notesQuery.data?.length > 0 ? (
+      <section class="flex flex-col">
+        {notes()?.length > 0 ? (
           <>
-            {notesQuery.data.map((note) => (
-              <BoardNote key={note.id} createdAt={note.createdAt} avatarUrl={note.author.photo} name={note.author.name}>
-                {note.content}
-              </BoardNote>
-            ))}
+            <For each={notes()}>
+              {(note) => (
+                <BoardNote createdAt={note.createdAt} avatarUrl={note.author.photo} name={note.author.name}>
+                  {note.content}
+                </BoardNote>
+              )}
+            </For>
 
             {notesQuery.isFetchingNextPage ? (
-              <div role="status" className="mx-auto mt-6">
-                <LoadingSvg className="fill-[#FF375F] w-8 text-transparent" />
-                <span className="sr-only">Next boards is loading</span>
+              <div role="status" class="mx-auto mt-6">
+                <LoadingSvg class="fill-[#FF375F] w-8 text-transparent" />
+                <span class="sr-only">Next boards is loading</span>
               </div>
-            ) : notesQuery.data.length >= 8 ? (
+            ) : notes().length >= 8 ? (
               <button
                 onClick={() => {
                   window.scrollTo({
@@ -259,7 +257,7 @@ const Application: React.FunctionComponent = () => {
                     top: 0,
                   });
                 }}
-                className="font-inter flex items-center gap-x-2 mt-6 text-[17px] active:opacity-70 transition-opacity leading-[22px] mx-auto text-[#FF375F]"
+                class="font-inter flex items-center gap-x-2 mt-6 text-[17px] active:opacity-70 transition-opacity leading-[22px] mx-auto text-[#FF375F]"
               >
                 Back to top
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -275,17 +273,13 @@ const Application: React.FunctionComponent = () => {
             ) : null}
           </>
         ) : (
-          <div className="p-8 flex flex-col items-center">
-            <img src="/assets/empty-notes.webp" className="w-32 aspect-square" alt="Questioning banana" />
-            <strong className="font-inter text-center font-medium text-[20px] leading-[25px] mt-6">
-              It's still empty
-            </strong>
-            <p className="text-[#AAA] font-inter text-center text-[17px] leading-[22px]">Be the first to post here!</p>
+          <div class="p-8 flex flex-col items-center">
+            <img src="/assets/empty-notes.webp" class="w-32 aspect-square" alt="Questioning banana" />
+            <strong class="font-inter text-center font-medium text-[20px] leading-[25px] mt-6">It's still empty</strong>
+            <p class="text-[#AAA] font-inter text-center text-[17px] leading-[22px]">Be the first to post here!</p>
           </div>
         )}
       </section>
     </main>
   );
 };
-
-export default Application;

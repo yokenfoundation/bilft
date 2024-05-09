@@ -3,14 +3,14 @@ import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-import react from "@vitejs/plugin-react";
+import solid from "vite-plugin-solid";
 
 export default defineConfig({
   server: {
     port: 1234,
   },
   plugins: [
-    react(),
+    solid(),
     tsconfigPaths(),
     nodePolyfills({
       globals: {

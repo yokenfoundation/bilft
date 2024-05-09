@@ -1,17 +1,16 @@
 import "@fontsource-variable/inter";
-import "terminal.css";
 import "./index.css";
+import { render } from "solid-js/web";
 
-import React from "react";
-import ReactDOM from "react-dom/client";
-
-import Application from "./application";
+import { Application } from "./application";
 import { AppQueryClientProvider } from "./queryClient";
+import { QueryClientContext, QueryClientProvider } from "@tanstack/solid-query";
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
+render(
+  () => (
     <AppQueryClientProvider>
       <Application />
     </AppQueryClientProvider>
-  </React.StrictMode>,
+  ),
+  document.getElementById("root") as HTMLElement,
 );

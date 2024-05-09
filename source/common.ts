@@ -1,7 +1,7 @@
 import WebApp from "@twa-dev/sdk";
 
 export type StyleProps = {
-  className?: string;
+  class?: string;
 };
 
 export const clsxString = (...items: string[]) => {

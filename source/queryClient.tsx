@@ -1,9 +1,8 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { PropsWithChildren } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
+import type { ParentProps } from "solid-js";
 
 export const queryClient = new QueryClient();
 
-export const AppQueryClientProvider = ({ children }: PropsWithChildren) => (
-  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+export const AppQueryClientProvider = (props: ParentProps) => (
+  <QueryClientProvider client={queryClient}>{props.children}</QueryClientProvider>
 );
-
