@@ -204,42 +204,40 @@ const Application: React.FunctionComponent = () => {
   });
 
   return (
-    <main>
-      <section className="mt-6">
-        <div className="px-6 py-4 flex flex-row gap-5 items-center">
-          <img
-            alt="Avatar"
-            src={boardQuery.data?.profile?.photo}
-            className="w-12 aspect-square rounded-full object-cover"
-          />
-          <div className="flex flex-col">
-            <p className="font-bold font-inter text-[20px] leading-6">
-              {boardQuery.data?.profile?.title ?? boardQuery.data?.name}
-            </p>
-            {/* TODO: add date */}
-            {/* <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p> */}
-          </div>
-        </div>
-
-        <UserStatus className="mt-4 mx-4">{boardQuery.data?.profile?.description}</UserStatus>
-        <PostInput
-          isLoading={addNoteMutation.isPending}
-          onSubmit={() => {
-            if (!inputValue) {
-              return;
-            }
-
-            addNoteMutation.mutate({
-              board: getBoardId(),
-              content: inputValue,
-            });
-          }}
-          value={inputValue}
-          onChange={setInputValue}
+    <main className="py-6">
+      <section className="sticky z-10 top-0 bg-[#0F0F0F] px-6 py-4 flex flex-row gap-5 items-center">
+        <img
+          alt="Avatar"
+          src={boardQuery.data?.profile?.photo}
+          className="w-12 aspect-square rounded-full object-cover"
         />
+        <div className="flex flex-col">
+          <p className="font-bold font-inter text-[20px] leading-6">
+            {boardQuery.data?.profile?.title ?? boardQuery.data?.name}
+          </p>
+          {/* TODO: add date */}
+          {/* <p className="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p> */}
+        </div>
       </section>
 
-      <section className="pb-6 flex flex-col">
+      <UserStatus className="mt-4 mx-4">{boardQuery.data?.profile?.description}</UserStatus>
+      <PostInput
+        isLoading={addNoteMutation.isPending}
+        onSubmit={() => {
+          if (!inputValue) {
+            return;
+          }
+
+          addNoteMutation.mutate({
+            board: getBoardId(),
+            content: inputValue,
+          });
+        }}
+        value={inputValue}
+        onChange={setInputValue}
+      />
+
+      <section className="flex flex-col">
         {notesQuery.data && notesQuery.data?.length > 0 ? (
           <>
             {notesQuery.data.map((note) => (
