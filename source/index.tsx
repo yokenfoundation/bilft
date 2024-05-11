@@ -20,22 +20,6 @@ import { addPrefix, getProfileId, getSelfUserId, isEqualIds, removePrefix } from
 
 const { backButton } = init();
 
-const useCanGoBack = (navigator: HashNavigator) => {
-  const [canGoBack, setCanGoBack] = createSignal(navigator.canGoBack);
-  let unsubscribe: () => void;
-  onMount(() => {
-    unsubscribe = navigator.on("change", (ev) => {
-      console.log("change navigator", ev);
-      setCanGoBack(ev.navigator.canGoBack);
-    });
-  });
-  onCleanup(() => {
-    unsubscribe();
-  });
-
-  return canGoBack;
-};
-
 const App = () => {
   const isOpenedSelfProfile = isEqualIds(getSelfUserId(), getProfileId());
   const selfEntry: Partial<NavigationEntry> = {
@@ -57,8 +41,7 @@ const App = () => {
   );
   void navigator.attach();
   const source = createIntegration(() => navigator);
-
-  const canGoBack = useCanGoBack(navigator);
+  console.log(navigator.path);
 
   onMount(() => {
     postEvent("web_app_ready");
