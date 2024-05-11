@@ -1,9 +1,9 @@
-import WebApp from "@twa-dev/sdk";
 import model from "./model";
 import axios from "axios";
 
 import { queryOptions } from "@tanstack/solid-query";
 import { infiniteQueryOptions } from "@/queryClientTypes";
+import { authData } from "@/common";
 
 const instance = axios.create({
   // prod
@@ -34,7 +34,7 @@ export const fetchMethod = async <T extends AvailableRequests>(
   instance
     .post(path, {
       ...data,
-      authentication_data: WebApp.initData,
+      authentication_data: authData,
     })
     .then((it) => it.data);
 

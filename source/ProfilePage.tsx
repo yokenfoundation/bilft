@@ -1,21 +1,18 @@
+import { type PropsWithChildren, createMemo, createSignal, For, Match, Switch } from "solid-js";
 import {
-  type PropsWithChildren,
-  createComputed,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  Match,
-  onMount,
-  Switch,
-} from "solid-js";
-import WebApp from "@twa-dev/sdk";
-import { clsxString, getBoardId, getProfileId, type DateString, type StyleProps } from "./common";
+  addPrefix,
+  clsxString,
+  getSelfUserId,
+  isEqualIds,
+  removePrefix,
+  type DateString,
+  type StyleProps,
+} from "./common";
 import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from "@tanstack/solid-query";
 import { fetchMethodCurry, keysFactory } from "./api/api";
 import type model from "./api/model";
 import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
-import { useNavigate } from "@solidjs/router";
+import { A, useNavigate, useParams } from "@solidjs/router";
 
 const UserStatus = (props: PropsWithChildren<StyleProps>) => (
   <article class={clsxString("relative flex flex-col", props.class ?? "")}>
@@ -131,12 +128,13 @@ function BoardNote(
       name: string;
       createdAt: DateString;
       avatarUrl: string | null;
+      authorId: string;
     }
   >,
 ) {
   return (
     <article class={clsxString("mt-4 mx-4 bg-[#181818] px-2 pb-4 pt-3 rounded-3xl flex flex-col", props.class ?? "")}>
-      <div class="flex gap-[10px] items-center">
+      <A href={`/board/${props.authorId}`} class="flex gap-[10px] items-center">
         {props.avatarUrl ? (
           <img class="w-10 aspect-square rounded-full object-cover" src={props.avatarUrl} />
         ) : (
@@ -148,7 +146,7 @@ function BoardNote(
             posted {formatPostDate(props.createdAt)} at {formatPostTime(props.createdAt)}
           </div>
         </div>
-      </div>
+      </A>
 
       <div class="mt-3 mb-4 bg-[#212121] h-[1px]" />
 
@@ -157,20 +155,14 @@ function BoardNote(
   );
 }
 
-export const Application = () => {
-  onMount(() => {
-    WebApp.ready();
-    WebApp.expand();
-  });
-  onMount(() => {
-    console.log(history.state)
-  })
-
+const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) => {
   const boardQuery = createQuery(() =>
     keysFactory.board({
-      value: getProfileId(),
+      value: addPrefix(props.idWithoutPrefix),
     })(),
   );
+
+  const getBoardId = () => removePrefix(props.idWithoutPrefix);
 
   const notesQuery = createInfiniteQuery(() =>
     infiniteQueryOptionsWithoutDataTag(
@@ -180,9 +172,6 @@ export const Application = () => {
       }),
     ),
   );
-  createEffect(() => {
-    console.log("notes", notesQuery);
-  });
   const notes = createMemo(() => (notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : []));
 
   const queryClient = useQueryClient();
@@ -269,7 +258,12 @@ export const Application = () => {
           <Match when={notes().length > 0}>
             <For each={notes()}>
               {(note) => (
-                <BoardNote createdAt={note.createdAt} avatarUrl={note.author.photo} name={note.author.name}>
+                <BoardNote
+                  authorId={note.author.id}
+                  createdAt={note.createdAt}
+                  avatarUrl={note.author.photo}
+                  name={note.author.name}
+                >
                   {note.content}
                 </BoardNote>
               )}
@@ -307,4 +301,12 @@ export const Application = () => {
       </section>
     </main>
   );
+};
+
+export const ProfilePage = () => {
+  const selfUserId = getSelfUserId().toString();
+  const params = useParams();
+  const idWithoutPrefix = () => params.idWithoutPrefix;
+
+  return <UserProfilePage idWithoutPrefix={idWithoutPrefix()} isSelf={isEqualIds(selfUserId, idWithoutPrefix())} />;
 };

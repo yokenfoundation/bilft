@@ -1,8 +1,11 @@
-import WebApp from "@twa-dev/sdk";
+import { retrieveLaunchParams } from "@tma.js/sdk";
 
 export type StyleProps = {
   class?: string;
 };
+
+const launchParams = retrieveLaunchParams();
+export const authData = launchParams.initDataRaw;
 
 export const clsxString = (...items: string[]) => {
   let res = "";
@@ -20,34 +23,44 @@ export const clsxString = (...items: string[]) => {
   return res;
 };
 
-export function getProfileId() {
-  let id = WebApp.initDataUnsafe.start_param;
+export const addPrefix = (id: string) => (id.startsWith("id") ? id : `id${id}`);
+export const removePrefix = (id: string) => (id.startsWith("id") ? id.slice(2) : id);
 
+export function getProfileId() {
   const searchParams = new URLSearchParams(window.location.search);
   const searchParamsID = searchParams.get("id");
   if (searchParamsID) {
-    id = `id${searchParamsID}`;
+    return addPrefix(searchParamsID);
   }
 
-  if (!id) {
-    const _id = WebApp.initDataUnsafe.user?.id;
-    if (_id) {
-      id = `id${_id}`;
-    } else {
-      throw new Error("Invalid user");
+  {
+    const startParamId = launchParams.initData?.startParam;
+    if (startParamId) {
+      return startParamId;
     }
   }
 
-  return id;
+  {
+    return addPrefix(getSelfUserId());
+  }
 }
+export const getProfileIdWithoutPrefix = () => removePrefix(getProfileId());
+
+export const isEqualIds = (a: string, b: string) => {
+  const aStrip = a.slice(a.startsWith("id") ? 2 : 0);
+  const bStrip = b.slice(b.startsWith("id") ? 2 : 0);
+
+  return aStrip === bStrip;
+};
+
 export const getSelfUserId = () => {
-  const id = WebApp.initDataUnsafe.user?.id;
+  const id = launchParams.initData?.user?.id;
   if (!id) {
     throw new Error("Invalid user");
   }
-  return id;
+  return id.toString();
 };
-export const getBoardId = () => getProfileId().slice(2);
+export const getBoardId = getProfileIdWithoutPrefix;
 
 declare const _symbol: unique symbol;
 export type Opaque<T, TTag> = T & {

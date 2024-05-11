@@ -15,7 +15,6 @@
     "@tanstack/solid-query": "5.0.0",
     "@tma.js/sdk": "^1.5.3",
     "@tma.js/solid-router-integration": "^1.0.18",
-    "@twa-dev/sdk": "^6.4.2",
     "axios": "^1.6.8",
     "solid-js": "^1.8.17",
     "vite-plugin-solid": "^2.10.2"
