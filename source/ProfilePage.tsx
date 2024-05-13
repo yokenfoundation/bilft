@@ -146,7 +146,12 @@ function BoardNote(
   >,
 ) {
   return (
-    <article class={clsxString("mt-4 mx-4 bg-[#181818] px-2 pb-4 pt-3 rounded-3xl flex flex-col", props.class ?? "")}>
+    <article
+      class={clsxString(
+        "mt-4 mx-4 bg-[#181818] px-2 pb-4 pt-3 rounded-3xl flex flex-col transition-transform has-[a:active]:scale-[0.98]",
+        props.class ?? "",
+      )}
+    >
       <A href={`/board/${props.authorId}`} class="flex gap-[10px] items-center">
         <AvatarIcon lazy isLoading={false} url={props.avatarUrl} class="w-10" />
         <div class="flex flex-col">
@@ -271,8 +276,11 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
       <section class="sticky z-10 top-0 bg-[#0F0F0F] px-6 py-4 flex flex-row gap-5 items-center">
         <AvatarIcon class="w-12" isLoading={boardQuery.isLoading} url={boardQuery.data?.profile?.photo ?? null} />
         <div class="flex flex-col flex-1">
-          <p class="font-bold font-inter text-[20px] leading-6">
-            {boardQuery.data?.profile?.title ?? boardQuery.data?.name}
+          <p class="font-bold font-inter text-[20px] leading-6 relative">
+            {boardQuery.data?.profile?.title ?? boardQuery.data?.name ?? " "}
+            <Show when={boardQuery.isLoading}>
+              <div class="rounded-xl animate-pulse absolute left-0 right-[50%] inset-y-1 bg-gray-600" />
+            </Show>
           </p>
           {/* TODO: add date */}
           {/* <p class="text-[15px] font-inter leading-[22px]">Member since Jan 2021</p> */}
