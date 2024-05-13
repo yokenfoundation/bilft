@@ -15,20 +15,6 @@ const App = () => {
   const selfEntry: BrowserNavigatorAnyHistoryItem<any> = {
     pathname: `/board/${removePrefix(getSelfUserId())}`,
   };
-  console.log({
-    isOpenedSelfProfile,
-  });
-  /* const navigator = new BrowserNavigator(
-    isOpenedSelfProfile
-      ? [selfEntry]
-      : [
-          selfEntry,
-          {
-            pathname: `/board/${removePrefix(getProfileId())}`,
-          },
-        ],
-    isOpenedSelfProfile ? 0 : 1,
-  ); */
   const navigator = initNavigator("app-navigator-state", {
     hashMode: "default",
   });

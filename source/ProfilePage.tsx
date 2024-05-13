@@ -1,4 +1,17 @@
-import { type PropsWithChildren, createMemo, createSignal, For, Match, Switch } from "solid-js";
+import {
+  type PropsWithChildren,
+  createComputed,
+  createEffect,
+  createMemo,
+  createReaction,
+  createRenderEffect,
+  createSignal,
+  For,
+  lazy,
+  Match,
+  Show,
+  Switch,
+} from "solid-js";
 import {
   addPrefix,
   clsxString,
@@ -135,11 +148,7 @@ function BoardNote(
   return (
     <article class={clsxString("mt-4 mx-4 bg-[#181818] px-2 pb-4 pt-3 rounded-3xl flex flex-col", props.class ?? "")}>
       <A href={`/board/${props.authorId}`} class="flex gap-[10px] items-center">
-        {props.avatarUrl ? (
-          <img class="w-10 aspect-square rounded-full object-cover" src={props.avatarUrl} />
-        ) : (
-          <div class="w-10 aspect-square rounded-full bg-gray-400" />
-        )}
+        <AvatarIcon lazy isLoading={false} url={props.avatarUrl} class="w-10" />
         <div class="flex flex-col">
           <div class="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
           <div class="font-inter text-[13px] leading-4 text-[#AAA]">
@@ -154,6 +163,54 @@ function BoardNote(
     </article>
   );
 }
+
+const isImageAlreadyLoaded = (imageSrc: string) => {
+  const img = document.createElement("img");
+  img.src = imageSrc;
+
+  return img.complete;
+};
+
+const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string | null; lazy?: boolean }) => {
+  const [isImageLoaded, setIsImageLoaded] = createSignal(props.url ? isImageAlreadyLoaded(props.url) : false);
+
+  createComputed((prev) => {
+    if (props.url && props.url !== prev) {
+      setIsImageLoaded(isImageAlreadyLoaded(props.url));
+    }
+
+    return props.url;
+  });
+
+  const isLoading = () => props.isLoading && !isImageLoaded();
+
+  return (
+    <div class={clsxString("aspect-square rounded-full overflow-hidden relative", props.class ?? "")}>
+      <div
+        class={clsxString(
+          "absolute inset-0 bg-gray-400 transition-opacity",
+          isLoading() ? "animate-pulse" : props.url ? "opacity-0" : "",
+        )}
+      />
+      <Show when={props.url}>
+        {(url) => (
+          <img
+            loading={props.lazy ? "lazy" : "eager"}
+            onLoadStart={() => {
+              setIsImageLoaded(false);
+            }}
+            onLoad={() => {
+              setIsImageLoaded(true);
+            }}
+            alt="Avatar"
+            src={url()}
+            class={clsxString("object-cover inset-0", isLoading() ? "opacity-0" : "")}
+          />
+        )}
+      </Show>
+    </div>
+  );
+};
 
 const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) => {
   const boardQuery = createQuery(() =>
@@ -212,8 +269,8 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
   return (
     <main class="py-6 flex flex-col bg-[#0F0F0F] text-white min-h-screen">
       <section class="sticky z-10 top-0 bg-[#0F0F0F] px-6 py-4 flex flex-row gap-5 items-center">
-        <img alt="Avatar" src={boardQuery.data?.profile?.photo} class="w-12 aspect-square rounded-full object-cover" />
-        <div class="flex flex-col">
+        <AvatarIcon class="w-12" isLoading={boardQuery.isLoading} url={boardQuery.data?.profile?.photo ?? null} />
+        <div class="flex flex-col flex-1">
           <p class="font-bold font-inter text-[20px] leading-6">
             {boardQuery.data?.profile?.title ?? boardQuery.data?.name}
           </p>
@@ -222,7 +279,9 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
         </div>
       </section>
 
-      <UserStatus class="mt-4 mx-4">{boardQuery.data?.profile?.description}</UserStatus>
+      <UserStatus class="mt-4 mx-4">
+        {boardQuery.isLoading ? "Loading..." : boardQuery.data?.profile?.description}
+      </UserStatus>
       <PostInput
         isLoading={addNoteMutation.isPending}
         onSubmit={() => {
