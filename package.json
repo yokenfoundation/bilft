@@ -4,17 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "debug": "bunx --bun vite",
+    "debug": "vite",
     "build": "tsc && vite build",
+    "type-check": "tsc",
     "lint": "eslint source --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "serve": "vite preview"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.0.18",
-    "@solidjs/router": "~0.9.0",
+    "@solidjs/router": "^0.13.3",
     "@tanstack/solid-query": "5.0.0",
-    "@tma.js/sdk": "^1.5.3",
-    "@tma.js/solid-router-integration": "^1.0.18",
+    "@tma.js/sdk": "^2.0.0",
+    "@tma.js/sdk-solid": "^2.1.0",
+    "@tma.js/solid-router-integration": "^2.0.0",
     "axios": "^1.6.8",
     "solid-js": "^1.8.17",
     "vite-plugin-solid": "^2.10.2"
@@ -52,5 +54,10 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@tma.js/sdk@2.0.0": "patches/@tma.js__sdk@2.0.0.patch"
+    }
   }
 }

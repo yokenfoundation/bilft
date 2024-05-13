@@ -4,31 +4,21 @@ import { render } from "solid-js/web";
 
 import { ProfilePage } from "./ProfilePage";
 import { AppQueryClientProvider } from "./queryClient";
-import { Route, Router, Routes, useLocation, useNavigate } from "@solidjs/router";
-import {
-  BackButton,
-  HashNavigator,
-  init,
-  postEvent,
-  request,
-  retrieveLaunchParams,
-  type NavigationEntry,
-} from "@tma.js/sdk";
-import { createIntegration } from "@tma.js/solid-router-integration";
-import { createComputed, createEffect, createSignal, onCleanup, onMount } from "solid-js";
-import { addPrefix, getProfileId, getSelfUserId, isEqualIds, removePrefix } from "./common";
-
-const { backButton } = init();
+import { Route } from "@solidjs/router";
+import { postEvent, initNavigator, type BrowserNavigatorAnyHistoryItem } from "@tma.js/sdk";
+import { createRouter } from "@tma.js/solid-router-integration";
+import { onCleanup, onMount } from "solid-js";
+import { getProfileId, getSelfUserId, isEqualIds, removePrefix } from "./common";
 
 const App = () => {
   const isOpenedSelfProfile = isEqualIds(getSelfUserId(), getProfileId());
-  const selfEntry: Partial<NavigationEntry> = {
+  const selfEntry: BrowserNavigatorAnyHistoryItem<any> = {
     pathname: `/board/${removePrefix(getSelfUserId())}`,
   };
   console.log({
     isOpenedSelfProfile,
   });
-  const navigator = new HashNavigator(
+  /* const navigator = new BrowserNavigator(
     isOpenedSelfProfile
       ? [selfEntry]
       : [
@@ -38,10 +28,24 @@ const App = () => {
           },
         ],
     isOpenedSelfProfile ? 0 : 1,
-  );
+  ); */
+  const navigator = initNavigator("app-navigator-state", {
+    hashMode: "default",
+  });
+
+  if (isOpenedSelfProfile) {
+    navigator.replace(selfEntry);
+  } else {
+    navigator.replace(selfEntry);
+    navigator.push({
+      pathname: `/board/${removePrefix(getProfileId())}`,
+    });
+  }
   void navigator.attach();
-  const source = createIntegration(() => navigator);
-  console.log(navigator.path);
+  onCleanup(() => {
+    void navigator.detach();
+  });
+  const Router = createRouter(navigator);
 
   onMount(() => {
     postEvent("web_app_ready");
@@ -50,13 +54,11 @@ const App = () => {
 
   return (
     <AppQueryClientProvider>
-      <Router source={source}>
-        <Routes>
-          <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
-        </Routes>
+      <Router>
+        <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
       </Router>
     </AppQueryClientProvider>
   );
 };
 
-render(App, document.getElementById("root") as HTMLElement);
+render(() => <App />, document.getElementById("root") as HTMLElement);
