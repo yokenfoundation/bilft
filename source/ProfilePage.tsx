@@ -1,17 +1,4 @@
-import {
-  type PropsWithChildren,
-  createComputed,
-  createEffect,
-  createMemo,
-  createReaction,
-  createRenderEffect,
-  createSignal,
-  For,
-  lazy,
-  Match,
-  Show,
-  Switch,
-} from "solid-js";
+import { type ParentProps, createComputed, createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
 import {
   addPrefix,
   clsxString,
@@ -25,9 +12,9 @@ import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from
 import { fetchMethodCurry, keysFactory } from "./api/api";
 import type model from "./api/model";
 import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
-import { A, useNavigate, useParams } from "@solidjs/router";
+import { A, useParams } from "@solidjs/router";
 
-const UserStatus = (props: PropsWithChildren<StyleProps>) => (
+const UserStatus = (props: ParentProps<StyleProps>) => (
   <article class={clsxString("relative flex flex-col", props.class ?? "")}>
     <svg
       class="absolute text-accent left-0 top-0"
@@ -91,6 +78,10 @@ function PostInput(props: { value: string; onChange: (s: string) => void; onSubm
           placeholder="Text me here..."
           rows={1}
           value={props.value}
+          onBlur={(e) => {
+            props.onChange(e.currentTarget.value.replaceAll("\n", ""));
+            e.currentTarget.value = props.value;
+          }}
           onInput={(e) => {
             props.onChange(e.target.value);
           }}
@@ -136,7 +127,7 @@ const formatPostTime = (createdAt: DateString) =>
   });
 
 function BoardNote(
-  props: PropsWithChildren<
+  props: ParentProps<
     StyleProps & {
       name: string;
       createdAt: DateString;
