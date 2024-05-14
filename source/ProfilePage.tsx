@@ -133,6 +133,7 @@ function BoardNote(
       createdAt: DateString;
       avatarUrl: string | null;
       authorId: string;
+      onClick?: (e: MouseEvent) => void;
     }
   >,
 ) {
@@ -143,7 +144,7 @@ function BoardNote(
         props.class ?? "",
       )}
     >
-      <A href={`/board/${props.authorId}`} class="flex gap-[10px] items-center">
+      <A href={`/board/${props.authorId}`} onClick={props.onClick} class="flex gap-[10px] items-center">
         <AvatarIcon lazy isLoading={false} url={props.avatarUrl} class="w-10" />
         <div class="flex flex-col">
           <div class="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
@@ -321,6 +322,15 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
                   createdAt={note.createdAt}
                   avatarUrl={note.author.photo}
                   name={note.author.name}
+                  onClick={(e) => {
+                    if (note.author.id === props.idWithoutPrefix) {
+                      e.preventDefault();
+                      window.scrollTo({
+                        top: 0,
+                        behavior: "smooth",
+                      });
+                    }
+                  }}
                 >
                   {note.content}
                 </BoardNote>
