@@ -36,6 +36,7 @@ const App = () => {
   onMount(() => {
     postEvent("web_app_ready");
     postEvent("web_app_expand");
+    postEvent("web_app_set_header_color", { color: "#0F0F0F" });
   });
 
   return (
