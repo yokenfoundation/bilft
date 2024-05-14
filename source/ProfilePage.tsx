@@ -86,7 +86,7 @@ function PostInput(props: { value: string; onChange: (s: string) => void; onSubm
             props.onChange(e.target.value);
           }}
           ref={inputRef}
-          class="bg-transparent overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
+          class="bg-transparent placeholder:select-none overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
         />
       </div>
       <button
@@ -181,7 +181,7 @@ const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string | null
   const isLoading = () => props.isLoading && !isImageLoaded();
 
   return (
-    <div class={clsxString("aspect-square rounded-full overflow-hidden relative", props.class ?? "")}>
+    <div class={clsxString("aspect-square rounded-full overflow-hidden relative select-none", props.class ?? "")}>
       <div
         class={clsxString(
           "absolute inset-0 bg-gray-400 transition-opacity",
