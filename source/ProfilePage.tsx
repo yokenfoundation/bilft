@@ -85,8 +85,18 @@ function PostInput(props: { value: string; onChange: (s: string) => void; onSubm
           onInput={(e) => {
             props.onChange(e.target.value);
           }}
+          inert={props.isLoading}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") {
+              return;
+            }
+            e.preventDefault();
+            if (props.value.length > 0) {
+              props.onSubmit();
+            }
+          }}
           ref={inputRef}
-          class="bg-transparent placeholder:select-none overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
+          class="bg-transparent w-full placeholder:select-none overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
         />
       </div>
       <button
