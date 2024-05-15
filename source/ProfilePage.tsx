@@ -68,7 +68,7 @@ function PostInput(props: { value: string; onChange: (s: string) => void; onSubm
         e.stopPropagation();
         props.onSubmit();
       }}
-      class="mt-4 p-4 bg-[#AAA] bg-opacity-[8%] border-[#AAA] border mx-4 border-opacity-15 rounded-3xl flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between"
+      class="mt-4 p-4 bg-bg secondary bg-opacity-[8%] border-[#AAA] border mx-4 border-opacity-15 rounded-3xl flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between"
     >
       <div
         class='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"]'
@@ -91,23 +91,26 @@ function PostInput(props: { value: string; onChange: (s: string) => void; onSubm
       </div>
       <button
         disabled={isEmpty() || props.isLoading}
-        class="relative mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-[#FF375F] [&:disabled>svg>path]:fill-[#AAAAAA33] rounded-full overflow-hidden"
+        class="relative mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
       >
-        {props.isLoading ? (
+        <Show
+          fallback={
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
+                class="transition-[fill]"
+              />
+            </svg>
+          }
+          when={props.isLoading}
+        >
           <div role="status">
             <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
             <span class="sr-only">Loading...</span>
           </div>
-        ) : (
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              fill-rule="evenodd"
-              clip-rule="evenodd"
-              d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
-              class="transition-[fill]"
-            />
-          </svg>
-        )}
+        </Show>
       </button>
     </form>
   );
@@ -140,7 +143,7 @@ function BoardNote(
   return (
     <article
       class={clsxString(
-        "mt-4 mx-4 bg-[#181818] px-2 pb-4 pt-3 rounded-3xl flex flex-col transition-transform has-[a:active]:scale-[0.98]",
+        "mt-4 mx-4 bg-bg px-2 pb-4 pt-3 rounded-3xl flex flex-col transition-transform has-[a:active]:scale-[0.98]",
         props.class ?? "",
       )}
     >
@@ -148,13 +151,13 @@ function BoardNote(
         <AvatarIcon lazy isLoading={false} url={props.avatarUrl} class="w-10" />
         <div class="flex flex-col">
           <div class="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
-          <div class="font-inter text-[13px] leading-4 text-[#AAA]">
+          <div class="font-inter text-[13px] leading-4 text-subtitle">
             posted {formatPostDate(props.createdAt)} at {formatPostTime(props.createdAt)}
           </div>
         </div>
       </A>
 
-      <div class="mt-3 mb-4 bg-[#212121] h-[1px]" />
+      <div class="mt-3 mb-4 bg-gray-300 h-[1px]" />
 
       <div class="px-2 font-inter text-[16px] leading-[21px]">{props.children}</div>
     </article>
@@ -264,8 +267,8 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
   }));
 
   return (
-    <main class="py-6 flex flex-col bg-[#0F0F0F] text-white min-h-screen">
-      <section class="sticky z-10 top-0 bg-[#0F0F0F] px-6 py-4 flex flex-row gap-5 items-center">
+    <main class="py-6 flex flex-col text-text min-h-screen">
+      <section class="sticky bg-secondary-bg z-10 top-0 px-6 py-4 flex flex-row gap-5 items-center">
         <AvatarIcon class="w-12" isLoading={boardQuery.isLoading} url={boardQuery.data?.profile?.photo ?? null} />
         <div class="flex flex-col flex-1">
           <p class="font-bold font-inter text-[20px] leading-6 relative">
@@ -279,7 +282,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
         </div>
       </section>
 
-      <UserStatus class="mt-4 mx-4">
+      <UserStatus class="mt-4 mx-4 text-text">
         {boardQuery.isLoading ? "Loading..." : boardQuery.data?.profile?.description}
       </UserStatus>
       <PostInput
@@ -302,7 +305,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
         <Switch>
           <Match when={notesQuery.isLoading}>
             <div class="flex flex-1 w-full items-center justify-center">
-              <LoadingSvg class="fill-[#FF375F] w-8 text-transparent" />
+              <LoadingSvg class="fill-accent w-8 text-transparent" />
             </div>
           </Match>
           <Match when={notes().length === 0}>
@@ -311,7 +314,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
               <strong class="font-inter text-center font-medium text-[20px] leading-[25px] mt-6">
                 It's still empty
               </strong>
-              <p class="text-[#AAA] font-inter text-center text-[17px] leading-[22px]">Be the first to post here!</p>
+              <p class="text-subtitle font-inter text-center text-[17px] leading-[22px]">Be the first to post here!</p>
             </div>
           </Match>
           <Match when={notes().length > 0}>
@@ -339,7 +342,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
 
             {notesQuery.isFetchingNextPage ? (
               <div role="status" class="mx-auto mt-6">
-                <LoadingSvg class="fill-[#FF375F] w-8 text-transparent" />
+                <LoadingSvg class="fill-accent w-8 text-transparent" />
                 <span class="sr-only">Next boards is loading</span>
               </div>
             ) : notes().length >= 8 ? (
@@ -350,7 +353,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
                     top: 0,
                   });
                 }}
-                class="font-inter flex items-center gap-x-2 mt-6 text-[17px] active:opacity-70 transition-opacity leading-[22px] mx-auto text-[#FF375F]"
+                class="font-inter flex items-center gap-x-2 mt-6 text-[17px] active:opacity-70 transition-opacity leading-[22px] mx-auto text-accent"
               >
                 Back to top
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">

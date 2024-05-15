@@ -5,11 +5,18 @@ import { render } from "solid-js/web";
 import { ProfilePage } from "./ProfilePage";
 import { AppQueryClientProvider } from "./queryClient";
 import { Route } from "@solidjs/router";
-import { postEvent, initNavigator, type BrowserNavigatorAnyHistoryItem } from "@tma.js/sdk";
+import {
+  postEvent,
+  initNavigator,
+  type BrowserNavigatorAnyHistoryItem,
+  bindThemeParamsCSSVars,
+  initThemeParams,
+} from "@tma.js/sdk";
 import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
 import { getProfileId, getSelfUserId, isEqualIds, removePrefix } from "./common";
 
+bindThemeParamsCSSVars(initThemeParams());
 const App = () => {
   const isOpenedSelfProfile = isEqualIds(getSelfUserId(), getProfileId());
   const selfEntry: BrowserNavigatorAnyHistoryItem<any> = {
@@ -36,7 +43,6 @@ const App = () => {
   onMount(() => {
     postEvent("web_app_ready");
     postEvent("web_app_expand");
-    postEvent("web_app_set_header_color", { color: "#0F0F0F" });
   });
 
   return (

@@ -8,7 +8,12 @@ export default {
         inter: ["Inter Variable", "Inter", "sans-serif"],
       },
       colors: {
-        accent: "#FF375F",
+        bg: "var(--tg-theme-bg-color,#181818)",
+        "secondary-bg": "var(--tg-theme-secondary-bg-color,#0F0F0F)",
+        hint: "var(--tg-theme-hint-color,#AAA)",
+        text: "var(--tg-theme-text-color,#FFF)",
+        subtitle: "var(--tg-theme-subtitle-text-color,#AAA)",
+        accent: "var(--tg-theme-accent-text-color,#FF375F)",
       },
     },
   },
