@@ -52,7 +52,9 @@ const LoadingSvg = (props: StyleProps) => (
   </svg>
 );
 
-function PostInput(props: { value: string; onChange: (s: string) => void; onSubmit: () => void; isLoading: boolean }) {
+function PostInput(
+  props: StyleProps & { value: string; onChange: (s: string) => void; onSubmit: () => void; isLoading: boolean },
+) {
   let inputRef!: HTMLTextAreaElement | undefined;
   const isEmpty = () => props.value.length === 0;
 
@@ -68,7 +70,10 @@ function PostInput(props: { value: string; onChange: (s: string) => void; onSubm
         e.stopPropagation();
         props.onSubmit();
       }}
-      class="mt-4 p-4 bg-bg secondary bg-opacity-[8%] border-[#AAA] border mx-4 border-opacity-15 rounded-3xl flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between"
+      class={clsxString(
+        "p-4 bg-section-bg border-[#AAA] border mx-4 border-opacity-15 rounded-[20px] flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between",
+        props.class ?? "",
+      )}
     >
       <div
         class='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"]'
@@ -78,20 +83,13 @@ function PostInput(props: { value: string; onChange: (s: string) => void; onSubm
           placeholder="Text me here..."
           rows={1}
           value={props.value}
-          onBlur={(e) => {
-            props.onChange(e.currentTarget.value.replaceAll("\n", ""));
-            e.currentTarget.value = props.value;
-          }}
           onInput={(e) => {
             props.onChange(e.target.value);
           }}
           inert={props.isLoading}
           onKeyDown={(e) => {
-            if (e.key !== "Enter") {
-              return;
-            }
-            e.preventDefault();
-            if (props.value.length > 0) {
+            if (e.key === "Enter" && e.ctrlKey && props.value.length > 0) {
+              e.preventDefault();
               props.onSubmit();
             }
           }}
@@ -153,7 +151,7 @@ function BoardNote(
   return (
     <article
       class={clsxString(
-        "mt-4 mx-4 bg-bg px-2 pb-4 pt-3 rounded-3xl flex flex-col transition-transform has-[a:active]:scale-[0.98]",
+        "mx-4 bg-section-bg px-[14px] pb-4 pt-[14px] rounded-3xl flex flex-col transition-transform has-[a:active]:scale-[0.98]",
         props.class ?? "",
       )}
     >
@@ -167,9 +165,9 @@ function BoardNote(
         </div>
       </A>
 
-      <div class="mt-3 mb-4 bg-gray-300 h-[1px]" />
+      <div class="mx-[2px] my-[10px] bg-gray-300/50 h-[1px]" />
 
-      <div class="px-2 font-inter text-[16px] leading-[21px]">{props.children}</div>
+      <div class="px-2 whitespace-pre-wrap font-inter text-[16px] leading-[21px]">{props.children}</div>
     </article>
   );
 }
@@ -277,8 +275,8 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
   }));
 
   return (
-    <main class="py-6 flex flex-col text-text min-h-screen">
-      <section class="sticky bg-secondary-bg z-10 top-0 px-6 py-4 flex flex-row gap-5 items-center">
+    <main class="pb-6 pt-4 flex flex-col text-text min-h-screen">
+      <section class="sticky bg-secondary-bg z-10 top-0 px-6 py-2 flex flex-row gap-5 items-center">
         <AvatarIcon class="w-12" isLoading={boardQuery.isLoading} url={boardQuery.data?.profile?.photo ?? null} />
         <div class="flex flex-col flex-1">
           <p class="font-bold font-inter text-[20px] leading-6 relative">
@@ -292,10 +290,11 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
         </div>
       </section>
 
-      <UserStatus class="mt-4 mx-4 text-text">
+      <UserStatus class="mt-2 mx-4 text-text">
         {boardQuery.isLoading ? "Loading..." : boardQuery.data?.profile?.description}
       </UserStatus>
       <PostInput
+        class="mt-6"
         isLoading={addNoteMutation.isPending}
         onSubmit={() => {
           if (!inputValue) {
@@ -311,7 +310,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
         onChange={setInputValue}
       />
 
-      <section class="flex flex-col flex-1">
+      <section class="flex mt-6 flex-col flex-1">
         <Switch>
           <Match when={notesQuery.isLoading}>
             <div class="flex flex-1 w-full items-center justify-center">
@@ -331,6 +330,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
             <For each={notes()}>
               {(note) => (
                 <BoardNote
+                  class="mb-4"
                   authorId={note.author.id}
                   createdAt={note.createdAt}
                   avatarUrl={note.author.photo}

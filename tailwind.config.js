@@ -10,6 +10,7 @@ export default {
       colors: {
         bg: "var(--tg-theme-bg-color,#181818)",
         "secondary-bg": "var(--tg-theme-secondary-bg-color,#0F0F0F)",
+        "section-bg": "var(--tg-theme-section-bg-color,#0F0F0F)",
         hint: "var(--tg-theme-hint-color,#AAA)",
         text: "var(--tg-theme-text-color,#FFF)",
         subtitle: "var(--tg-theme-subtitle-text-color,#AAA)",
