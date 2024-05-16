@@ -167,7 +167,7 @@ function BoardNote(
 
       <div class="mx-[2px] my-[10px] bg-gray-300/50 h-[1px]" />
 
-      <div class="px-2 whitespace-pre-wrap font-inter text-[16px] leading-[21px]">{props.children}</div>
+      <div class="whitespace-pre-wrap font-inter text-[16px] leading-[21px]">{props.children}</div>
     </article>
   );
 }
