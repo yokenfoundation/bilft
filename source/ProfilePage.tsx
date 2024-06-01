@@ -1,4 +1,4 @@
-import { type ParentProps, createComputed, createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
+import { type ParentProps, createComputed, createMemo, createSignal, For, Match, Show, Switch, type ComponentProps, createUniqueId, createEffect } from "solid-js";
 import {
   addPrefix,
   clsxString,
@@ -13,6 +13,45 @@ import { fetchMethodCurry, keysFactory } from "./api/api";
 import type model from "./api/model";
 import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
 import { A, useParams } from "@solidjs/router";
+import { TonConnectUI, type EventDispatcher } from '@tonconnect/ui'
+
+
+const TonButton = (props: ComponentProps<'button'>) => {
+  const _id = createUniqueId()
+  const id = () => props.id ?? _id;
+  const consoleEventDispatcher: EventDispatcher<any> = {
+    dispatchEvent: ((name, data) => {
+      console.log(`Event: ${name}, details: `, data)
+    }) as EventDispatcher<any>['dispatchEvent'],
+    addEventListener: () => Promise.resolve(() => { })
+  }
+
+  createEffect<() => void>((prevDispose) => {
+    if (prevDispose) {
+      prevDispose()
+    }
+    const url = new URL(window.location.href)
+    url.hash = ''
+    for (const [key] of url.searchParams) {
+      url.searchParams.delete(key)
+    }
+    url.pathname = 'tonconnect-manifest.json'
+
+    const tonConnectUI = new TonConnectUI({
+      manifestUrl: url.toString(),
+      buttonRootId: id(),
+      eventDispatcher: consoleEventDispatcher
+    })
+
+    const dispose = tonConnectUI.onStatusChange(e => {
+      console.log('tonConnectUI', e)
+    })
+
+    return () => dispose()
+  })
+
+  return <button {...props} id={id()}>{props.children}</button>
+}
 
 const UserStatus = (props: ParentProps<StyleProps>) => (
   <article class={clsxString("relative flex flex-col", props.class ?? "")}>
@@ -279,6 +318,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
 
   return (
     <main class="pb-6 pt-4 flex flex-col text-text min-h-screen">
+      <TonButton />
       <section class="sticky bg-secondary-bg z-10 top-0 px-6 py-2 flex flex-row gap-5 items-center">
         <AvatarIcon class="w-12" isLoading={boardQuery.isLoading} url={boardQuery.data?.profile?.photo ?? null} />
         <div class="flex flex-col flex-1">
