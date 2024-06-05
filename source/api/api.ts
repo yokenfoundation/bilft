@@ -6,9 +6,7 @@ import { infiniteQueryOptions } from "@/queryClientTypes";
 import { authData } from "@/common";
 
 const instance = axios.create({
-  // prod
-  // baseURL: "https://redsun.yoken.io/api",
-  baseURL: "https://redsun-staging.yoken.io/api/",
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   timeout: 10000,
 });
 
