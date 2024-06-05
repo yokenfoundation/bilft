@@ -15,12 +15,36 @@ type RequestResponse<Request, Response> = {
   response: Response;
 };
 
-type AvailableRequests = "/board/resolve" | "/board/createNote" | "/board/getNotes";
 type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
   "/board/createNote": RequestResponse<{ board: string; content: string }, model.Note>;
   "/board/getNotes": RequestResponse<{ board: string; next?: string }, model.NoteArray>;
+  "/me/linkWallet": RequestResponse<
+    {
+      address: string;
+      network: "-239" | "-1";
+      proof: {
+        timestamp: number;
+        domain: {
+          value: string;
+          lengthBytes: number;
+        };
+        signature: string;
+        payload: string;
+        state_init: string;
+      };
+    },
+    {
+      wallet: {
+        address: string;
+        tokens: {
+          yo: string;
+        };
+      };
+    }
+  >;
 };
+type AvailableRequests = keyof RequestResponseMappings;
 
 type PickRequest<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["request"];
 type PickResponse<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["response"];

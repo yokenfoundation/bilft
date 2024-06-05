@@ -15,6 +15,22 @@ import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
 import { A, useParams } from "@solidjs/router";
 import { TonConnectUI, type EventDispatcher } from '@tonconnect/ui'
 
+const getCleanUrl = () => {
+  const url = new URL(window.location.href)
+  url.hash = ''
+  for (const [key] of url.searchParams) {
+    url.searchParams.delete(key)
+  }
+
+  return url
+}
+
+const random32Byte = () => {
+  const buf = Buffer.alloc(4)
+  crypto.getRandomValues(buf)
+
+  return buf.toString('hex')
+}
 
 const TonButton = (props: ComponentProps<'button'>) => {
   const _id = createUniqueId()
@@ -30,12 +46,9 @@ const TonButton = (props: ComponentProps<'button'>) => {
     if (prevDispose) {
       prevDispose()
     }
-    const url = new URL(window.location.href)
-    url.hash = ''
-    for (const [key] of url.searchParams) {
-      url.searchParams.delete(key)
-    }
+    const url = getCleanUrl()
     url.pathname = 'tonconnect-manifest.json'
+
 
     const tonConnectUI = new TonConnectUI({
       manifestUrl: url.toString(),
@@ -43,8 +56,29 @@ const TonButton = (props: ComponentProps<'button'>) => {
       eventDispatcher: consoleEventDispatcher
     })
 
+
+    tonConnectUI.setConnectRequestParameters({
+      state: 'ready',
+      value: {
+        tonProof: random32Byte()
+      }
+    })
+
     const dispose = tonConnectUI.onStatusChange(e => {
       console.log('tonConnectUI', e)
+
+      if (e?.connectItems?.tonProof && 'proof' in e.connectItems.tonProof) {
+        console.log('tonProof', e.connectItems.tonProof)
+
+        fetchMethodCurry('/me/linkWallet')({
+          address: e.account.address,
+          network: e.account.chain as "-239" | "-1",
+          proof: {
+            ...e.connectItems.tonProof.proof,
+            state_init: e.account.walletStateInit
+          }
+        })
+      }
     })
 
     return () => dispose()
