@@ -230,12 +230,15 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
   const getBoardId = () => removePrefix(props.idWithoutPrefix);
 
   const notesQuery = createInfiniteQuery(() =>
-    infiniteQueryOptionsWithoutDataTag(
+  ({
+    ...infiniteQueryOptionsWithoutDataTag(
       // @ts-expect-error
       keysFactory.notes({
         board: getBoardId(),
       }),
     ),
+    reconcile: 'id'
+  }),
   );
   const notes = createMemo(() => (notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : []));
 
