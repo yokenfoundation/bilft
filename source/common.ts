@@ -1,4 +1,5 @@
 import { retrieveLaunchParams } from "@tma.js/sdk";
+import { createEffect } from "solid-js";
 
 export type StyleProps = {
   class?: string;
@@ -68,3 +69,13 @@ export type Opaque<T, TTag> = T & {
 };
 
 export type DateString = Opaque<string, "DateString">;
+
+export type Dispose = () => void;
+export const createDisposeEffect = (effect: () => Dispose | undefined) =>
+  createEffect((prevDispose: undefined | Dispose) => {
+    if (prevDispose) {
+      prevDispose();
+    }
+
+    return effect();
+  });

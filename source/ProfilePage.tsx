@@ -1,4 +1,16 @@
-import { type ParentProps, createComputed, createMemo, createSignal, For, Match, Show, Switch, type ComponentProps, createUniqueId, createEffect } from "solid-js";
+import {
+  type ParentProps,
+  createComputed,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  Show,
+  Switch,
+  type ComponentProps,
+  createUniqueId,
+  createEffect,
+} from "solid-js";
 import {
   addPrefix,
   clsxString,
@@ -9,83 +21,58 @@ import {
   type StyleProps,
 } from "./common";
 import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from "@tanstack/solid-query";
-import { fetchMethodCurry, keysFactory } from "./api/api";
+import { fetchMethod, fetchMethodCurry, keysFactory } from "./api/api";
 import type model from "./api/model";
 import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
 import { A, useParams } from "@solidjs/router";
-import { TonConnectUI, type EventDispatcher } from '@tonconnect/ui'
+import { useTonConnectUI, useTonWallet } from "./TonConnect";
 
-const getCleanUrl = () => {
-  const url = new URL(window.location.href)
-  url.hash = ''
-  for (const [key] of url.searchParams) {
-    url.searchParams.delete(key)
-  }
-
-  return url
-}
-
-const random32Byte = () => {
-  const buf = Buffer.alloc(4)
-  crypto.getRandomValues(buf)
-
-  return buf.toString('hex')
-}
-
-const TonButton = (props: ComponentProps<'button'>) => {
-  const _id = createUniqueId()
+const TonButton = (props: ComponentProps<"button">) => {
+  const _id = createUniqueId();
   const id = () => props.id ?? _id;
-  const consoleEventDispatcher: EventDispatcher<any> = {
-    dispatchEvent: ((name, data) => {
-      console.log(`Event: ${name}, details: `, data)
-    }) as EventDispatcher<any>['dispatchEvent'],
-    addEventListener: () => Promise.resolve(() => { })
-  }
 
-  createEffect<() => void>((prevDispose) => {
-    if (prevDispose) {
-      prevDispose()
+  const [tonConnectUI, setUiOptions] = useTonConnectUI();
+  const wallet = useTonWallet();
+
+  createEffect(() => {
+    if (!tonConnectUI()) {
+      return;
     }
-    const url = getCleanUrl()
-    url.pathname = 'tonconnect-manifest.json'
-
-
-    const tonConnectUI = new TonConnectUI({
-      manifestUrl: url.toString(),
+    setUiOptions({
       buttonRootId: id(),
-      eventDispatcher: consoleEventDispatcher
-    })
+    });
+  });
 
+  const meQuery = createQuery(() => ({
+    queryKey: ["me"],
+    queryFn: () => fetchMethod("/me", undefined),
+  }));
 
-    tonConnectUI.setConnectRequestParameters({
-      state: 'ready',
-      value: {
-        tonProof: random32Byte()
-      }
-    })
+  const unlink = () => Promise.all([fetchMethod("/me/unlinkWallet", undefined), tonConnectUI()?.disconnect()]);
+  const unlinkMutation = createMutation(() => ({
+    mutationFn: unlink,
+    onSuccess: () => {
+      meQuery.refetch;
+    },
+  }));
 
-    const dispose = tonConnectUI.onStatusChange(e => {
-      console.log('tonConnectUI', e)
-
-      if (e?.connectItems?.tonProof && 'proof' in e.connectItems.tonProof) {
-        console.log('tonProof', e.connectItems.tonProof)
-
-        fetchMethodCurry('/me/linkWallet')({
-          address: e.account.address,
-          network: e.account.chain as "-239" | "-1",
-          proof: {
-            ...e.connectItems.tonProof.proof,
-            state_init: e.account.walletStateInit
-          }
-        })
-      }
-    })
-
-    return () => dispose()
-  })
-
-  return <button {...props} id={id()}>{props.children}</button>
-}
+  return (
+    <div class="flex flex-col px-4">
+      <button {...props} id={id()}>
+        {props.children}
+      </button>
+      {JSON.stringify(meQuery.data)}
+      <Show when={wallet()?.account.address}>
+        <button onClick={() => unlinkMutation.mutate()} type="button">
+          Unlink wallet
+          <Show when={unlinkMutation.isPending}>
+            <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
+          </Show>
+        </button>
+      </Show>
+    </div>
+  );
+};
 
 const UserStatus = (props: ParentProps<StyleProps>) => (
   <article class={clsxString("relative flex flex-col", props.class ?? "")}>
@@ -302,17 +289,15 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
 
   const getBoardId = () => removePrefix(props.idWithoutPrefix);
 
-  const notesQuery = createInfiniteQuery(() =>
-  ({
+  const notesQuery = createInfiniteQuery(() => ({
     ...infiniteQueryOptionsWithoutDataTag(
       // @ts-expect-error
       keysFactory.notes({
         board: getBoardId(),
       }),
     ),
-    reconcile: 'id'
-  }),
-  );
+    reconcile: "id",
+  }));
   const notes = createMemo(() => (notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : []));
 
   const queryClient = useQueryClient();

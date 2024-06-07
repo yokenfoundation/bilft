@@ -19,10 +19,10 @@ type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
   "/board/createNote": RequestResponse<{ board: string; content: string }, model.Note>;
   "/board/getNotes": RequestResponse<{ board: string; next?: string }, model.NoteArray>;
+  "/me": RequestResponse<void, { wallet: undefined | {} }>;
   "/me/linkWallet": RequestResponse<
     {
       address: string;
-      network: "-239" | "-1";
       proof: {
         timestamp: number;
         domain: {
@@ -31,8 +31,9 @@ type RequestResponseMappings = {
         };
         signature: string;
         payload: string;
-        state_init: string;
       };
+      stateInit: string;
+      publicKey: string;
     },
     {
       wallet: {
@@ -43,6 +44,7 @@ type RequestResponseMappings = {
       };
     }
   >;
+  "/me/unlinkWallet": RequestResponse<void, void>;
 };
 type AvailableRequests = keyof RequestResponseMappings;
 

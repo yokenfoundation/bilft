@@ -15,6 +15,18 @@ import {
 import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
 import { getProfileId, getSelfUserId, isEqualIds, removePrefix } from "./common";
+import { TonConnectProvider } from "./TonConnect";
+
+const getTonconnectManifestUrl = () => {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  for (const [key] of url.searchParams) {
+    url.searchParams.delete(key);
+  }
+
+  url.pathname = "tonconnect-manifest.json";
+  return url.toString();
+};
 
 bindThemeParamsCSSVars(initThemeParams());
 const App = () => {
@@ -47,9 +59,11 @@ const App = () => {
 
   return (
     <AppQueryClientProvider>
-      <Router>
-        <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
-      </Router>
+      <TonConnectProvider manifestUrl={getTonconnectManifestUrl()}>
+        <Router>
+          <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
+        </Router>
+      </TonConnectProvider>
     </AppQueryClientProvider>
   );
 };
