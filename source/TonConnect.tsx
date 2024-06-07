@@ -1,7 +1,6 @@
-import type { TonConnectUI, TonConnectOptions, WalletsModal, TonConnectUiOptions } from "@tonconnect/ui";
+import type { TonConnectUI, WalletsModal, TonConnectUiOptions } from "@tonconnect/ui";
 import {
   createContext,
-  createEffect,
   createMemo,
   createResource,
   createSignal,
@@ -10,15 +9,7 @@ import {
   type ParentProps,
   type Setter,
 } from "solid-js";
-import { fetchMethodCurry } from "./api/api";
 import { createDisposeEffect } from "./common";
-
-const random32Byte = () => {
-  const buf = Buffer.alloc(32);
-  crypto.getRandomValues(buf);
-
-  return buf.toString("hex");
-};
 
 const TonContext = createContext<null | (() => TonConnectUI | null)>(null);
 
@@ -110,35 +101,6 @@ export const TonConnectProvider = (
 
     return ui;
   });
-
-  // application specific logic
-  createEffect(() => {
-    tonConnectUI()?.setConnectRequestParameters({
-      state: "ready",
-      value: { tonProof: random32Byte() },
-    });
-  });
-
-  createDisposeEffect(() =>
-    tonConnectUI()?.onStatusChange((e) => {
-      if (e?.connectItems?.tonProof && "proof" in e.connectItems.tonProof && e.account.publicKey) {
-        console.log("get wallet connection proof");
-
-        fetchMethodCurry("/me/linkWallet")({
-          address: e.account.address,
-          proof: e.connectItems.tonProof.proof,
-          publicKey: e.account.publicKey,
-          stateInit: e.account.walletStateInit,
-        })
-          .then((info) => {
-            console.log("connected", info);
-          })
-          .catch((err) => {
-            console.error("connection failed", err);
-          });
-      }
-    }),
-  );
 
   return <TonContext.Provider value={tonConnectUI}>{props.children}</TonContext.Provider>;
 };

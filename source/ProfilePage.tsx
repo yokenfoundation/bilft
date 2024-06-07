@@ -14,6 +14,7 @@ import {
 import {
   addPrefix,
   clsxString,
+  createDisposeEffect,
   getSelfUserId,
   isEqualIds,
   removePrefix,
@@ -26,6 +27,54 @@ import type model from "./api/model";
 import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
 import { A, useParams } from "@solidjs/router";
 import { useTonConnectUI, useTonWallet } from "./TonConnect";
+import { queryClient } from "./queryClient";
+
+const random32Byte = () => {
+  const buf = Buffer.alloc(32);
+  crypto.getRandomValues(buf);
+
+  return buf.toString("hex");
+};
+
+export const SetupTonWallet = () => {
+  const [tonConnectUI] = useTonConnectUI();
+  // application specific logic
+  createEffect(() => {
+    tonConnectUI()?.setConnectRequestParameters({
+      state: "ready",
+      value: { tonProof: random32Byte() },
+    });
+  });
+
+  const queryClient = useQueryClient();
+  const linkWalletMutation = createMutation(() => ({
+    mutationFn: fetchMethodCurry("/me/linkWallet"),
+    onSuccess: (data) => {
+      console.log("connected", data);
+      queryClient.setQueryData(keysFactory.me().queryKey, data);
+    },
+    onError: (err) => {
+      console.error("connection failed", err);
+    },
+  }));
+
+  createDisposeEffect(() =>
+    tonConnectUI()?.onStatusChange((e) => {
+      if (e?.connectItems?.tonProof && "proof" in e.connectItems.tonProof && e.account.publicKey) {
+        console.log("get wallet connection proof");
+
+        linkWalletMutation.mutate({
+          address: e.account.address,
+          proof: e.connectItems.tonProof.proof,
+          publicKey: e.account.publicKey,
+          stateInit: e.account.walletStateInit,
+        });
+      }
+    }),
+  );
+
+  return null;
+};
 
 const TonButton = (props: ComponentProps<"button">) => {
   const _id = createUniqueId();
@@ -43,16 +92,24 @@ const TonButton = (props: ComponentProps<"button">) => {
     });
   });
 
-  const meQuery = createQuery(() => ({
-    queryKey: ["me"],
-    queryFn: () => fetchMethod("/me", undefined),
-  }));
+  const meQuery = createQuery(keysFactory.me);
 
   const unlink = () => Promise.all([fetchMethod("/me/unlinkWallet", undefined), tonConnectUI()?.disconnect()]);
   const unlinkMutation = createMutation(() => ({
     mutationFn: unlink,
     onSuccess: () => {
-      meQuery.refetch;
+      // need to fix error with type
+      queryClient.setQueryData(keysFactory.me().queryKey, (v) =>
+        v
+          ? {
+              ...v,
+              wallet: undefined,
+            }
+          : v,
+      );
+    },
+    onSettled: () => {
+      meQuery.refetch();
     },
   }));
 

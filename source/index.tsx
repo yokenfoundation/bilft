@@ -2,7 +2,7 @@ import "@fontsource-variable/inter";
 import "./index.css";
 import { render } from "solid-js/web";
 
-import { ProfilePage } from "./ProfilePage";
+import { ProfilePage, SetupTonWallet } from "./ProfilePage";
 import { AppQueryClientProvider } from "./queryClient";
 import { Route } from "@solidjs/router";
 import {
@@ -60,6 +60,7 @@ const App = () => {
   return (
     <AppQueryClientProvider>
       <TonConnectProvider manifestUrl={getTonconnectManifestUrl()}>
+        <SetupTonWallet />
         <Router>
           <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
         </Router>

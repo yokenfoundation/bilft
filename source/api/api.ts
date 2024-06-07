@@ -19,7 +19,17 @@ type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
   "/board/createNote": RequestResponse<{ board: string; content: string }, model.Note>;
   "/board/getNotes": RequestResponse<{ board: string; next?: string }, model.NoteArray>;
-  "/me": RequestResponse<void, { wallet: undefined | {} }>;
+  "/me": RequestResponse<
+    void,
+    {
+      wallet?: {
+        address: string;
+        tokens: {
+          yo: string;
+        };
+      };
+    }
+  >;
   "/me/linkWallet": RequestResponse<
     {
       address: string;
@@ -84,4 +94,8 @@ export const keysFactory = {
         }),
       getNextPageParam: ({ next }) => next,
     }),
+  me: queryOptions(() => ({
+    queryFn: () => fetchMethod("/me", undefined),
+    queryKey: ["me"],
+  })),
 };
