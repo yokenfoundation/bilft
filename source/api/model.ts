@@ -41,25 +41,34 @@ namespace model {
       yo: string;
     };
   };
-  
+
   export type WalletConfirmation = {
-      address: string;
-      proof: {
-        timestamp: number;
-        domain: {
-          value: string;
-          lengthBytes: number;
-        };
-        signature: string;
-        payload: string;
+    address: string;
+    proof: {
+      timestamp: number;
+      domain: {
+        value: string;
+        lengthBytes: number;
       };
-      stateInit: string;
-      publicKey: string;
-    }
+      signature: string;
+      payload: string;
+    };
+    stateInit: string;
+    publicKey: string;
+  };
 
   export type Error = {
     error: {
       message: string;
+    };
+  };
+
+  export type WalletError = {
+    error: {
+      reason: "insufficient_balance" | "no_connected_wallet";
+      payload: {
+        requiredBalance: string;
+      };
     };
   };
 }

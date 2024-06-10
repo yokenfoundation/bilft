@@ -16,7 +16,10 @@ type RequestResponse<Request, Response> = {
 
 type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
-  "/board/createNote": RequestResponse<{ board: string; content: string }, model.Note>;
+  "/board/createNote": RequestResponse<
+    { board: string; content: string; type: "private" | "public" | "public-anonymous" },
+    model.Note
+  >;
   "/board/getNotes": RequestResponse<{ board: string; next?: string }, model.NoteArray>;
   "/me": RequestResponse<
     void,
@@ -47,6 +50,26 @@ export const fetchMethod = async <T extends AvailableRequests>(
       authentication_data: authData,
     })
     .then((it) => it.data);
+
+export const getWalletError = (response: { status: number; data: unknown }): model.WalletError | null => {
+  if (response.status !== 403) {
+    return null;
+  }
+  if (!!response.data && typeof response.data !== "object") {
+    return null;
+  }
+  const data: {
+    error?: {
+      reason?: string;
+    };
+  } = response.data as Record<string, unknown>;
+
+  if (data?.error?.reason !== "no_connected_wallet" && data.error?.reason !== "insufficient_balance") {
+    return null;
+  }
+
+  return data as model.WalletError;
+};
 
 export const fetchMethodCurry =
   <T extends AvailableRequests>(path: T) =>

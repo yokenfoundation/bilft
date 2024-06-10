@@ -22,11 +22,12 @@ import {
   type StyleProps,
 } from "./common";
 import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from "@tanstack/solid-query";
-import { fetchMethod, fetchMethodCurry, keysFactory } from "./api/api";
+import { fetchMethod, fetchMethodCurry, getWalletError, keysFactory } from "./api/api";
 import type model from "./api/model";
 import { A, useParams } from "@solidjs/router";
 import { useTonConnectUI, useTonWallet } from "./TonConnect";
 import { queryClient } from "./queryClient";
+import { AxiosError } from "axios";
 
 const random32Byte = () => {
   const buf = Buffer.alloc(32);
@@ -153,7 +154,14 @@ const LoadingSvg = (props: StyleProps) => (
 );
 
 function PostInput(
-  props: StyleProps & { value: string; onChange: (s: string) => void; onSubmit: () => void; isLoading: boolean },
+  props: StyleProps & {
+    value: string;
+    onChange: (s: string) => void;
+    onSubmit: () => void;
+    isLoading: boolean;
+    isAnonymous: boolean;
+    setIsAnonymous: (status: boolean) => void;
+  },
 ) {
   let inputRef!: HTMLTextAreaElement | undefined;
   const isEmpty = () => props.value.length === 0;
@@ -171,7 +179,7 @@ function PostInput(
         props.onSubmit();
       }}
       class={clsxString(
-        "p-4 bg-section-bg border-[#AAA] border mx-4 border-opacity-15 rounded-[20px] flex flex-row gap-[10px] items-center overflow-hidden cursor-text justify-between",
+        "p-4 bg-section-bg border-[#AAA] border mx-4 border-opacity-15 rounded-[20px] flex flex-col gap-[10px] items-stretch overflow-hidden cursor-text justify-between",
         props.class ?? "",
       )}
     >
@@ -197,29 +205,65 @@ function PostInput(
           class="bg-transparent w-full placeholder:select-none overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
         />
       </div>
-      <button
-        disabled={isEmpty() || props.isLoading}
-        class="relative mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
-      >
-        <Show
-          fallback={
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div class="bg-gray-300/50 w-full h-[1px]" />
+      <div class="flex flex-row justify-between items-center p-[2px]">
+        <label
+          class="group select-none flex flex-row items-center cursor-pointer"
+          data-checked={props.isAnonymous ? "" : undefined}
+        >
+          <input
+            onChange={(e) => {
+              props.setIsAnonymous(e.target.checked);
+            }}
+            checked={props.isAnonymous}
+            type="checkbox"
+            class="invisible w-0 h-0"
+          />
+          <div class="w-5 isolate flex items-center justify-center aspect-square border-accent border-[1.5px] rounded-md relative">
+            <div class="absolute -z-10 inset-0 bg-accent group-[[data-checked]]:opacity-100 opacity-0 transition-opacity" />
+            <svg
+              class="text-white transition-opacity opacity-0 group-[[data-checked]]:opacity-100"
+              width="10"
+              height="8"
+              viewBox="0 0 10 8"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <path
-                fill-rule="evenodd"
-                clip-rule="evenodd"
-                d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
-                class="transition-[fill]"
+                d="M0.75 3.99992L3.58 6.82992L9.25 1.16992"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               />
             </svg>
-          }
-          when={props.isLoading}
-        >
-          <div role="status">
-            <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
-            <span class="sr-only">Loading...</span>
           </div>
-        </Show>
-      </button>
+          <div class="ml-2 font-inter text-subtitle text-[16px] leading-[22px]">Send anonymously</div>
+        </label>
+        <button
+          disabled={isEmpty() || props.isLoading}
+          class="relative ml-auto mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
+        >
+          <Show
+            fallback={
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
+                  class="transition-[fill]"
+                />
+              </svg>
+            }
+            when={props.isLoading}
+          >
+            <div role="status">
+              <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
+              <span class="sr-only">Loading...</span>
+            </div>
+          </Show>
+        </button>
+      </div>
     </form>
   );
 }
@@ -340,6 +384,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
   const queryClient = useQueryClient();
 
   const [inputValue, setInputValue] = createSignal("");
+  const [isAnonymous, setIsAnonymous] = createSignal(false);
   const addNoteMutation = createMutation(() => ({
     mutationFn: fetchMethodCurry("/board/createNote"),
     onSettled: () => {
@@ -368,7 +413,19 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
           };
         },
       );
+
       setInputValue("");
+      setIsAnonymous(false);
+    },
+    onError: (error) => {
+      if (!(error instanceof AxiosError) || !error.response) {
+        return;
+      }
+      const walletError = getWalletError(error.response);
+      if (!walletError) {
+        return;
+      }
+      console.error("failed to upload note", walletError);
     },
   }));
 
@@ -393,6 +450,8 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
         {boardQuery.isLoading ? "Loading..." : boardQuery.data?.profile?.description}
       </UserStatus>
       <PostInput
+        isAnonymous={isAnonymous()}
+        setIsAnonymous={setIsAnonymous}
         class="mt-6"
         isLoading={addNoteMutation.isPending}
         onSubmit={() => {
@@ -403,6 +462,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
           addNoteMutation.mutate({
             board: getBoardId(),
             content: inputValue(),
+            type: isAnonymous() ? "public-anonymous" : "public",
           });
         }}
         value={inputValue()}
