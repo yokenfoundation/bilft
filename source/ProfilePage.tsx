@@ -24,7 +24,6 @@ import {
 import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from "@tanstack/solid-query";
 import { fetchMethod, fetchMethodCurry, keysFactory } from "./api/api";
 import type model from "./api/model";
-import { infiniteQueryOptionsWithoutDataTag } from "./queryClientTypes";
 import { A, useParams } from "@solidjs/router";
 import { useTonConnectUI, useTonWallet } from "./TonConnect";
 import { queryClient } from "./queryClient";
@@ -51,7 +50,7 @@ export const SetupTonWallet = () => {
     mutationFn: fetchMethodCurry("/me/linkWallet"),
     onSuccess: (data) => {
       console.log("connected", data);
-      queryClient.setQueryData(keysFactory.me().queryKey, data);
+      queryClient.setQueryData(keysFactory.me.queryKey, data);
     },
     onError: (err) => {
       console.error("connection failed", err);
@@ -92,14 +91,13 @@ const TonButton = (props: ComponentProps<"button">) => {
     });
   });
 
-  const meQuery = createQuery(keysFactory.me);
+  const meQuery = createQuery(() => keysFactory.me);
 
   const unlink = () => Promise.all([fetchMethod("/me/unlinkWallet", undefined), tonConnectUI()?.disconnect()]);
   const unlinkMutation = createMutation(() => ({
     mutationFn: unlink,
     onSuccess: () => {
-      // need to fix error with type
-      queryClient.setQueryData(keysFactory.me().queryKey, (v) =>
+      queryClient.setQueryData(keysFactory.me.queryKey, (v) =>
         v
           ? {
               ...v,
@@ -113,22 +111,7 @@ const TonButton = (props: ComponentProps<"button">) => {
     },
   }));
 
-  return (
-    <div class="flex flex-col px-4">
-      <button {...props} id={id()}>
-        {props.children}
-      </button>
-      {JSON.stringify(meQuery.data)}
-      <Show when={wallet()?.account.address}>
-        <button onClick={() => unlinkMutation.mutate()} type="button">
-          Unlink wallet
-          <Show when={unlinkMutation.isPending}>
-            <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
-          </Show>
-        </button>
-      </Show>
-    </div>
-  );
+  return null;
 };
 
 const UserStatus = (props: ParentProps<StyleProps>) => (
@@ -341,18 +324,15 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
   const boardQuery = createQuery(() =>
     keysFactory.board({
       value: addPrefix(props.idWithoutPrefix),
-    })(),
+    }),
   );
 
   const getBoardId = () => removePrefix(props.idWithoutPrefix);
 
   const notesQuery = createInfiniteQuery(() => ({
-    ...infiniteQueryOptionsWithoutDataTag(
-      // @ts-expect-error
-      keysFactory.notes({
-        board: getBoardId(),
-      }),
-    ),
+    ...keysFactory.notes({
+      board: getBoardId(),
+    }),
     reconcile: "id",
   }));
   const notes = createMemo(() => (notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : []));

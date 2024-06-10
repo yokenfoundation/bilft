@@ -35,6 +35,28 @@ namespace model {
     notes: NoteArray;
   };
 
+  export type Wallet = {
+    address: string;
+    tokens: {
+      yo: string;
+    };
+  };
+  
+  export type WalletConfirmation = {
+      address: string;
+      proof: {
+        timestamp: number;
+        domain: {
+          value: string;
+          lengthBytes: number;
+        };
+        signature: string;
+        payload: string;
+      };
+      stateInit: string;
+      publicKey: string;
+    }
+
   export type Error = {
     error: {
       message: string;

@@ -1,8 +1,7 @@
 import model from "./model";
 import axios from "axios";
 
-import { queryOptions } from "@tanstack/solid-query";
-import { infiniteQueryOptions } from "@/queryClientTypes";
+import { queryOptions, infiniteQueryOptions } from "@tanstack/solid-query";
 import { authData } from "@/common";
 
 const instance = axios.create({
@@ -22,36 +21,13 @@ type RequestResponseMappings = {
   "/me": RequestResponse<
     void,
     {
-      wallet?: {
-        address: string;
-        tokens: {
-          yo: string;
-        };
-      };
+      wallet?: model.Wallet;
     }
   >;
   "/me/linkWallet": RequestResponse<
+    model.WalletConfirmation,
     {
-      address: string;
-      proof: {
-        timestamp: number;
-        domain: {
-          value: string;
-          lengthBytes: number;
-        };
-        signature: string;
-        payload: string;
-      };
-      stateInit: string;
-      publicKey: string;
-    },
-    {
-      wallet: {
-        address: string;
-        tokens: {
-          yo: string;
-        };
-      };
+      wallet: model.Wallet;
     }
   >;
   "/me/unlinkWallet": RequestResponse<void, void>;
@@ -79,10 +55,10 @@ export const fetchMethodCurry =
 
 export const keysFactory = {
   board: (params: PickRequest<"/board/resolve">) =>
-    queryOptions(() => ({
+    queryOptions({
       queryFn: () => fetchMethod("/board/resolve", params),
       queryKey: ["board", params],
-    })),
+    }),
   notes: ({ board }: Omit<PickRequest<"/board/getNotes">, "next">) =>
     infiniteQueryOptions({
       queryKey: ["notes", board],
@@ -94,8 +70,8 @@ export const keysFactory = {
         }),
       getNextPageParam: ({ next }) => next,
     }),
-  me: queryOptions(() => ({
+  me: queryOptions({
     queryFn: () => fetchMethod("/me", undefined),
     queryKey: ["me"],
-  })),
+  }),
 };
