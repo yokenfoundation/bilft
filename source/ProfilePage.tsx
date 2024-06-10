@@ -29,7 +29,7 @@ import { useTonConnectUI, useTonWallet } from "./TonConnect";
 import { queryClient } from "./queryClient";
 import { AxiosError } from "axios";
 import { error } from "console";
-import { YoCoinIcon } from "./icons";
+import { ArrowPointDownIcon, ArrowPointUp, ArrowUpIcon, CloseIcon, YoCoinIcon } from "./icons";
 
 const random32Byte = () => {
   const buf = Buffer.alloc(32);
@@ -251,19 +251,7 @@ function PostInput(
           disabled={isEmpty() || props.isLoading}
           class="relative ml-auto mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
         >
-          <Show
-            fallback={
-              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                  d="M14 28C21.732 28 28 21.732 28 14C28 6.26801 21.732 0 14 0C6.26801 0 0 6.26801 0 14C0 21.732 6.26801 28 14 28ZM14.6498 7.37729C14.48 7.20016 14.2453 7.1 14 7.1C13.7547 7.1 13.52 7.20016 13.3502 7.37729L8.35021 12.5947C8.00629 12.9535 8.01842 13.5233 8.37729 13.8672C8.73615 14.2111 9.30587 14.199 9.64979 13.8401L13.1 10.2399V20C13.1 20.4971 13.5029 20.9 14 20.9C14.4971 20.9 14.9 20.4971 14.9 20V10.2399L18.3502 13.8401C18.6941 14.199 19.2638 14.2111 19.6227 13.8672C19.9816 13.5233 19.9937 12.9535 19.6498 12.5947L14.6498 7.37729Z"
-                  class="transition-[fill]"
-                />
-              </svg>
-            }
-            when={props.isLoading}
-          >
+          <Show fallback={<ArrowUpIcon />} when={props.isLoading}>
             <div role="status">
               <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
               <span class="sr-only">Loading...</span>
@@ -460,24 +448,12 @@ const PostCreator = (props: { boardId: string }) => {
               <section class="pt-5 pb-3 relative flex items-center justify-end">
                 <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
                   UQAt...BTUQ
-                  <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                      d="M2.15557 2.2952C2.40812 1.96688 2.879 1.90546 3.20732 2.15801L6.00004 4.30625L8.79275 2.15801C9.12107 1.90546 9.59196 1.96688 9.84451 2.2952C10.0971 2.62351 10.0356 3.0944 9.70732 3.34695L6.45732 5.84695C6.18773 6.05432 5.81234 6.05432 5.54275 5.84695L2.29275 3.34695C1.96444 3.0944 1.90302 2.62351 2.15557 2.2952Z"
-                      fill="currentColor"
-                    />
-                  </svg>
+                  <ArrowPointDownIcon />
                 </div>
 
                 <button type="button">
                   <span class="sr-only">Close</span>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M12 0C18.6274 0 24 5.37258 24 12C24 18.6274 18.6274 24 12 24C5.37258 24 0 18.6274 0 12C0 5.37258 5.37258 0 12 0ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM7.79289 7.79289C8.18342 7.40237 8.81658 7.40237 9.20711 7.79289L12 10.585L14.7929 7.79289C15.1534 7.43241 15.7206 7.40468 16.1129 7.7097L16.2071 7.79289C16.5976 8.18342 16.5976 8.81658 16.2071 9.20711L13.415 12L16.2071 14.7929C16.5676 15.1534 16.5953 15.7206 16.2903 16.1129L16.2071 16.2071C15.8166 16.5976 15.1834 16.5976 14.7929 16.2071L12 13.415L9.20711 16.2071C8.84662 16.5676 8.27939 16.5953 7.8871 16.2903L7.79289 16.2071C7.40237 15.8166 7.40237 15.1834 7.79289 14.7929L10.585 12L7.79289 9.20711C7.43241 8.84662 7.40468 8.27939 7.7097 7.8871L7.79289 7.79289Z"
-                      fill="#FF375F"
-                    />
-                  </svg>
+                  <CloseIcon class="text-accent" />
                 </button>
               </section>
 
@@ -600,15 +576,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
                 class="font-inter flex items-center gap-x-2 mt-6 text-[17px] active:opacity-70 transition-opacity leading-[22px] mx-auto text-accent"
               >
                 Back to top
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M3 10L8 5L13 10"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
+                <ArrowPointUp />
               </button>
             ) : null}
           </Match>
