@@ -16,6 +16,16 @@ export default {
         subtitle: "var(--tg-theme-subtitle-text-color,#AAA)",
         accent: "var(--tg-theme-accent-text-color,#FF375F)",
       },
+      keyframes: {
+        "modal-appear": {
+          "0%": {
+            transform: "translateY(100%)",
+          },
+          "100%": {
+            transform: "translateY(0%)",
+          },
+        },
+      },
     },
   },
   plugins: [],

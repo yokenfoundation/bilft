@@ -10,11 +10,10 @@ import {
   initNavigator,
   type BrowserNavigatorAnyHistoryItem,
   bindThemeParamsCSSVars,
-  initThemeParams,
 } from "@tma.js/sdk";
 import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
-import { getProfileId, getSelfUserId, isEqualIds, removePrefix } from "./common";
+import { getProfileId, getSelfUserId, isEqualIds, removePrefix, themeParams } from "./common";
 import { TonConnectProvider } from "./TonConnect";
 
 const getTonconnectManifestUrl = () => {
@@ -28,7 +27,8 @@ const getTonconnectManifestUrl = () => {
   return url.toString();
 };
 
-bindThemeParamsCSSVars(initThemeParams());
+bindThemeParamsCSSVars(themeParams);
+
 const App = () => {
   const isOpenedSelfProfile = isEqualIds(getSelfUserId(), getProfileId());
   const selfEntry: BrowserNavigatorAnyHistoryItem<any> = {

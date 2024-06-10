@@ -28,6 +28,8 @@ import { A, useParams } from "@solidjs/router";
 import { useTonConnectUI, useTonWallet } from "./TonConnect";
 import { queryClient } from "./queryClient";
 import { AxiosError } from "axios";
+import { error } from "console";
+import { YoCoinIcon } from "./icons";
 
 const random32Byte = () => {
   const buf = Buffer.alloc(32);
@@ -153,6 +155,28 @@ const LoadingSvg = (props: StyleProps) => (
   </svg>
 );
 
+const CheckboxUI = () => (
+  <div class="w-5 isolate flex items-center justify-center aspect-square border-accent border-[1.5px] rounded-md relative">
+    <div class="absolute -z-10 inset-0 bg-accent group-[[data-checked]]:opacity-100 opacity-0 transition-opacity" />
+    <svg
+      class="text-white transition-opacity opacity-0 group-[[data-checked]]:opacity-100"
+      width="10"
+      height="8"
+      viewBox="0 0 10 8"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M0.75 3.99992L3.58 6.82992L9.25 1.16992"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  </div>
+);
+
 function PostInput(
   props: StyleProps & {
     value: string;
@@ -219,25 +243,8 @@ function PostInput(
             type="checkbox"
             class="invisible w-0 h-0"
           />
-          <div class="w-5 isolate flex items-center justify-center aspect-square border-accent border-[1.5px] rounded-md relative">
-            <div class="absolute -z-10 inset-0 bg-accent group-[[data-checked]]:opacity-100 opacity-0 transition-opacity" />
-            <svg
-              class="text-white transition-opacity opacity-0 group-[[data-checked]]:opacity-100"
-              width="10"
-              height="8"
-              viewBox="0 0 10 8"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M0.75 3.99992L3.58 6.82992L9.25 1.16992"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
+          <CheckboxUI />
+
           <div class="ml-2 font-inter text-subtitle text-[16px] leading-[22px]">Send anonymously</div>
         </label>
         <button
@@ -364,36 +371,25 @@ const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string | null
   );
 };
 
-const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) => {
-  const boardQuery = createQuery(() =>
-    keysFactory.board({
-      value: addPrefix(props.idWithoutPrefix),
-    }),
-  );
-
-  const getBoardId = () => removePrefix(props.idWithoutPrefix);
-
-  const notesQuery = createInfiniteQuery(() => ({
-    ...keysFactory.notes({
-      board: getBoardId(),
-    }),
-    reconcile: "id",
-  }));
-  const notes = createMemo(() => (notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : []));
-
+const PostCreator = (props: { boardId: string }) => {
   const queryClient = useQueryClient();
 
   const [inputValue, setInputValue] = createSignal("");
   const [isAnonymous, setIsAnonymous] = createSignal(false);
+  const [walletError, setWalletError] = createSignal<model.WalletError | null>(null);
   const addNoteMutation = createMutation(() => ({
     mutationFn: fetchMethodCurry("/board/createNote"),
     onSettled: () => {
-      notesQuery.refetch();
+      queryClient.prefetchQuery(
+        keysFactory.notes({
+          board: props.boardId,
+        }),
+      );
     },
     onSuccess: (note: model.Note) => {
       queryClient.setQueryData(
         keysFactory.notes({
-          board: getBoardId(),
+          board: props.boardId,
         }).queryKey,
         (data) => {
           if (!data || data.pages.length < 1) {
@@ -425,9 +421,105 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
       if (!walletError) {
         return;
       }
-      console.error("failed to upload note", walletError);
+      setWalletError(walletError);
     },
   }));
+
+  return (
+    <>
+      <PostInput
+        isAnonymous={isAnonymous()}
+        setIsAnonymous={setIsAnonymous}
+        class="mt-6"
+        isLoading={addNoteMutation.isPending}
+        onSubmit={() => {
+          if (!inputValue) {
+            return;
+          }
+
+          addNoteMutation.mutate({
+            board: props.boardId,
+            content: inputValue(),
+            type: isAnonymous() ? "public-anonymous" : "public",
+          });
+        }}
+        value={inputValue()}
+        onChange={setInputValue}
+      />
+      <dialog
+        ref={(e) => {
+          setTimeout(() => {
+            e?.showModal();
+          });
+        }}
+        class="open:backdrop:opacity-100 backdrop:opacity-0 w-screen mx-0 bg-bg max-w-[9999999px] mb-0 open:animate-[modal-appear_300ms_ease-in] px-4 outline-none backdrop:bg-black/30 rounded-t-[30px]"
+      >
+        <Show when={true}>
+          {(error) => (
+            <div class="min-h-[432px]">
+              <section class="pt-5 pb-3 relative flex items-center justify-end">
+                <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
+                  UQAt...BTUQ
+                  <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      fill-rule="evenodd"
+                      clip-rule="evenodd"
+                      d="M2.15557 2.2952C2.40812 1.96688 2.879 1.90546 3.20732 2.15801L6.00004 4.30625L8.79275 2.15801C9.12107 1.90546 9.59196 1.96688 9.84451 2.2952C10.0971 2.62351 10.0356 3.0944 9.70732 3.34695L6.45732 5.84695C6.18773 6.05432 5.81234 6.05432 5.54275 5.84695L2.29275 3.34695C1.96444 3.0944 1.90302 2.62351 2.15557 2.2952Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
+
+                <button type="button">
+                  <span class="sr-only">Close</span>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M12 0C18.6274 0 24 5.37258 24 12C24 18.6274 18.6274 24 12 24C5.37258 24 0 18.6274 0 12C0 5.37258 5.37258 0 12 0ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM7.79289 7.79289C8.18342 7.40237 8.81658 7.40237 9.20711 7.79289L12 10.585L14.7929 7.79289C15.1534 7.43241 15.7206 7.40468 16.1129 7.7097L16.2071 7.79289C16.5976 8.18342 16.5976 8.81658 16.2071 9.20711L13.415 12L16.2071 14.7929C16.5676 15.1534 16.5953 15.7206 16.2903 16.1129L16.2071 16.2071C15.8166 16.5976 15.1834 16.5976 14.7929 16.2071L12 13.415L9.20711 16.2071C8.84662 16.5676 8.27939 16.5953 7.8871 16.2903L7.79289 16.2071C7.40237 15.8166 7.40237 15.1834 7.79289 14.7929L10.585 12L7.79289 9.20711C7.43241 8.84662 7.40468 8.27939 7.7097 7.8871L7.79289 7.79289Z"
+                      fill="#FF375F"
+                    />
+                  </svg>
+                </button>
+              </section>
+
+              <section class="mt-5 flex flex-col items-center gap-6">
+                <YoCoinIcon />
+
+                <p
+                  data-checked=""
+                  class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
+                >
+                  <CheckboxUI />
+                  Send anonymously
+                </p>
+                <p class="text-hint font-inter text-[17px] leading-[22px] text-center">
+                  To ask a question, you need <span class="text-text">1000 Yo Tokens.</span>
+                  <br /> Please top up your balance.
+                </p>
+              </section>
+            </div>
+          )}
+        </Show>
+      </dialog>
+    </>
+  );
+};
+
+const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) => {
+  const boardQuery = createQuery(() =>
+    keysFactory.board({
+      value: addPrefix(props.idWithoutPrefix),
+    }),
+  );
+
+  const getBoardId = () => removePrefix(props.idWithoutPrefix);
+
+  const notesQuery = createInfiniteQuery(() => ({
+    ...keysFactory.notes({
+      board: getBoardId(),
+    }),
+    reconcile: "id",
+  }));
+  const notes = createMemo(() => (notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : []));
 
   return (
     <main class="pb-6 pt-4 flex flex-col text-text min-h-screen">
@@ -449,25 +541,8 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
       <UserStatus class="mt-2 mx-4 text-text">
         {boardQuery.isLoading ? "Loading..." : boardQuery.data?.profile?.description}
       </UserStatus>
-      <PostInput
-        isAnonymous={isAnonymous()}
-        setIsAnonymous={setIsAnonymous}
-        class="mt-6"
-        isLoading={addNoteMutation.isPending}
-        onSubmit={() => {
-          if (!inputValue) {
-            return;
-          }
 
-          addNoteMutation.mutate({
-            board: getBoardId(),
-            content: inputValue(),
-            type: isAnonymous() ? "public-anonymous" : "public",
-          });
-        }}
-        value={inputValue()}
-        onChange={setInputValue}
-      />
+      <PostCreator boardId={getBoardId()} />
 
       <section class="flex mt-6 flex-col flex-1">
         <Switch>
