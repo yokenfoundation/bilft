@@ -28,7 +28,7 @@ import {
 import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from "@tanstack/solid-query";
 import { fetchMethod, fetchMethodCurry, getWalletError, keysFactory } from "./api/api";
 import type model from "./api/model";
-import { A, useParams } from "@solidjs/router";
+import { A, useParams, useSearchParams } from "@solidjs/router";
 import { useTonConnectUI, useTonWallet } from "./TonConnect";
 import { queryClient } from "./queryClient";
 import { AxiosError } from "axios";
@@ -386,6 +386,9 @@ const BottomDialog = <T,>(
   const whenOrPrev = createMemo<T | undefined | null | false>((prev) =>
     modalStatus() === "shown" && props.when ? props.when : prev,
   );
+  const [params, setParams] = useSearchParams<{
+    modals?: string;
+  }>();
 
   createDisposeEffect(() => {
     asserkOk(dialogRef);
@@ -400,6 +403,33 @@ const BottomDialog = <T,>(
     document.body.style.overflowY = "clip";
     dialogRef.style.setProperty("--opacity", "1");
     dialogRef.style.setProperty("--translateY", "0%");
+    const id = Math.random().toString(16).slice(2);
+    untrack(() => {
+      setParams(
+        {
+          ...params,
+          modals: params.modals ? `${params.modals}.${id}` : id,
+        },
+        {
+          replace: false,
+        },
+      );
+    });
+
+    let isSet = false;
+    createEffect(() => {
+      // expensive operation, but not a big deal
+      const includesId = params.modals?.split(".").includes(id);
+      if (includesId) {
+        isSet = true;
+        return;
+      }
+      if (!isSet) {
+        return;
+      }
+      props.onClose();
+      isSet = false;
+    });
 
     return () => {
       const dismiss = () => {
