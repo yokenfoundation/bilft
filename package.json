@@ -14,9 +14,8 @@
     "@fontsource-variable/inter": "^5.0.18",
     "@solidjs/router": "^0.13.3",
     "@tanstack/solid-query": "5.42.0",
-    "@tma.js/sdk": "^2.0.0",
-    "@tma.js/sdk-solid": "^2.1.0",
-    "@tma.js/solid-router-integration": "^2.0.0",
+    "@tma.js/sdk": "^2.5.0",
+    "@tma.js/solid-router-integration": "^5.0.2",
     "@tonconnect/ui": "^2.0.3",
     "axios": "^1.6.8",
     "solid-js": "^1.8.17",
@@ -57,8 +56,7 @@
     ]
   },
   "pnpm": {
-    "patchedDependencies": {
-      "@tma.js/sdk@2.0.0": "patches/@tma.js__sdk@2.0.0.patch"
-    }
+    "@tma.js/sdk@2.0.0": "patches/@tma.js__sdk@2.0.0.patch",
+    "patchedDependencies": {}
   }
 }

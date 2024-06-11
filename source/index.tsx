@@ -5,12 +5,7 @@ import { render } from "solid-js/web";
 import { ProfilePage, SetupTonWallet } from "./ProfilePage";
 import { AppQueryClientProvider } from "./queryClient";
 import { Route } from "@solidjs/router";
-import {
-  postEvent,
-  initNavigator,
-  type BrowserNavigatorAnyHistoryItem,
-  bindThemeParamsCSSVars,
-} from "@tma.js/sdk";
+import { postEvent, initNavigator, type BrowserNavigatorAnyHistoryItem, bindThemeParamsCSSVars } from "@tma.js/sdk";
 import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
 import { getProfileId, getSelfUserId, isEqualIds, removePrefix, themeParams } from "./common";
@@ -34,9 +29,7 @@ const App = () => {
   const selfEntry: BrowserNavigatorAnyHistoryItem<any> = {
     pathname: `/board/${removePrefix(getSelfUserId())}`,
   };
-  const navigator = initNavigator("app-navigator-state", {
-    hashMode: "default",
-  });
+  const navigator = initNavigator("app-navigator-state");
 
   if (isOpenedSelfProfile) {
     navigator.replace(selfEntry);
