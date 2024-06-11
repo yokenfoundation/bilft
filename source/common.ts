@@ -1,4 +1,4 @@
-import { initThemeParams, retrieveLaunchParams } from "@tma.js/sdk";
+import { initThemeParams, retrieveLaunchParams, initUtils } from "@tma.js/sdk";
 import { createEffect } from "solid-js";
 
 export type StyleProps = {
@@ -7,7 +7,8 @@ export type StyleProps = {
 
 const launchParams = retrieveLaunchParams();
 export const authData = launchParams.initDataRaw;
-export const themeParams = initThemeParams()
+export const themeParams = initThemeParams();
+export const utils = initUtils();
 
 export const clsxString = (...items: string[]) => {
   let res = "";

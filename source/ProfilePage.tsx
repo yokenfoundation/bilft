@@ -12,6 +12,7 @@ import {
   createEffect,
   type JSX,
   untrack,
+  type Accessor,
 } from "solid-js";
 import {
   addPrefix,
@@ -20,6 +21,7 @@ import {
   getSelfUserId,
   isEqualIds,
   removePrefix,
+  utils,
   type DateString,
   type StyleProps,
 } from "./common";
@@ -366,19 +368,28 @@ function asserkOk(value: unknown): asserts value {
   }
 }
 
-const BottomDialog = (props: ParentProps<StyleProps & { show: boolean; onClose(): void }>) => {
+const buttonClass =
+  "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-center rounded-xl self-stretch";
+
+const BottomDialog = <T,>(
+  props: StyleProps & {
+    when: T | undefined | null | false;
+    onClose(): void;
+    children: (accessor: Accessor<NoInfer<T>>) => JSX.Element;
+  },
+) => {
   let dialogRef!: HTMLDialogElement | undefined;
 
-  const [modalStatus, setModalStatus] = createSignal<"hidden" | "shown" | "closing">(props.show ? "shown" : "hidden");
+  const [modalStatus, setModalStatus] = createSignal<"hidden" | "shown" | "closing">(props.when ? "shown" : "hidden");
+  const show = createMemo(() => !!props.when);
 
-  const lastChildren = createMemo<JSX.Element>(
-    (prev) => (modalStatus() === "shown" ? props.children : prev),
-    props.children,
+  const whenOrPrev = createMemo<T | undefined | null | false>((prev) =>
+    modalStatus() === "shown" && props.when ? props.when : prev,
   );
 
   createDisposeEffect(() => {
     asserkOk(dialogRef);
-    if (!props.show || untrack(() => modalStatus() === "closing")) {
+    if (!show() || untrack(() => modalStatus() === "closing")) {
       modalStatus();
       return;
     }
@@ -417,9 +428,9 @@ const BottomDialog = (props: ParentProps<StyleProps & { show: boolean; onClose()
         props.onClose();
       }}
       ref={dialogRef}
-      class="backdrop:opacity-[var(--opacity,0)] transition-transform backdrop:transition-opacity duration-300 translate-y-[var(--translateY,100%)] w-screen mx-0 bg-bg max-w-[9999999px] mb-0 px-4 outline-none backdrop:bg-black/30 rounded-t-[30px]"
+      class="backdrop:opacity-[var(--opacity,0)] transition-transform backdrop:transition-opacity duration-300 translate-y-[var(--translateY,100%)] w-screen mx-0 bg-secondary-bg max-w-[9999999px] mb-0 px-4 outline-none backdrop:bg-black/30 rounded-t-[30px]"
     >
-      <Show when={modalStatus() !== "hidden"}>{lastChildren()}</Show>
+      <Show when={modalStatus() !== "hidden" && whenOrPrev()}>{(data) => props.children(data)}</Show>
     </dialog>
   );
 };
@@ -482,7 +493,6 @@ const PostCreator = (props: { boardId: string }) => {
       setWalletError(walletError);
     },
   }));
-  const requiredBalance = () => walletError()?.error.payload.requiredBalance;
   const meQuery = createQuery(() => keysFactory.me);
 
   return (
@@ -510,49 +520,89 @@ const PostCreator = (props: { boardId: string }) => {
         onClose={() => {
           setWalletError(null);
         }}
-        show={!!walletError()}
+        when={walletError()}
       >
-        <div class="min-h-[432px]">
-          <section class="pt-5 pb-3 relative flex items-center justify-end">
-            {/* [TODO] add loading state */}
-            <Show when={meQuery.data?.wallet}>
-              {(wallet) => (
-                <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
-                  {/* convert on backend to userfriendly */}
-                  {trimAddress(wallet().address)}
-                  <ArrowPointDownIcon />
-                </div>
-              )}
-            </Show>
+        {(walletError) => (
+          <div class="min-h-[432px]">
+            <section class="pt-5 pb-3 relative flex items-center justify-end">
+              {/* [TODO] add loading state */}
+              <Show when={meQuery.data?.wallet}>
+                {(wallet) => (
+                  <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
+                    {/* convert on backend to userfriendly */}
+                    {trimAddress(wallet().address)}
+                    <ArrowPointDownIcon />
+                  </div>
+                )}
+              </Show>
 
-            <button
-              onClick={() => {
-                setWalletError(null);
-              }}
-              type="button"
-            >
-              <span class="sr-only">Close</span>
-              <CloseIcon class="text-accent" />
-            </button>
-          </section>
+              <button
+                onClick={() => {
+                  setWalletError(null);
+                }}
+                type="button"
+              >
+                <span class="sr-only">Close</span>
+                <CloseIcon class="text-accent" />
+              </button>
+            </section>
 
-          <section class="mt-5 flex flex-col items-center gap-6">
-            <YoCoinIcon />
+            <section class="mt-5 flex flex-col items-center">
+              <YoCoinIcon class="mb-6" />
 
-            <p
-              data-checked=""
-              class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
-            >
-              <CheckboxUI />
-              Send anonymously
-            </p>
-            <p class="text-hint font-inter text-[17px] leading-[22px] text-center">
-              To ask a question, you need{" "}
-              <span class="text-text">{yokenAmountToFloat(requiredBalance() ?? "0").toFixed(0)} Yo Tokens.</span>
-              <br /> Please top up your balance.
-            </p>
-          </section>
-        </div>
+              <p
+                data-checked=""
+                class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
+              >
+                <CheckboxUI />
+                Send anonymously
+              </p>
+              <p class="text-hint font-inter text-[17px] leading-[22px] text-center mt-2">
+                To ask a question, you need{" "}
+                <span class="text-text">
+                  {yokenAmountToFloat(walletError().error.payload.requiredBalance).toFixed(0)} Yo Tokens.
+                </span>
+                <Show when={walletError().error.reason === "insufficient_balance"}>
+                  <br /> Please top up your balance.
+                </Show>
+              </p>
+
+              <Switch>
+                <Match when={walletError().error.reason === "insufficient_balance"}>
+                  <article class="flex flex-row gap-1 mt-5">
+                    <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
+                      <div class="text-subtitle font-inter text-[12px] leading-4">Your balance</div>
+                      <div class="text-[#30D158] font-inter text-[13px] leading-[18px]">
+                        {yokenAmountToFloat(meQuery.data?.wallet?.tokens.yo ?? "0").toFixed(0)} Yo
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
+                      <div class="text-subtitle font-inter text-[12px] leading-4">lacks</div>
+                      <div class="text-text font-inter text-[13px] leading-[18px]">
+                        {Math.ceil(
+                          yokenAmountToFloat(walletError().error.payload.requiredBalance) -
+                            yokenAmountToFloat(meQuery.data?.wallet?.tokens.yo ?? "0"),
+                        )}{" "}
+                        Yo
+                      </div>
+                    </div>
+                  </article>
+
+                  <button
+                    type="button"
+                    class={clsxString("mt-7 mb-4", buttonClass)}
+                    onClick={() => {
+                      utils.openLink("https://app.dedust.io/swap/TON/YO");
+                    }}
+                  >
+                    Add
+                  </button>
+                </Match>
+              </Switch>
+            </section>
+          </div>
+        )}
       </BottomDialog>
     </>
   );
@@ -577,7 +627,6 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
 
   return (
     <main class="pb-6 pt-4 flex flex-col text-text min-h-screen">
-      <TonButton />
       <section class="sticky bg-secondary-bg z-10 top-0 px-6 py-2 flex flex-row gap-5 items-center">
         <AvatarIcon class="w-12" isLoading={boardQuery.isLoading} url={boardQuery.data?.profile?.photo ?? null} />
         <div class="flex flex-col flex-1">
