@@ -91,7 +91,7 @@ export const keysFactory = {
           board,
           next: pageParam,
         }),
-      getNextPageParam: ({ next }) => next,
+      getNextPageParam: (response) => response?.next,
     }),
   me: queryOptions({
     queryFn: () => fetchMethod("/me", undefined),
