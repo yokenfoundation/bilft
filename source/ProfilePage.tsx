@@ -11,6 +11,7 @@ import {
   createUniqueId,
   createEffect,
   type JSX,
+  untrack,
 } from "solid-js";
 import {
   addPrefix,
@@ -370,16 +371,15 @@ const BottomDialog = (props: ParentProps<StyleProps & { show: boolean; onClose()
 
   const [modalStatus, setModalStatus] = createSignal<"hidden" | "shown" | "closing">(props.show ? "shown" : "hidden");
 
-  const lastChildren = createMemo<JSX.Element>((prev) => (modalStatus() === "shown" ? props.children : prev));
-  createEffect(() => {
-    console.log(props.show);
-  });
-
-  const isClosing = createMemo(() => modalStatus() === "closing");
+  const lastChildren = createMemo<JSX.Element>(
+    (prev) => (modalStatus() === "shown" ? props.children : prev),
+    props.children,
+  );
 
   createDisposeEffect(() => {
     asserkOk(dialogRef);
-    if (!props.show || isClosing()) {
+    if (!props.show || untrack(() => modalStatus() === "closing")) {
+      modalStatus();
       return;
     }
 
