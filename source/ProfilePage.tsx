@@ -365,39 +365,44 @@ function asserkOk(value: unknown): asserts value {
   }
 }
 
-const BottomDialog = (props: ParentProps<StyleProps & { show: boolean }>) => {
+const BottomDialog = (props: ParentProps<StyleProps & { show: boolean; onClose(): void }>) => {
   let dialogRef!: HTMLDialogElement | undefined;
 
-  const [modalStatus, setModalStatus] = createSignal<"hidden" | "shown" | "closing">(props.show ? "shown" : "closing");
+  const [modalStatus, setModalStatus] = createSignal<"hidden" | "shown" | "closing">(props.show ? "shown" : "hidden");
 
   const lastChildren = createMemo<JSX.Element>((prev) => (modalStatus() === "shown" ? props.children : prev));
+  createEffect(() => {
+    console.log(props.show);
+  });
+
+  const isClosing = createMemo(() => modalStatus() === "closing");
 
   createDisposeEffect(() => {
     asserkOk(dialogRef);
-    if (!props.show || modalStatus() === "closing") {
+    if (!props.show || isClosing()) {
       return;
     }
 
     const curOverflowY = document.body.style.overflowY;
+    setModalStatus("shown");
     dialogRef?.showModal();
     document.body.style.overflowY = "clip";
-    setModalStatus("shown");
     dialogRef.style.setProperty("--opacity", "1");
     dialogRef.style.setProperty("--translateY", "0%");
 
     return () => {
-      dialogRef.addEventListener(
-        "transitionend",
-        () => {
-          document.body.style.overflowY = curOverflowY;
-          setModalStatus("hidden");
+      const dismiss = () => {
+        document.body.style.overflowY = curOverflowY;
+        setModalStatus("hidden");
 
-          dialogRef?.close();
-        },
-        {
-          once: true,
-        },
-      );
+        dialogRef?.close();
+      };
+      if (!dialogRef.open) {
+        return dismiss();
+      }
+      dialogRef.addEventListener("transitionend", dismiss, {
+        once: true,
+      });
 
       dialogRef.style.setProperty("--opacity", "0");
       dialogRef.style.setProperty("--translateY", "100%");
@@ -407,7 +412,10 @@ const BottomDialog = (props: ParentProps<StyleProps & { show: boolean }>) => {
 
   return (
     <dialog
-      data-closing={modalStatus() === "closing" ? "" : undefined}
+      onCancel={(e) => {
+        e.preventDefault();
+        props.onClose();
+      }}
       ref={dialogRef}
       class="backdrop:opacity-[var(--opacity,0)] transition-transform backdrop:transition-opacity duration-300 translate-y-[var(--translateY,100%)] w-screen mx-0 bg-bg max-w-[9999999px] mb-0 px-4 outline-none backdrop:bg-black/30 rounded-t-[30px]"
     >
@@ -415,6 +423,11 @@ const BottomDialog = (props: ParentProps<StyleProps & { show: boolean }>) => {
     </dialog>
   );
 };
+
+const YOKEN_DECIMALS = 9;
+
+const yokenAmountToFloat = (amount: string) => Number(amount) / 10 ** YOKEN_DECIMALS;
+const trimAddress = (address: string) => `${address.slice(0, 4)}...${address.slice(-4)}`;
 
 const PostCreator = (props: { boardId: string }) => {
   const queryClient = useQueryClient();
@@ -469,8 +482,8 @@ const PostCreator = (props: { boardId: string }) => {
       setWalletError(walletError);
     },
   }));
-
-  const [show, setShow] = createSignal(true);
+  const requiredBalance = () => walletError()?.error.payload.requiredBalance;
+  const meQuery = createQuery(() => keysFactory.me);
 
   return (
     <>
@@ -493,17 +506,28 @@ const PostCreator = (props: { boardId: string }) => {
         value={inputValue()}
         onChange={setInputValue}
       />
-      <BottomDialog show={show()}>
+      <BottomDialog
+        onClose={() => {
+          setWalletError(null);
+        }}
+        show={!!walletError()}
+      >
         <div class="min-h-[432px]">
           <section class="pt-5 pb-3 relative flex items-center justify-end">
-            <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
-              UQAt...BTUQ
-              <ArrowPointDownIcon />
-            </div>
+            {/* [TODO] add loading state */}
+            <Show when={meQuery.data?.wallet}>
+              {(wallet) => (
+                <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
+                  {/* convert on backend to userfriendly */}
+                  {trimAddress(wallet().address)}
+                  <ArrowPointDownIcon />
+                </div>
+              )}
+            </Show>
 
             <button
               onClick={() => {
-                setShow(false);
+                setWalletError(null);
               }}
               type="button"
             >
@@ -523,7 +547,8 @@ const PostCreator = (props: { boardId: string }) => {
               Send anonymously
             </p>
             <p class="text-hint font-inter text-[17px] leading-[22px] text-center">
-              To ask a question, you need <span class="text-text">1000 Yo Tokens.</span>
+              To ask a question, you need{" "}
+              <span class="text-text">{yokenAmountToFloat(requiredBalance() ?? "0").toFixed(0)} Yo Tokens.</span>
               <br /> Please top up your balance.
             </p>
           </section>

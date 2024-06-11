@@ -55,14 +55,14 @@ export const getWalletError = (response: { status: number; data: unknown }): mod
   if (response.status !== 403) {
     return null;
   }
-  if (!!response.data && typeof response.data !== "object") {
+  if (!response.data || typeof response.data !== "object") {
     return null;
   }
   const data: {
     error?: {
       reason?: string;
     };
-  } = response.data as Record<string, unknown>;
+  } = response.data;
 
   if (data?.error?.reason !== "no_connected_wallet" && data.error?.reason !== "insufficient_balance") {
     return null;
