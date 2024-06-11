@@ -10,6 +10,7 @@ import {
   type ComponentProps,
   createUniqueId,
   createEffect,
+  type JSX,
 } from "solid-js";
 import {
   addPrefix,
@@ -28,7 +29,6 @@ import { A, useParams } from "@solidjs/router";
 import { useTonConnectUI, useTonWallet } from "./TonConnect";
 import { queryClient } from "./queryClient";
 import { AxiosError } from "axios";
-import { error } from "console";
 import { ArrowPointDownIcon, ArrowPointUp, ArrowUpIcon, CloseIcon, YoCoinIcon } from "./icons";
 
 const random32Byte = () => {
@@ -359,6 +359,63 @@ const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string | null
   );
 };
 
+function asserkOk(value: unknown): asserts value {
+  if (!value) {
+    throw new Error("Value is not ok");
+  }
+}
+
+const BottomDialog = (props: ParentProps<StyleProps & { show: boolean }>) => {
+  let dialogRef!: HTMLDialogElement | undefined;
+
+  const [modalStatus, setModalStatus] = createSignal<"hidden" | "shown" | "closing">(props.show ? "shown" : "closing");
+
+  const lastChildren = createMemo<JSX.Element>((prev) => (modalStatus() === "shown" ? props.children : prev));
+
+  createDisposeEffect(() => {
+    asserkOk(dialogRef);
+    if (!props.show || modalStatus() === "closing") {
+      return;
+    }
+
+    const curOverflowY = document.body.style.overflowY;
+    dialogRef?.showModal();
+    document.body.style.overflowY = "clip";
+    setModalStatus("shown");
+    dialogRef.style.setProperty("--opacity", "1");
+    dialogRef.style.setProperty("--translateY", "0%");
+
+    return () => {
+      dialogRef.addEventListener(
+        "transitionend",
+        () => {
+          document.body.style.overflowY = curOverflowY;
+          setModalStatus("hidden");
+
+          dialogRef?.close();
+        },
+        {
+          once: true,
+        },
+      );
+
+      dialogRef.style.setProperty("--opacity", "0");
+      dialogRef.style.setProperty("--translateY", "100%");
+      setModalStatus("closing");
+    };
+  });
+
+  return (
+    <dialog
+      data-closing={modalStatus() === "closing" ? "" : undefined}
+      ref={dialogRef}
+      class="backdrop:opacity-[var(--opacity,0)] transition-transform backdrop:transition-opacity duration-300 translate-y-[var(--translateY,100%)] w-screen mx-0 bg-bg max-w-[9999999px] mb-0 px-4 outline-none backdrop:bg-black/30 rounded-t-[30px]"
+    >
+      <Show when={modalStatus() !== "hidden"}>{lastChildren()}</Show>
+    </dialog>
+  );
+};
+
 const PostCreator = (props: { boardId: string }) => {
   const queryClient = useQueryClient();
 
@@ -413,6 +470,8 @@ const PostCreator = (props: { boardId: string }) => {
     },
   }));
 
+  const [show, setShow] = createSignal(true);
+
   return (
     <>
       <PostInput
@@ -434,48 +493,42 @@ const PostCreator = (props: { boardId: string }) => {
         value={inputValue()}
         onChange={setInputValue}
       />
-      <dialog
-        ref={(e) => {
-          setTimeout(() => {
-            e?.showModal();
-          });
-        }}
-        class="open:backdrop:opacity-100 backdrop:opacity-0 w-screen mx-0 bg-bg max-w-[9999999px] mb-0 open:animate-[modal-appear_300ms_ease-in] px-4 outline-none backdrop:bg-black/30 rounded-t-[30px]"
-      >
-        <Show when={true}>
-          {(error) => (
-            <div class="min-h-[432px]">
-              <section class="pt-5 pb-3 relative flex items-center justify-end">
-                <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
-                  UQAt...BTUQ
-                  <ArrowPointDownIcon />
-                </div>
-
-                <button type="button">
-                  <span class="sr-only">Close</span>
-                  <CloseIcon class="text-accent" />
-                </button>
-              </section>
-
-              <section class="mt-5 flex flex-col items-center gap-6">
-                <YoCoinIcon />
-
-                <p
-                  data-checked=""
-                  class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
-                >
-                  <CheckboxUI />
-                  Send anonymously
-                </p>
-                <p class="text-hint font-inter text-[17px] leading-[22px] text-center">
-                  To ask a question, you need <span class="text-text">1000 Yo Tokens.</span>
-                  <br /> Please top up your balance.
-                </p>
-              </section>
+      <BottomDialog show={show()}>
+        <div class="min-h-[432px]">
+          <section class="pt-5 pb-3 relative flex items-center justify-end">
+            <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
+              UQAt...BTUQ
+              <ArrowPointDownIcon />
             </div>
-          )}
-        </Show>
-      </dialog>
+
+            <button
+              onClick={() => {
+                setShow(false);
+              }}
+              type="button"
+            >
+              <span class="sr-only">Close</span>
+              <CloseIcon class="text-accent" />
+            </button>
+          </section>
+
+          <section class="mt-5 flex flex-col items-center gap-6">
+            <YoCoinIcon />
+
+            <p
+              data-checked=""
+              class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
+            >
+              <CheckboxUI />
+              Send anonymously
+            </p>
+            <p class="text-hint font-inter text-[17px] leading-[22px] text-center">
+              To ask a question, you need <span class="text-text">1000 Yo Tokens.</span>
+              <br /> Please top up your balance.
+            </p>
+          </section>
+        </div>
+      </BottomDialog>
     </>
   );
 };
