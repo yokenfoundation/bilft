@@ -10,9 +10,8 @@ import {
   type ComponentProps,
   createUniqueId,
   createEffect,
-  type JSX,
-  untrack,
-  type Accessor,
+  batch,
+  onCleanup,
 } from "solid-js";
 import {
   addPrefix,
@@ -28,11 +27,12 @@ import {
 import { createInfiniteQuery, createMutation, createQuery, useQueryClient } from "@tanstack/solid-query";
 import { fetchMethod, fetchMethodCurry, getWalletError, keysFactory } from "./api/api";
 import type model from "./api/model";
-import { A, useParams, useSearchParams } from "@solidjs/router";
+import { A, useParams } from "@solidjs/router";
 import { useTonConnectUI, useTonWallet } from "./TonConnect";
 import { queryClient } from "./queryClient";
 import { AxiosError } from "axios";
 import { ArrowPointDownIcon, ArrowPointUp, ArrowUpIcon, CloseIcon, YoCoinIcon } from "./icons";
+import { BottomDialog } from "./BottomDialog";
 
 const random32Byte = () => {
   const buf = Buffer.alloc(32);
@@ -40,6 +40,8 @@ const random32Byte = () => {
 
   return buf.toString("hex");
 };
+
+const walletLinkedTarget = new EventTarget();
 
 export const SetupTonWallet = () => {
   const [tonConnectUI] = useTonConnectUI();
@@ -55,11 +57,8 @@ export const SetupTonWallet = () => {
   const linkWalletMutation = createMutation(() => ({
     mutationFn: fetchMethodCurry("/me/linkWallet"),
     onSuccess: (data) => {
-      console.log("connected", data);
+      walletLinkedTarget.dispatchEvent(new Event("wallet-linked"));
       queryClient.setQueryData(keysFactory.me.queryKey, data);
-    },
-    onError: (err) => {
-      console.error("connection failed", err);
     },
   }));
 
@@ -362,108 +361,8 @@ const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string | null
   );
 };
 
-function asserkOk(value: unknown): asserts value {
-  if (!value) {
-    throw new Error("Value is not ok");
-  }
-}
-
 const buttonClass =
   "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-center rounded-xl self-stretch";
-
-const BottomDialog = <T,>(
-  props: StyleProps & {
-    when: T | undefined | null | false;
-    onClose(): void;
-    children: (accessor: Accessor<NoInfer<T>>) => JSX.Element;
-  },
-) => {
-  let dialogRef!: HTMLDialogElement | undefined;
-
-  const [modalStatus, setModalStatus] = createSignal<"hidden" | "shown" | "closing">(props.when ? "shown" : "hidden");
-  const show = createMemo(() => !!props.when);
-
-  const whenOrPrev = createMemo<T | undefined | null | false>((prev) =>
-    modalStatus() === "shown" && props.when ? props.when : prev,
-  );
-  const [params, setParams] = useSearchParams<{
-    modals?: string;
-  }>();
-
-  createDisposeEffect(() => {
-    asserkOk(dialogRef);
-    if (!show() || untrack(() => modalStatus() === "closing")) {
-      modalStatus();
-      return;
-    }
-
-    const curOverflowY = document.body.style.overflowY;
-    setModalStatus("shown");
-    dialogRef?.showModal();
-    document.body.style.overflowY = "clip";
-    dialogRef.style.setProperty("--opacity", "1");
-    dialogRef.style.setProperty("--translateY", "0%");
-    const id = Math.random().toString(16).slice(2);
-    untrack(() => {
-      setParams(
-        {
-          ...params,
-          modals: params.modals ? `${params.modals}.${id}` : id,
-        },
-        {
-          replace: false,
-        },
-      );
-    });
-
-    let isSet = false;
-    createEffect(() => {
-      // expensive operation, but not a big deal
-      const includesId = params.modals?.split(".").includes(id);
-      if (includesId) {
-        isSet = true;
-        return;
-      }
-      if (!isSet) {
-        return;
-      }
-      props.onClose();
-      isSet = false;
-    });
-
-    return () => {
-      const dismiss = () => {
-        document.body.style.overflowY = curOverflowY;
-        setModalStatus("hidden");
-
-        dialogRef?.close();
-      };
-      if (!dialogRef.open) {
-        return dismiss();
-      }
-      dialogRef.addEventListener("transitionend", dismiss, {
-        once: true,
-      });
-
-      dialogRef.style.setProperty("--opacity", "0");
-      dialogRef.style.setProperty("--translateY", "100%");
-      setModalStatus("closing");
-    };
-  });
-
-  return (
-    <dialog
-      onCancel={(e) => {
-        e.preventDefault();
-        props.onClose();
-      }}
-      ref={dialogRef}
-      class="backdrop:opacity-[var(--opacity,0)] transition-transform backdrop:transition-opacity duration-300 translate-y-[var(--translateY,100%)] w-screen mx-0 bg-secondary-bg max-w-[9999999px] mb-0 px-4 outline-none backdrop:bg-black/30 rounded-t-[30px]"
-    >
-      <Show when={modalStatus() !== "hidden" && whenOrPrev()}>{(data) => props.children(data)}</Show>
-    </dialog>
-  );
-};
 
 const YOKEN_DECIMALS = 9;
 
@@ -479,11 +378,11 @@ const PostCreator = (props: { boardId: string }) => {
   const addNoteMutation = createMutation(() => ({
     mutationFn: fetchMethodCurry("/board/createNote"),
     onSettled: () => {
-      queryClient.prefetchQuery(
-        keysFactory.notes({
+      queryClient.invalidateQueries({
+        queryKey: keysFactory.notes({
           board: props.boardId,
-        }),
-      );
+        }).queryKey,
+      });
     },
     onSuccess: (note: model.Note) => {
       queryClient.setQueryData(
@@ -491,7 +390,7 @@ const PostCreator = (props: { boardId: string }) => {
           board: props.boardId,
         }).queryKey,
         (data) => {
-          if (!data || data.pages.length < 1) {
+          if (!data || !data.pages || data.pages.length < 1) {
             return data;
           }
           const firstPage = data.pages[0];
@@ -509,8 +408,11 @@ const PostCreator = (props: { boardId: string }) => {
         },
       );
 
-      setInputValue("");
-      setIsAnonymous(false);
+      batch(() => {
+        setInputValue("");
+        setIsAnonymous(false);
+        setWalletError(null);
+      });
     },
     onError: (error) => {
       if (!(error instanceof AxiosError) || !error.response) {
@@ -520,10 +422,37 @@ const PostCreator = (props: { boardId: string }) => {
       if (!walletError) {
         return;
       }
-      setWalletError(walletError);
+      try {
+        setWalletError(walletError);
+      } catch (err) {
+        console.error(err);
+        throw err;
+      }
     },
   }));
   const meQuery = createQuery(() => keysFactory.me);
+  const [tonConnectUI] = useTonConnectUI();
+
+  const abortController = new AbortController();
+  walletLinkedTarget.addEventListener(
+    "wallet-linked",
+    () => {
+      if (walletError()) {
+        addNoteMutation.mutate({
+          board: props.boardId,
+          content: inputValue(),
+          type: isAnonymous() ? "public-anonymous" : "public",
+        });
+      }
+    },
+    {
+      signal: abortController.signal,
+    },
+  );
+
+  onCleanup(() => {
+    abortController.abort();
+  });
 
   return (
     <>
@@ -558,7 +487,7 @@ const PostCreator = (props: { boardId: string }) => {
               {/* [TODO] add loading state */}
               <Show when={meQuery.data?.wallet}>
                 {(wallet) => (
-                  <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-secondary-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
+                  <div class="absolute flex gap-1 flex-row font-inter text-[12px] left-1/2 translate-x-[-50%] bg-bg text-text items-center px-[10px] py-[6px] rounded-[10px]">
                     {/* convert on backend to userfriendly */}
                     {trimAddress(wallet().address)}
                     <ArrowPointDownIcon />
@@ -626,7 +555,31 @@ const PostCreator = (props: { boardId: string }) => {
                       utils.openLink("https://app.dedust.io/swap/TON/YO");
                     }}
                   >
-                    Add
+                    Top up
+                  </button>
+                </Match>
+                <Match when={walletError().error.reason === "no_connected_wallet"}>
+                  <button
+                    type="button"
+                    class={clsxString(buttonClass, "mt-7")}
+                    onClick={() => {
+                      tonConnectUI()?.modal.open();
+                    }}
+                  >
+                    Connect Wallet
+                  </button>
+                  <button
+                    type="button"
+                    class="pt-[14px] mb-2 active:opacity-70 transition-opacity text-center text-accent font-inter text-[17px] leading-[22px]"
+                    onClick={() => {
+                      addNoteMutation.mutate({
+                        board: props.boardId,
+                        type: "public",
+                        content: inputValue(),
+                      });
+                    }}
+                  >
+                    Ask not anonymously
                   </button>
                 </Match>
               </Switch>

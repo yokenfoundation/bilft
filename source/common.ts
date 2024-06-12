@@ -73,8 +73,8 @@ export type Opaque<T, TTag> = T & {
 export type DateString = Opaque<string, "DateString">;
 
 export type Dispose = () => void;
-export const createDisposeEffect = (effect: () => Dispose | undefined) =>
-  createEffect((prevDispose: undefined | Dispose) => {
+export const createDisposeEffect = (effect: () => Dispose | void) =>
+  createEffect((prevDispose: void | Dispose) => {
     if (prevDispose) {
       prevDispose();
     }

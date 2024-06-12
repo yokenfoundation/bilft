@@ -13,7 +13,7 @@
   "dependencies": {
     "@fontsource-variable/inter": "^5.0.18",
     "@solidjs/router": "^0.13.3",
-    "@tanstack/solid-query": "5.42.0",
+    "@tanstack/solid-query": "5.44.0",
     "@tma.js/sdk": "^2.5.0",
     "@tma.js/solid-router-integration": "^5.0.2",
     "@tonconnect/ui": "^2.0.3",
