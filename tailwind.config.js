@@ -13,6 +13,7 @@ export default {
         "section-bg": "var(--tg-theme-section-bg-color,#0F0F0F)",
         hint: "var(--tg-theme-hint-color,#AAA)",
         text: "var(--tg-theme-text-color,#FFF)",
+        "destructive-text": "var(--tg-theme-destructive-text-color,#FF4530)",
         subtitle: "var(--tg-theme-subtitle-text-color,#AAA)",
         accent: "var(--tg-theme-accent-text-color,#FF375F)",
       },
