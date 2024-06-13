@@ -1,4 +1,6 @@
 // @ts-check
+import animated from "tailwindcss-animated";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./source/**/*.{js,ts,jsx,tsx}"],
@@ -17,7 +19,20 @@ export default {
         subtitle: "var(--tg-theme-subtitle-text-color,#AAA)",
         accent: "var(--tg-theme-accent-text-color,#FF375F)",
       },
+      keyframes: {
+        "fade-out": {
+          "0%": {
+            opacity: "1",
+          },
+          "100%": {
+            opacity: "0",
+          },
+        },
+      },
+      animation: {
+        'fade-out': 'fade-out var(--tw-animate-duration, 1s) var(--tw-animate-easing, ease) var(--tw-animate-delay, 0s) var(--tw-animate-iteration, 1) var(--tw-animate-fill, both)',
+      }
     },
   },
-  plugins: [],
+  plugins: [animated],
 };

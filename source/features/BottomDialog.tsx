@@ -1,23 +1,8 @@
 import { useNavigate, useSearchParams } from "@solidjs/router";
-import {
-  type Accessor,
-  type JSX,
-  createSignal,
-  createMemo,
-  untrack,
-  createEffect,
-  Show,
-  startTransition,
-} from "solid-js";
+import { type Accessor, type JSX, createSignal, createMemo, untrack, createEffect, Show, onCleanup } from "solid-js";
 import { type StyleProps } from "../common";
 import { Portal } from "solid-js/web";
-import { createDisposeEffect } from "@/lib/solid";
-
-function asserkOk(value: unknown): asserts value {
-  if (!value) {
-    throw new Error("Value is not ok");
-  }
-}
+import { createDisposeEffect, createTransitionPresence, useCleanup } from "@/lib/solid";
 
 const useModalNavigation = ({ onClose, show: _show }: { onClose(): void; show: Accessor<boolean> }) => {
   const show = createMemo(_show);
@@ -78,93 +63,73 @@ export const BottomDialog = <T,>(
     children: (accessor: Accessor<NoInfer<T>>) => JSX.Element;
   },
 ) => {
-  let dialogRef!: HTMLDivElement | undefined;
+  const [dialogRef, setDialogRef] = createSignal<HTMLDialogElement>();
 
-  const [modalStatus, setModalStatus] = createSignal<"hidden" | "shown" | "closing">(props.when ? "shown" : "hidden");
-  const show = createMemo(() => !!props.when);
-
-  const whenOrPrev = createMemo<T | undefined | null | false>((prev) =>
-    modalStatus() === "hidden" ? null : modalStatus() === "shown" && props.when ? props.when : prev,
-  );
-
+  const transitionPresence = createTransitionPresence({
+    when: () => props.when,
+    element: dialogRef,
+  });
   useModalNavigation({
     onClose: () => props.onClose(),
-    show: () => modalStatus() !== "hidden",
+    show: () => transitionPresence.status() !== "hidden",
   });
 
-  createDisposeEffect(() => {
-    if (!show() || untrack(() => modalStatus() === "closing")) {
-      modalStatus();
+  createEffect(() => {
+    if (!transitionPresence.present()) {
       return;
     }
 
     const curOverflowY = document.body.style.overflowY;
     document.body.style.overflowY = "clip";
+    onCleanup(() => {
+      document.body.style.overflowY = curOverflowY;
+    });
 
-    const animationPromise = startTransition(() => setModalStatus("shown"))
-      .then(raf)
-      .then(() => {
-        requestAnimationFrame(() => {
-          asserkOk(dialogRef);
-          dialogRef.style.setProperty("--opacity", "1");
-          dialogRef.style.setProperty("--translateY", "0%");
-        });
-      });
-
-    const abortController = new AbortController();
-    window.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key === "Escape") {
-          props.onClose();
-        }
-      },
-      {
-        signal: abortController.signal,
-      },
-    );
-
-    return () => {
-      abortController.abort();
-      const dismiss = () => {
-        document.body.style.overflowY = curOverflowY;
-        setModalStatus("hidden");
-      };
-
-      if (!dialogRef) {
-        dismiss();
-        return;
-      }
-
-      animationPromise.then(() => {
-        dialogRef.children.item(1)!.addEventListener("transitionend", dismiss, {
-          once: true,
-        });
-
-        dialogRef.style.setProperty("--opacity", "0");
-        dialogRef.style.setProperty("--translateY", "100%");
-      });
-      setModalStatus("closing");
-    };
+    useCleanup((signal) => {
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key === "Escape") {
+            props.onClose();
+          }
+        },
+        {
+          signal,
+        },
+      );
+    });
   });
 
   return (
-    <>
-      <Show when={whenOrPrev()}>
-        {(data) => (
-          <Portal>
-            <div ref={dialogRef} class="z-50 flex flex-col fixed inset-0">
-              <button
-                class="bg-black/60 absolute inset-0 transition-opacity duration-300 opacity-[var(--opacity,0)]"
-                onClick={() => {
-                  props.onClose();
-                }}
-              />
-              <div class="transition-transform translate-y-[var(--translateY,100%)] duration-300 px-4 mt-auto bg-secondary-bg rounded-t-[30px]">
-                {props.children(data)}
-              </div>
+    <Show when={transitionPresence.present()}>
+      {(data) => (
+        <Portal>
+          <div
+            style={
+              transitionPresence.status() === "hiding" || transitionPresence.status() === "presenting"
+                ? {
+                    "--opacity": 0,
+                    "--translateY": "100%",
+                  }
+                : {
+                    "--opacity": 1,
+                    "--translateY": "0%",
+                  }
+            }
+            ref={setDialogRef}
+            class="z-50 flex flex-col fixed inset-0"
+          >
+            <button
+              class="bg-black/60 absolute inset-0 transition-opacity duration-300 opacity-[var(--opacity,0)]"
+              onClick={() => {
+                props.onClose();
+              }}
+            />
+            <div class="transition-transform translate-y-[var(--translateY,100%)] duration-300 px-4 mt-auto bg-secondary-bg rounded-t-[30px]">
+              {props.children(data)}
             </div>
-            {/* <dialog
+          </div>
+          {/* <dialog
             onCancel={(e) => {
               e.preventDefault();
               props.onClose();
@@ -174,9 +139,8 @@ export const BottomDialog = <T,>(
           >
             {props.children(data)}
           </dialog> */}
-          </Portal>
-        )}
-      </Show>
-    </>
+        </Portal>
+      )}
+    </Show>
   );
 };

@@ -7,10 +7,10 @@ import { useTonConnectUI } from "@/lib/ton-connect-solid";
 import { useQueryClient, createMutation, createQuery } from "@tanstack/solid-query";
 import { postEvent } from "@tma.js/sdk";
 import { AxiosError } from "axios";
-import { createSignal, createEffect, Show, batch, Switch, Match } from "solid-js";
+import { createSignal, createEffect, Show, batch, Switch, Match, type ComponentProps } from "solid-js";
 import { disconnectWallet, walletLinkedTarget } from "./SetupTonWallet";
 import { LoadingSvg } from "./LoadingSvg";
-import { useCleanup } from "@/lib/solid";
+import { createTransitionPresence, mergeRefs, useCleanup } from "@/lib/solid";
 
 const buttonClass =
   "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-center rounded-xl self-stretch";
@@ -128,9 +128,11 @@ function PostInput(
   );
 }
 
-const WalletControlPopup = (props: { address: string; onUnlink(): void }) => {
+const WalletControlPopup = (
+  props: StyleProps & { address: string; onUnlink(): void } & Pick<ComponentProps<"div">, "ref">,
+) => {
   const [show, setShow] = createSignal(false);
-  let divRef!: HTMLDivElement;
+  const [divRef, setDivRef] = createSignal<HTMLDivElement>();
 
   createEffect(() => {
     if (!show()) {
@@ -141,19 +143,35 @@ const WalletControlPopup = (props: { address: string; onUnlink(): void }) => {
       window.addEventListener(
         "click",
         (ev) => {
-          if (ev.target instanceof HTMLElement && !divRef.contains(ev.target)) {
+          if (ev.target instanceof HTMLElement && !divRef()?.contains(ev.target)) {
             setShow(false);
+            ev.preventDefault();
+            ev.stopPropagation();
           }
         },
         {
           signal,
+          capture: true,
         },
       );
     });
   });
 
+  const [buttonRef, setButtonRef] = createSignal<HTMLButtonElement>();
+
+  const { present, status } = createTransitionPresence({
+    element: buttonRef,
+    when: show,
+  });
+
   return (
-    <div ref={divRef} class="absolute select-none left-1/2 translate-x-[-50%] flex flex-col gap-[10px] items-center">
+    <div
+      ref={mergeRefs(setDivRef, props.ref)}
+      class={clsxString(
+        "absolute select-none left-1/2 translate-x-[-50%] flex flex-col gap-[10px] items-center",
+        props.class ?? "",
+      )}
+    >
       <button
         onClick={() => {
           setShow((curShow) => !curShow);
@@ -165,8 +183,9 @@ const WalletControlPopup = (props: { address: string; onUnlink(): void }) => {
         <ArrowPointDownIcon />
       </button>
 
-      <Show when={show()}>
+      <Show when={present()}>
         <button
+          ref={setButtonRef}
           onPointerDown={() => {
             postEvent("web_app_trigger_haptic_feedback", {
               type: "impact",
@@ -177,13 +196,138 @@ const WalletControlPopup = (props: { address: string; onUnlink(): void }) => {
             setShow(false);
             props.onUnlink();
           }}
-          type="button"
-          class="text-destructive-text absolute top-[calc(100%+10px)] -mx-[40px] bg-section-bg font-inter text-[15px] leading-[18px] text-center px-2 py-[10px] flex flex-row gap-1 rounded-xl transition-transform active:scale-[97%]"
+          class={clsxString(
+            "text-destructive-text absolute top-[calc(100%+10px)] transition-transform -mx-[40px]",
+            "bg-section-bg font-inter text-[15px] leading-[18px] text-center px-2 py-[10px] flex flex-row gap-1 rounded-xl active:scale-[97%] animate-duration-300",
+            status() === "hiding" ? "animate-fade-out" : "animate-fade",
+          )}
         >
           Unlink wallet
           <UnlinkIcon />
         </button>
       </Show>
+    </div>
+  );
+};
+
+const ModalContent = (props: {
+  walletError: model.WalletError;
+  onClose(): void;
+  onUnlinkWallet(): void;
+  onSendPublic(): void;
+}) => {
+  const walletError = () => props.walletError;
+  const meQuery = createQuery(() => keysFactory.me);
+
+  const [tonConnectUI] = useTonConnectUI();
+
+  return (
+    <div class="min-h-[432px] flex flex-col">
+      <section class="pt-5 pb-3 relative flex items-center justify-end">
+        <Show when={meQuery.data?.wallet}>
+          {(wallet) => (
+            <WalletControlPopup
+              onUnlink={() => {
+                props.onUnlinkWallet();
+              }}
+              address={wallet().address}
+            />
+          )}
+        </Show>
+
+        <button
+          onClick={() => {
+            props.onClose();
+          }}
+          type="button"
+        >
+          <span class="sr-only">Close</span>
+          <CloseIcon class="text-accent" />
+        </button>
+      </section>
+
+      <section class="mt-5 flex flex-col flex-1 items-center">
+        <YoCoinIcon class="mb-6" />
+
+        <p
+          data-checked=""
+          class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
+        >
+          <CheckboxUI />
+          Send anonymously
+        </p>
+        <p class="text-hint font-inter text-[17px] leading-[22px] text-center mt-2">
+          To ask a question, you need{" "}
+          <span class="text-text">
+            {yokenAmountToFloat(walletError().error.payload.requiredBalance).toFixed(0)} Yo Tokens.
+          </span>
+          <Show when={walletError().error.reason === "insufficient_balance"}>
+            <br /> Please top up your balance.
+          </Show>
+        </p>
+
+        <Switch>
+          <Match when={walletError().error.reason === "insufficient_balance"}>
+            <article class="flex flex-row gap-1 mt-5 mb-auto">
+              <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
+                <div class="text-subtitle font-inter text-[12px] leading-4">Your balance</div>
+                <div class="text-[#30D158] font-inter text-[13px] leading-[18px]">
+                  {yokenAmountToFloat(meQuery.data?.wallet?.tokens.yo ?? "0").toFixed(0)} Yo
+                </div>
+              </div>
+
+              <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
+                <div class="text-subtitle font-inter text-[12px] leading-4">lacks</div>
+                <div class="text-text font-inter text-[13px] leading-[18px]">
+                  {Math.ceil(
+                    yokenAmountToFloat(walletError().error.payload.requiredBalance) -
+                      yokenAmountToFloat(meQuery.data?.wallet?.tokens.yo ?? "0"),
+                  )}{" "}
+                  Yo
+                </div>
+              </div>
+            </article>
+
+            <button
+              type="button"
+              class={clsxString("mt-7 mb-4", buttonClass)}
+              onClick={() => {
+                utils.openLink("https://app.dedust.io/swap/TON/YO");
+              }}
+            >
+              Top up
+            </button>
+          </Match>
+          <Match when={walletError().error.reason === "no_connected_wallet"}>
+            <div class="flex flex-col mt-7 flex-1 justify-center self-stretch">
+              <button
+                type="button"
+                class={clsxString(buttonClass)}
+                onClick={async () => {
+                  const ton = tonConnectUI();
+                  if (!ton) {
+                    return;
+                  }
+
+                  await disconnectWallet(ton);
+                  ton.modal.open();
+                }}
+              >
+                Connect Wallet
+              </button>
+              <button
+                type="button"
+                class="pt-[14px] mb-2 active:opacity-70 transition-opacity text-center text-accent font-inter text-[17px] leading-[22px]"
+                onClick={() => {
+                  props.onSendPublic();
+                }}
+              >
+                Ask not anonymously
+              </button>
+            </div>
+          </Match>
+        </Switch>
+      </section>
     </div>
   );
 };
@@ -254,7 +398,6 @@ export const PostCreator = (props: { boardId: string }) => {
       }
     },
   }));
-  const meQuery = createQuery(() => keysFactory.me);
 
   const unlinkMutation = createMutation(() => ({
     mutationFn: fetchMethodCurry("/me/unlinkWallet"),
@@ -285,8 +428,6 @@ export const PostCreator = (props: { boardId: string }) => {
       setWalletError(ctx?.curWalletError ?? null);
     },
   }));
-
-  const [tonConnectUI] = useTonConnectUI();
 
   useCleanup((signal) => {
     walletLinkedTarget.addEventListener(
@@ -334,117 +475,22 @@ export const PostCreator = (props: { boardId: string }) => {
         when={walletError()}
       >
         {(walletError) => (
-          <div class="min-h-[432px] flex flex-col">
-            <section class="pt-5 pb-3 relative flex items-center justify-end">
-              <Show when={meQuery.data?.wallet}>
-                {(wallet) => (
-                  <WalletControlPopup
-                    onUnlink={() => {
-                      unlinkMutation.mutate();
-                    }}
-                    address={wallet().address}
-                  />
-                )}
-              </Show>
-
-              <button
-                onClick={() => {
-                  setWalletError(null);
-                }}
-                type="button"
-              >
-                <span class="sr-only">Close</span>
-                <CloseIcon class="text-accent" />
-              </button>
-            </section>
-
-            <section class="mt-5 flex flex-col flex-1 items-center">
-              <YoCoinIcon class="mb-6" />
-
-              <p
-                data-checked=""
-                class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
-              >
-                <CheckboxUI />
-                Send anonymously
-              </p>
-              <p class="text-hint font-inter text-[17px] leading-[22px] text-center mt-2">
-                To ask a question, you need{" "}
-                <span class="text-text">
-                  {yokenAmountToFloat(walletError().error.payload.requiredBalance).toFixed(0)} Yo Tokens.
-                </span>
-                <Show when={walletError().error.reason === "insufficient_balance"}>
-                  <br /> Please top up your balance.
-                </Show>
-              </p>
-
-              <Switch>
-                <Match when={walletError().error.reason === "insufficient_balance"}>
-                  <article class="flex flex-row gap-1 mt-5 mb-auto">
-                    <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
-                      <div class="text-subtitle font-inter text-[12px] leading-4">Your balance</div>
-                      <div class="text-[#30D158] font-inter text-[13px] leading-[18px]">
-                        {yokenAmountToFloat(meQuery.data?.wallet?.tokens.yo ?? "0").toFixed(0)} Yo
-                      </div>
-                    </div>
-
-                    <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
-                      <div class="text-subtitle font-inter text-[12px] leading-4">lacks</div>
-                      <div class="text-text font-inter text-[13px] leading-[18px]">
-                        {Math.ceil(
-                          yokenAmountToFloat(walletError().error.payload.requiredBalance) -
-                            yokenAmountToFloat(meQuery.data?.wallet?.tokens.yo ?? "0"),
-                        )}{" "}
-                        Yo
-                      </div>
-                    </div>
-                  </article>
-
-                  <button
-                    type="button"
-                    class={clsxString("mt-7 mb-4", buttonClass)}
-                    onClick={() => {
-                      utils.openLink("https://app.dedust.io/swap/TON/YO");
-                    }}
-                  >
-                    Top up
-                  </button>
-                </Match>
-                <Match when={walletError().error.reason === "no_connected_wallet"}>
-                  <div class="flex flex-col mt-7 flex-1 justify-center self-stretch">
-                    <button
-                      type="button"
-                      class={clsxString(buttonClass)}
-                      onClick={async () => {
-                        const ton = tonConnectUI();
-                        if (!ton) {
-                          return;
-                        }
-
-                        await disconnectWallet(ton);
-                        ton.modal.open();
-                      }}
-                    >
-                      Connect Wallet
-                    </button>
-                    <button
-                      type="button"
-                      class="pt-[14px] mb-2 active:opacity-70 transition-opacity text-center text-accent font-inter text-[17px] leading-[22px]"
-                      onClick={() => {
-                        addNoteMutation.mutate({
-                          board: props.boardId,
-                          type: "public",
-                          content: inputValue(),
-                        });
-                      }}
-                    >
-                      Ask not anonymously
-                    </button>
-                  </div>
-                </Match>
-              </Switch>
-            </section>
-          </div>
+          <ModalContent
+            walletError={walletError()}
+            onClose={() => {
+              setWalletError(null);
+            }}
+            onUnlinkWallet={() => {
+              unlinkMutation.mutate();
+            }}
+            onSendPublic={() => {
+              addNoteMutation.mutate({
+                board: props.boardId,
+                type: "public",
+                content: inputValue(),
+              });
+            }}
+          />
         )}
       </BottomDialog>
     </>
