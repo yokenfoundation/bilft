@@ -2,6 +2,7 @@ import { fetchMethodCurry, keysFactory } from "@/api/api";
 import { createDisposeEffect } from "@/lib/solid";
 import { useTonConnectUI } from "@/lib/ton-connect-solid";
 import { useQueryClient, createMutation } from "@tanstack/solid-query";
+import { TonConnectUI } from "@tonconnect/ui";
 import { createEffect } from "solid-js";
 
 const random32Byte = () => {
@@ -11,7 +12,23 @@ const random32Byte = () => {
   return buf.toString("hex");
 };
 
+const Ref = {
+  make: <T>(value: T) => ({
+    value,
+  }),
+};
+
 export const walletLinkedTarget = new EventTarget();
+const walletDisconnection = Ref.make<null | Promise<void>>(null);
+export const disconnectWallet = (wallet: TonConnectUI) => {
+  if (wallet.connected && !walletDisconnection.value) {
+    walletDisconnection.value = wallet.disconnect().finally(() => {
+      walletDisconnection.value = null;
+    });
+  }
+
+  return walletDisconnection.value;
+};
 
 export const SetupTonWallet = () => {
   const [tonConnectUI] = useTonConnectUI();
@@ -26,9 +43,14 @@ export const SetupTonWallet = () => {
   const queryClient = useQueryClient();
   const linkWalletMutation = createMutation(() => ({
     mutationFn: fetchMethodCurry("/me/linkWallet"),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       walletLinkedTarget.dispatchEvent(new Event("wallet-linked"));
       queryClient.setQueryData(keysFactory.me.queryKey, data);
+
+      const ton = tonConnectUI();
+      if (ton) {
+        void disconnectWallet(ton);
+      }
     },
     retry: 3,
   }));

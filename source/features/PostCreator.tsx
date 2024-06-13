@@ -8,7 +8,7 @@ import { useQueryClient, createMutation, createQuery } from "@tanstack/solid-que
 import { postEvent } from "@tma.js/sdk";
 import { AxiosError } from "axios";
 import { createSignal, createEffect, Show, batch, Switch, Match } from "solid-js";
-import { walletLinkedTarget } from "./SetupTonWallet";
+import { disconnectWallet, walletLinkedTarget } from "./SetupTonWallet";
 import { LoadingSvg } from "./LoadingSvg";
 import { useCleanup } from "@/lib/solid";
 
@@ -421,9 +421,7 @@ export const PostCreator = (props: { boardId: string }) => {
                           return;
                         }
 
-                        if (ton.connected) {
-                          await ton.disconnect();
-                        }
+                        await disconnectWallet(ton);
                         ton.modal.open();
                       }}
                     >
