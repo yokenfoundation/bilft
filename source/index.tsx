@@ -2,14 +2,15 @@ import "@fontsource-variable/inter";
 import "./index.css";
 import { render } from "solid-js/web";
 
-import { ProfilePage, SetupTonWallet } from "./ProfilePage";
+import { ProfilePage } from "@/features/ProfilePage";
 import { AppQueryClientProvider } from "./queryClient";
 import { Route } from "@solidjs/router";
 import { postEvent, initNavigator, type BrowserNavigatorAnyHistoryItem, bindThemeParamsCSSVars } from "@tma.js/sdk";
 import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
-import { getProfileId, getSelfUserId, isEqualIds, removePrefix, themeParams } from "./common";
-import { TonConnectProvider } from "./TonConnect";
+import { getProfileId, getSelfUserId, isEqualIds, removePrefix, themeParams } from "@/common";
+import { TonConnectProvider } from "@/lib/ton-connect-solid";
+import { SetupTonWallet } from "@/features/SetupTonWallet";
 
 const getTonconnectManifestUrl = () => {
   const url = new URL(window.location.href);

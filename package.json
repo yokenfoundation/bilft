@@ -56,7 +56,6 @@
     ]
   },
   "pnpm": {
-    "@tma.js/sdk@2.0.0": "patches/@tma.js__sdk@2.0.0.patch",
     "patchedDependencies": {}
   }
 }

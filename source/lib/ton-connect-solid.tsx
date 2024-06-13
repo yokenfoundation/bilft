@@ -9,7 +9,7 @@ import {
   type ParentProps,
   type Setter,
 } from "solid-js";
-import { createDisposeEffect } from "./common";
+import { createDisposeEffect } from "@/lib/solid";
 
 const TonContext = createContext<null | (() => TonConnectUI | null)>(null);
 

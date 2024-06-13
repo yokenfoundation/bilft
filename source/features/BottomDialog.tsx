@@ -9,8 +9,9 @@ import {
   Show,
   startTransition,
 } from "solid-js";
-import { type StyleProps, createDisposeEffect } from "./common";
+import { type StyleProps } from "../common";
 import { Portal } from "solid-js/web";
+import { createDisposeEffect } from "@/lib/solid";
 
 function asserkOk(value: unknown): asserts value {
   if (!value) {
