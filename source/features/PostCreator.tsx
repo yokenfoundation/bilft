@@ -13,7 +13,7 @@ import { LoadingSvg } from "./LoadingSvg";
 import { createTransitionPresence, mergeRefs, useCleanup } from "@/lib/solid";
 
 const buttonClass =
-  "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-center rounded-xl self-stretch";
+  "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-button-text text-center rounded-xl self-stretch";
 
 const YOKEN_DECIMALS = 9;
 
@@ -445,6 +445,20 @@ export const PostCreator = (props: { boardId: string }) => {
         signal,
       },
     );
+  });
+
+    useCleanup((signal) => {
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && walletError()?.error.reason === 'insufficient_balance')  {
+          
+        }
+      })
+    })
+  createEffect(() => {
+    if (walletError()?.error.reason !== "insufficient_balance") {
+      return;
+    }
+    
   });
 
   return (

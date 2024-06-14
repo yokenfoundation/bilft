@@ -163,7 +163,7 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
         </div>
       </section>
 
-      <UserStatus class="mt-2 mx-4 text-text">
+      <UserStatus class="mt-2 mx-4 text-button-text">
         {boardQuery.isLoading ? "Loading..." : boardQuery.data?.profile?.description}
       </UserStatus>
 
