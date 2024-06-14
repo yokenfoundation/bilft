@@ -7,13 +7,15 @@ import {
   removePrefix,
   type DateString,
   type StyleProps,
-} from "../common";
+} from "../../common";
 import { createInfiniteQuery, createQuery } from "@tanstack/solid-query";
-import { A, useParams } from "@solidjs/router";
-import { ArrowPointUp } from "../icons";
+import { useParams } from "@solidjs/router";
+import { ArrowPointUp } from "../../icons";
 import { PostCreator } from "./PostCreator";
-import { keysFactory } from "../api/api";
-import { LoadingSvg } from "./LoadingSvg";
+import { keysFactory } from "../../api/api";
+import { LoadingSvg } from "../LoadingSvg";
+import { AvatarIcon } from "./AvatarIcon";
+import { BoardNote } from "./BoardNote";
 
 const UserStatus = (props: ParentProps<StyleProps>) => (
   <article class={clsxString("relative flex flex-col", props.class ?? "")}>
@@ -33,102 +35,6 @@ const UserStatus = (props: ParentProps<StyleProps>) => (
     <div class="px-4 py-2 self-start rounded-3xl ml-1 bg-accent min-h-[38px]">{props.children}</div>
   </article>
 );
-
-const formatPostDate = (createdAt: DateString) =>
-  new Date(createdAt).toLocaleDateString(undefined, {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-  });
-
-const formatPostTime = (createdAt: DateString) =>
-  new Date(createdAt).toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
-function BoardNote(
-  props: ParentProps<
-    StyleProps & {
-      name: string;
-      createdAt: DateString;
-      avatarUrl: string | null;
-      authorId: string;
-      onClick?: (e: MouseEvent) => void;
-    }
-  >,
-) {
-  return (
-    <article
-      class={clsxString(
-        "mx-4 bg-section-bg px-[14px] pb-4 pt-[14px] rounded-3xl flex flex-col transition-transform has-[a:active]:scale-[0.98]",
-        props.class ?? "",
-      )}
-    >
-      <A href={`/board/${props.authorId}`} onClick={props.onClick} class="flex gap-[10px] items-center">
-        <AvatarIcon lazy isLoading={false} url={props.avatarUrl} class="w-10" />
-        <div class="flex flex-col">
-          <div class="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
-          <div class="font-inter text-[13px] leading-4 text-subtitle">
-            posted {formatPostDate(props.createdAt)} at {formatPostTime(props.createdAt)}
-          </div>
-        </div>
-      </A>
-
-      <div class="mx-[2px] my-[10px] bg-gray-300/50 h-[1px]" />
-
-      <div class="whitespace-pre-wrap font-inter text-[16px] leading-[21px]">{props.children}</div>
-    </article>
-  );
-}
-
-const isImageAlreadyLoaded = (imageSrc: string) => {
-  const img = document.createElement("img");
-  img.src = imageSrc;
-
-  return img.complete;
-};
-
-const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string | null; lazy?: boolean }) => {
-  const [isImageLoaded, setIsImageLoaded] = createSignal(props.url ? isImageAlreadyLoaded(props.url) : false);
-
-  createComputed((prev) => {
-    if (props.url && props.url !== prev) {
-      setIsImageLoaded(isImageAlreadyLoaded(props.url));
-    }
-
-    return props.url;
-  });
-
-  const isLoading = () => props.isLoading && !isImageLoaded();
-
-  return (
-    <div class={clsxString("aspect-square rounded-full overflow-hidden relative select-none", props.class ?? "")}>
-      <div
-        class={clsxString(
-          "absolute inset-0 bg-gray-400 transition-opacity",
-          isLoading() ? "animate-pulse" : props.url ? "opacity-0" : "",
-        )}
-      />
-      <Show when={props.url}>
-        {(url) => (
-          <img
-            loading={props.lazy ? "lazy" : "eager"}
-            onLoadStart={() => {
-              setIsImageLoaded(false);
-            }}
-            onLoad={() => {
-              setIsImageLoaded(true);
-            }}
-            alt="Avatar"
-            src={url()}
-            class={clsxString("object-cover inset-0", isLoading() ? "opacity-0" : "")}
-          />
-        )}
-      </Show>
-    </div>
-  );
-};
 
 const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) => {
   const boardQuery = createQuery(() =>
@@ -188,22 +94,30 @@ const UserProfilePage = (props: { isSelf: boolean; idWithoutPrefix: string }) =>
           <Match when={notes().length > 0}>
             <For each={notes()}>
               {(note) => (
-                <BoardNote
-                  class="mb-4"
-                  authorId={note.author.id}
-                  createdAt={note.createdAt}
-                  avatarUrl={note.author.photo}
-                  name={note.author.name}
-                  onClick={(e) => {
-                    if (note.author.id === props.idWithoutPrefix) {
-                      e.preventDefault();
-                      window.scrollTo({
-                        top: 0,
-                        behavior: "smooth",
-                      });
-                    }
-                  }}
-                >
+                <BoardNote class="mb-4">
+                  {/* extends to match based on type */}
+                  <Switch fallback={<BoardNote.PrivateHeader createdAt={note.createdAt} />}>
+                    <Match when={note.author}>
+                      {(author) => (
+                        <BoardNote.PublicHeader
+                          name={author().name}
+                          avatarUrl={author().photo}
+                          authorId={author().id}
+                          createdAt={note.createdAt}
+                          onClick={(e) => {
+                            if (author().id === props.idWithoutPrefix) {
+                              e.preventDefault();
+                              window.scrollTo({
+                                top: 0,
+                                behavior: "smooth",
+                              });
+                            }
+                          }}
+                        />
+                      )}
+                    </Match>
+                  </Switch>
+                  <BoardNote.Divider />
                   {note.content}
                 </BoardNote>
               )}

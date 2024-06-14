@@ -11,7 +11,7 @@ namespace model {
 
   export type Note = {
     id: string;
-    author: NoteAuthor;
+    author?: NoteAuthor;
     createdAt: DateString;
     content: string;
   };

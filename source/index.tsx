@@ -2,7 +2,7 @@ import "@fontsource-variable/inter";
 import "./index.css";
 import { render } from "solid-js/web";
 
-import { ProfilePage } from "@/features/ProfilePage";
+import { ProfilePage } from "@/features/ProfilePage/ProfilePage";
 import { AppQueryClientProvider } from "./queryClient";
 import { Route } from "@solidjs/router";
 import { postEvent, initNavigator, type BrowserNavigatorAnyHistoryItem, bindThemeParamsCSSVars } from "@tma.js/sdk";

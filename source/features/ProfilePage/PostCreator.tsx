@@ -8,8 +8,8 @@ import { useQueryClient, createMutation, createQuery } from "@tanstack/solid-que
 import { postEvent } from "@tma.js/sdk";
 import { AxiosError } from "axios";
 import { createSignal, createEffect, Show, batch, Switch, Match, type ComponentProps } from "solid-js";
-import { disconnectWallet, walletLinkedTarget } from "./SetupTonWallet";
-import { LoadingSvg } from "./LoadingSvg";
+import { disconnectWallet, walletLinkedTarget } from "../SetupTonWallet";
+import { LoadingSvg } from "../LoadingSvg";
 import { createTransitionPresence, mergeRefs, useCleanup } from "@/lib/solid";
 
 const buttonClass =
@@ -221,7 +221,7 @@ const ModalContent = (props: {
   const [tonConnectUI] = useTonConnectUI();
 
   return (
-    <div class="min-h-[432px] flex flex-col">
+    <div class="min-h-[432px] flex flex-col pb-2">
       <section class="pt-5 pb-3 relative flex items-center justify-end">
         <Show when={meQuery.data?.wallet}>
           {(wallet) => (
@@ -446,15 +446,17 @@ export const PostCreator = (props: { boardId: string }) => {
     );
   });
 
-  useCleanup((signal) => {
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && walletError()?.error.reason === "insufficient_balance") {
-      }
-    });
-  });
+  const meQuery = createQuery(() => keysFactory.me);
+
   createEffect(() => {
-    if (walletError()?.error.reason !== "insufficient_balance") {
+    const curWalletError = walletError();
+    const tokensBalance = meQuery.data?.wallet?.tokens.yo;
+    if (curWalletError?.error.reason !== "insufficient_balance" || !tokensBalance) {
       return;
+    }
+    // must happen window focus
+    if (BigInt(curWalletError.error.payload.requiredBalance) <= BigInt(tokensBalance)) {
+      setWalletError(null);
     }
   });
 
