@@ -3,7 +3,14 @@ import { themeParams } from "./common";
 
 export const YoCoinIcon = (props: ComponentProps<"svg">) =>
   themeParams.isDark ? (
-    <svg width="82" height="82" viewBox="0 0 82 82" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg
+      width="82"
+      height="82"
+      viewBox="0 0 82 82"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
       <rect width="82" height="82" rx="41" fill="white" />
       <rect
         x="0.2"
@@ -19,10 +26,23 @@ export const YoCoinIcon = (props: ComponentProps<"svg">) =>
         d="M38.8821 45.4864L24.9697 21.8958H29.6072L41.0848 41.6029L52.3306 21.8958H57.0261L43.0558 45.4864V62.4693H38.8821V45.4864Z"
         fill="black"
       />
-      <ellipse cx="40.9484" cy="21.899" rx="2.42401" ry="2.37504" fill="black" />
+      <ellipse
+        cx="40.9484"
+        cy="21.899"
+        rx="2.42401"
+        ry="2.37504"
+        fill="black"
+      />
     </svg>
   ) : (
-    <svg width="82" height="82" viewBox="0 0 82 82" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg
+      width="82"
+      height="82"
+      viewBox="0 0 82 82"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
       <rect width="82" height="82" rx="41" fill="black" />
       <rect
         x="0.2"
@@ -38,12 +58,25 @@ export const YoCoinIcon = (props: ComponentProps<"svg">) =>
         d="M38.8821 45.4864L24.9697 21.8958H29.6072L41.0848 41.6029L52.3306 21.8958H57.0261L43.0558 45.4864V62.4693H38.8821V45.4864Z"
         fill="white"
       />
-      <ellipse cx="40.9484" cy="21.899" rx="2.42401" ry="2.37504" fill="white" />
+      <ellipse
+        cx="40.9484"
+        cy="21.899"
+        rx="2.42401"
+        ry="2.37504"
+        fill="white"
+      />
     </svg>
   );
 
 export const CloseIcon = (props: ComponentProps<"svg">) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
     <path
       d="M12 0C18.6274 0 24 5.37258 24 12C24 18.6274 18.6274 24 12 24C5.37258 24 0 18.6274 0 12C0 5.37258 5.37258 0 12 0ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM7.79289 7.79289C8.18342 7.40237 8.81658 7.40237 9.20711 7.79289L12 10.585L14.7929 7.79289C15.1534 7.43241 15.7206 7.40468 16.1129 7.7097L16.2071 7.79289C16.5976 8.18342 16.5976 8.81658 16.2071 9.20711L13.415 12L16.2071 14.7929C16.5676 15.1534 16.5953 15.7206 16.2903 16.1129L16.2071 16.2071C15.8166 16.5976 15.1834 16.5976 14.7929 16.2071L12 13.415L9.20711 16.2071C8.84662 16.5676 8.27939 16.5953 7.8871 16.2903L7.79289 16.2071C7.40237 15.8166 7.40237 15.1834 7.79289 14.7929L10.585 12L7.79289 9.20711C7.43241 8.84662 7.40468 8.27939 7.7097 7.8871L7.79289 7.79289Z"
       fill="currentColor"
@@ -52,7 +85,14 @@ export const CloseIcon = (props: ComponentProps<"svg">) => (
 );
 
 export const ArrowPointDownIcon = (props: ComponentProps<"svg">) => (
-  <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <svg
+    width="12"
+    height="8"
+    viewBox="0 0 12 8"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
     <path
       fill-rule="evenodd"
       clip-rule="evenodd"
@@ -63,7 +103,14 @@ export const ArrowPointDownIcon = (props: ComponentProps<"svg">) => (
 );
 
 export const ArrowUpIcon = (props: ComponentProps<"svg">) => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <svg
+    width="28"
+    height="28"
+    viewBox="0 0 28 28"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
     <path
       fill-rule="evenodd"
       clip-rule="evenodd"
@@ -74,18 +121,70 @@ export const ArrowUpIcon = (props: ComponentProps<"svg">) => (
 );
 
 export const ArrowPointUp = (props: ComponentProps<"svg">) => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-    <path d="M3 10L8 5L13 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M3 10L8 5L13 10"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
   </svg>
 );
 
 export const UnlinkIcon = (props: ComponentProps<"svg">) => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 18 18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
     <path
       fill-rule="evenodd"
       clip-rule="evenodd"
       d="M12.499 3.19072C12.0076 3.15057 11.3783 3.15005 10.485 3.15005H9.67504C9.30225 3.15005 9.00004 2.84784 9.00004 2.47505C9.00004 2.10226 9.30225 1.80005 9.67504 1.80005H10.5144C11.3716 1.80004 12.0561 1.80004 12.6089 1.84521C13.1759 1.89153 13.6636 1.98872 14.1116 2.21695C14.8313 2.58366 15.4164 3.16882 15.7831 3.88854C16.0114 4.33646 16.1086 4.82416 16.1549 5.39117C16.2001 5.944 16.2 6.62849 16.2 7.48568V10.5144C16.2 11.3716 16.2001 12.0561 16.1549 12.6089C16.1086 13.1759 16.0114 13.6636 15.7831 14.1116C15.4164 14.8313 14.8313 15.4164 14.1116 15.7831C13.6636 16.0114 13.1759 16.1086 12.6089 16.1549C12.0561 16.2001 11.3716 16.2001 10.5144 16.2H9.67922C9.30642 16.2 9.00422 15.8978 9.00422 15.525C9.00422 15.1523 9.30642 14.85 9.67922 14.85H10.485C11.3783 14.85 12.0076 14.8495 12.499 14.8094C12.9825 14.7699 13.2728 14.6954 13.4987 14.5803C13.9644 14.343 14.343 13.9644 14.5803 13.4987C14.6954 13.2728 14.7699 12.9825 14.8094 12.499C14.8495 12.0076 14.85 11.3783 14.85 10.485V7.51505C14.85 6.62183 14.8495 5.99251 14.8094 5.5011C14.7699 5.01758 14.6954 4.72732 14.5803 4.50142C14.343 4.03572 13.9644 3.65709 13.4987 3.41981C13.2728 3.30471 12.9825 3.23023 12.499 3.19072ZM7.39775 6.27275C7.66135 6.00915 8.08874 6.00915 8.35234 6.27275L10.6023 8.52273C10.7289 8.64932 10.8 8.82101 10.8 9.00003C10.8001 9.17905 10.7289 9.35074 10.6023 9.47733L8.35235 11.7273C8.08875 11.9909 7.66136 11.9909 7.39775 11.7273C7.13415 11.4637 7.13415 11.0364 7.39775 10.7728L8.49546 9.67503L2.47505 9.67505C2.10226 9.67505 1.80005 9.37284 1.80005 9.00005C1.80005 8.62726 2.10226 8.32505 2.47505 8.32505L8.49545 8.32503L7.39775 7.22735C7.13415 6.96374 7.13415 6.53636 7.39775 6.27275Z"
       fill="currentColor"
+    />
+  </svg>
+);
+
+export const RefreshIcon = (props: ComponentProps<"svg">) => (
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 18 18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M8.99952 8.15481C8.99952 8.22754 8.9717 8.29766 8.9215 8.35148C8.81005 8.47096 8.62031 8.47976 8.49771 8.37114L5.28148 5.52165C5.26974 5.51125 5.25852 5.50031 5.24785 5.48887C5.06209 5.28974 5.07715 4.98156 5.28148 4.80053L8.49771 1.95103C8.55294 1.90211 8.62489 1.875 8.69952 1.875C8.8652 1.875 8.99952 2.0059 8.99952 2.16737L8.99951 4.43016C12.3132 4.43016 14.9995 7.04814 14.9995 10.2776C14.9995 13.507 12.3132 16.125 8.99951 16.125C5.6858 16.125 2.99951 13.507 2.99951 10.2776C2.99951 9.8739 3.3353 9.54665 3.74951 9.54665C4.16373 9.54665 4.49951 9.8739 4.49951 10.2776C4.49951 12.6997 6.51423 14.6631 8.99951 14.6631C11.4848 14.6631 13.4995 12.6997 13.4995 10.2776C13.4995 7.8555 11.4848 5.89202 8.99951 5.89202L8.99952 8.15481Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+export const SuccessIcon = (props: ComponentProps<"svg">) => (
+  <svg
+    width="82"
+    height="82"
+    viewBox="0 0 82 82"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M41 0C63.6437 0 82 18.3563 82 41C82 63.6437 63.6437 82 41 82C18.3563 82 0 63.6437 0 41C0 18.3563 18.3563 0 41 0ZM41 6.83333C22.1303 6.83333 6.83333 22.1303 6.83333 41C6.83333 59.8697 22.1303 75.1667 41 75.1667C59.8697 75.1667 75.1667 59.8697 75.1667 41C75.1667 22.1303 59.8697 6.83333 41 6.83333ZM55.6575 28.3242C56.9918 26.9899 59.1749 26.9899 60.5092 28.3242C61.8435 29.6585 61.8435 31.8415 60.5092 33.1758L36.5826 57.0826C35.2483 58.4169 33.085 58.4169 31.7507 57.0826L19.7924 45.1243C18.4581 43.79 18.4581 41.6267 19.7924 40.2924C21.1267 38.9581 23.29 38.9581 24.6243 40.2924L34.1667 49.8348L55.6575 28.3242Z"
+      fill="#30D158"
     />
   </svg>
 );

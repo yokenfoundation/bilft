@@ -1,4 +1,11 @@
-import { createEffect, createMemo, createSignal, onCleanup, untrack, type Accessor } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  untrack,
+  type Accessor,
+} from "solid-js";
 
 export type Dispose = () => void;
 export const createDisposeEffect = (effect: () => Dispose | void) =>
@@ -22,7 +29,9 @@ export const useCleanup = (callback: (signal: AbortSignal) => void) => {
 
 export type RefFunction<T> = (el: T) => void;
 export type Ref<T> = T | undefined | RefFunction<T>;
-export const mergeRefs = <T extends any>(...refsFuncs: Ref<T>[]): RefFunction<T> => {
+export const mergeRefs = <T extends any>(
+  ...refsFuncs: Ref<T>[]
+): RefFunction<T> => {
   return (arg) => {
     for (const ref of refsFuncs) {
       ref && (ref as RefFunction<T>)(arg);
@@ -30,7 +39,11 @@ export const mergeRefs = <T extends any>(...refsFuncs: Ref<T>[]): RefFunction<T>
   };
 };
 
-export type TransitionPresenceStatus = "presenting" | "present" | "hiding" | "hidden";
+export type TransitionPresenceStatus =
+  | "presenting"
+  | "present"
+  | "hiding"
+  | "hidden";
 export const createTransitionPresence = <T,>(params: {
   when: Accessor<T | undefined | null | false>;
   element: Accessor<undefined | HTMLElement>;
@@ -46,7 +59,11 @@ export const createTransitionPresence = <T,>(params: {
   );
 
   const whenOrPrev = createMemo<T | undefined | null | false>((prev) =>
-    status() === "hidden" ? null : status() !== "hiding" && params.when() ? params.when() : prev,
+    status() === "hidden"
+      ? null
+      : status() !== "hiding" && params.when()
+        ? params.when()
+        : prev,
   );
 
   createDisposeEffect(() => {
@@ -111,4 +128,8 @@ export const createTransitionPresence = <T,>(params: {
     present: whenOrPrev,
     status,
   };
+};
+
+export const SignalHelper = {
+  map: <T, R>(sig: Accessor<T>, map: (value: T) => R) => map(sig()),
 };
