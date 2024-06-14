@@ -37,6 +37,7 @@ namespace model {
 
   export type Wallet = {
     address: string;
+    friendlyAddress: string;
     tokens: {
       yo: string;
     };

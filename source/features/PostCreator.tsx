@@ -178,7 +178,6 @@ const WalletControlPopup = (
         }}
         class="flex gap-1 transition-transform active:scale-[97%] flex-row font-inter text-[12px] bg-bg text-text items-center px-[10px] py-[6px] rounded-[10px]"
       >
-        {/* convert on backend to userfriendly */}
         {trimAddress(props.address)}
         <ArrowPointDownIcon />
       </button>
@@ -230,7 +229,7 @@ const ModalContent = (props: {
               onUnlink={() => {
                 props.onUnlinkWallet();
               }}
-              address={wallet().address}
+              address={wallet().friendlyAddress}
             />
           )}
         </Show>
@@ -447,18 +446,16 @@ export const PostCreator = (props: { boardId: string }) => {
     );
   });
 
-    useCleanup((signal) => {
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && walletError()?.error.reason === 'insufficient_balance')  {
-          
-        }
-      })
-    })
+  useCleanup((signal) => {
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && walletError()?.error.reason === "insufficient_balance") {
+      }
+    });
+  });
   createEffect(() => {
     if (walletError()?.error.reason !== "insufficient_balance") {
       return;
     }
-    
   });
 
   return (
