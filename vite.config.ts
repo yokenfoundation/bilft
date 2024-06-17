@@ -39,7 +39,9 @@ const tonConnectPlugin = (webAppUrl: string): Plugin[] => {
             return next();
           }
 
+          res.statusCode = 200;
           res.setHeader("Content-Type", "application/json").write(fileContent);
+          res.end();
         });
       },
     },
