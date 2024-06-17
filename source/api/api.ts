@@ -6,7 +6,7 @@ import { authData } from "@/common";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
-  timeout: 10000,
+  timeout: 15000,
 });
 
 type RequestResponse<Request, Response> = {
