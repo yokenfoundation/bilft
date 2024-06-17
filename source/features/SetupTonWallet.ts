@@ -2,7 +2,7 @@ import { fetchMethodCurry, keysFactory } from "@/api/api";
 import { createDisposeEffect } from "@/lib/solid";
 import { useTonConnectUI } from "@/lib/ton-connect-solid";
 import { useQueryClient, createMutation } from "@tanstack/solid-query";
-import { TonConnectUI } from "@tonconnect/ui";
+import type { TonConnectUI } from "@tonconnect/ui";
 import { createEffect } from "solid-js";
 
 const random32Byte = () => {
