@@ -320,7 +320,7 @@ const ModalContent = (props: {
                       <div class="text-subtitle font-inter text-[12px] leading-4">
                         Your balance
                       </div>
-                      <div class="text-[#30D158] font-inter text-[13px] leading-[18px]">
+                      <div class="text-text font-inter text-[13px] leading-[18px]">
                         {yokenAmountToFloat(
                           meQuery.data?.wallet?.tokens.yo ?? "0",
                         ).toFixed(0)}{" "}
@@ -416,17 +416,17 @@ const ModalContent = (props: {
               data-checked=""
               class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
             >
-              You can ask anonymous question
+              Send anonymously
             </p>
-            <p class="text-hint font-inter text-[17px] leading-[22px] text-center mt-2">
-              tettetetettettettetettettetetet e6eee6e6e6e
+            <p class="text-hint font-inter text-[17px] leading-[22px] text-center mx-4 mt-2">
+              You have successfully added the required number of Yo tokens
             </p>
 
             <div class="flex self-center mb-auto mt-5 flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
               <div class="text-subtitle font-inter text-[12px] leading-4">
                 Your balance
               </div>
-              <div class="text-[#30D158] font-inter self-center text-center text-[13px] leading-[18px]">
+              <div class="text-text font-inter self-center text-center text-[13px] leading-[18px]">
                 {yokenAmountToFloat(
                   meQuery.data?.wallet?.tokens.yo ?? "0",
                 ).toFixed(0)}{" "}

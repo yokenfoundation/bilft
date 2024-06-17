@@ -1,7 +1,13 @@
-import { type StyleProps, type DateString, clsxString } from "@/common";
+import {
+  type StyleProps,
+  type DateString,
+  clsxString,
+  themeParams,
+} from "@/common";
 import { A } from "@solidjs/router";
 import type { ParentProps } from "solid-js";
 import { AvatarIcon } from "./AvatarIcon";
+import { AnonymousAvatarIcon } from "@/icons";
 
 const formatPostDate = (createdAt: DateString) =>
   new Date(createdAt).toLocaleDateString(undefined, {
@@ -24,33 +30,59 @@ const BoardNotePublicHeader = (props: {
 
   onClick?: (e: MouseEvent) => void;
 }) => (
-  <A href={`/board/${props.authorId}`} onClick={props.onClick} class="flex gap-[10px] items-center">
+  <A
+    href={`/board/${props.authorId}`}
+    onClick={props.onClick}
+    class="flex gap-[10px] items-center"
+  >
     <AvatarIcon lazy isLoading={false} url={props.avatarUrl} class="w-10" />
     <div class="flex flex-col">
-      <div class="font-inter font-medium text-[17px] leading-[22px]">{props.name}</div>
+      <div class="font-inter font-medium text-[17px] leading-[22px]">
+        {props.name}
+      </div>
       <div class="font-inter text-[13px] leading-4 text-subtitle">
-        posted {formatPostDate(props.createdAt)} at {formatPostTime(props.createdAt)}
+        posted {formatPostDate(props.createdAt)} at{" "}
+        {formatPostTime(props.createdAt)}
       </div>
     </div>
   </A>
 );
-const BoardNotePrivateHeader = (props: { createdAt: DateString }) => (
+const BoardNoteAnonymousHeader = (props: { createdAt: DateString }) => (
   <div class="flex gap-[10px] items-center">
-    <AvatarIcon isLoading={false} url={null} class="w-10" />
+    <AnonymousAvatarIcon
+      class={clsxString(
+        themeParams.isDark
+          ? "text-white fill-[#1C1C1D]"
+          : "text-black fill-slate-200",
+      )}
+    />
     <div class="flex flex-col">
-      <div class="font-inter font-medium text-[17px] leading-[22px]">Anon</div>
+      <div class="font-inter font-medium text-[17px] leading-[22px]">
+        Anonymously
+      </div>
       <div class="font-inter text-[13px] leading-4 text-subtitle">
-        posted {formatPostDate(props.createdAt)} at {formatPostTime(props.createdAt)}
+        posted {formatPostDate(props.createdAt)} at{" "}
+        {formatPostTime(props.createdAt)}
       </div>
     </div>
   </div>
 );
 const BoardNoteDivider = (props: StyleProps) => (
-  <div class={clsxString("mx-[2px] my-[10px] bg-gray-300/50 h-[1px]", props.class ?? "")} />
+  <div
+    class={clsxString(
+      "mx-[2px] my-[10px] bg-gray-300/50 h-[1px]",
+      props.class ?? "",
+    )}
+  />
 );
 
 const BoardNoteContent = (props: ParentProps<StyleProps>) => (
-  <div class={clsxString("whitespace-pre-wrap font-inter text-[16px] leading-[21px]", props.class ?? "")}>
+  <div
+    class={clsxString(
+      "whitespace-pre-wrap font-inter text-[16px] leading-[21px]",
+      props.class ?? "",
+    )}
+  >
     {props.children}
   </div>
 );
@@ -70,7 +102,7 @@ function BoardNoteRoot(props: ParentProps<StyleProps>) {
 
 export const BoardNote = Object.assign(BoardNoteRoot, {
   PublicHeader: BoardNotePublicHeader,
-  PrivateHeader: BoardNotePrivateHeader,
+  PrivateHeader: BoardNoteAnonymousHeader,
   Divider: BoardNoteDivider,
   Content: BoardNoteContent,
 });
