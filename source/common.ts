@@ -9,6 +9,7 @@ const launchParams = retrieveLaunchParams();
 export const authData = launchParams.initDataRaw;
 export const [themeParams] = initThemeParams();
 export const utils = initUtils();
+export const platform = launchParams.platform;
 
 export const clsxString = (...items: string[]) => {
   let res = "";
@@ -27,7 +28,8 @@ export const clsxString = (...items: string[]) => {
 };
 
 export const addPrefix = (id: string) => (id.startsWith("id") ? id : `id${id}`);
-export const removePrefix = (id: string) => (id.startsWith("id") ? id.slice(2) : id);
+export const removePrefix = (id: string) =>
+  id.startsWith("id") ? id.slice(2) : id;
 
 export function getProfileId() {
   const searchParams = new URLSearchParams(window.location.search);
