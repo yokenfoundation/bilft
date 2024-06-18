@@ -82,7 +82,7 @@ function PostInput(
   },
 ) {
   let inputRef!: HTMLTextAreaElement | undefined;
-  const isEmpty = () => props.value.length === 0;
+  const isEmpty = () => props.value.trim().length === 0;
 
   return (
     <form
@@ -589,6 +589,12 @@ export const PostCreator = (props: { boardId: string }) => {
               data: error,
             },
     );
+  const sendContent = (anonymous: boolean) =>
+    addNoteMutation.mutate({
+      board: props.boardId,
+      content: inputValue(),
+      type: anonymous ? "public-anonymous" : "public",
+    });
 
   return (
     <>
@@ -602,11 +608,7 @@ export const PostCreator = (props: { boardId: string }) => {
             return;
           }
 
-          addNoteMutation.mutate({
-            board: props.boardId,
-            content: inputValue(),
-            type: isAnonymous() ? "public-anonymous" : "public",
-          });
+          sendContent(isAnonymous());
         }}
         value={inputValue()}
         onChange={setInputValue}
@@ -620,11 +622,7 @@ export const PostCreator = (props: { boardId: string }) => {
         {(status) => (
           <ModalContent
             onSend={() => {
-              addNoteMutation.mutate({
-                board: props.boardId,
-                type: "private",
-                content: inputValue(),
-              });
+              sendContent(isAnonymous());
               setWalletError(null);
             }}
             status={status()}
@@ -635,11 +633,7 @@ export const PostCreator = (props: { boardId: string }) => {
               unlinkMutation.mutate();
             }}
             onSendPublic={() => {
-              addNoteMutation.mutate({
-                board: props.boardId,
-                type: "public",
-                content: inputValue(),
-              });
+              sendContent(false);
             }}
           />
         )}
