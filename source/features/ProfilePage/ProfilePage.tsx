@@ -71,7 +71,7 @@ const UserProfilePage = (props: {
 
   return (
     <main class="pb-6 pt-4 flex flex-col text-text min-h-screen">
-      <section class="sticky bg-secondary-bg z-10 top-0 px-6 py-2 flex flex-row gap-5 items-center">
+      <section class="sticky bg-secondary-bg z-10 top-0 px-6 py-2 flex flex-row gap-3 items-center">
         <AvatarIcon
           class="w-12"
           isLoading={boardQuery.isLoading}
