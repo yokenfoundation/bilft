@@ -1,43 +1,42 @@
-import { BottomDialog } from "@/features/BottomDialog";
-import { fetchMethodCurry, keysFactory, getWalletError } from "@/api/api";
-import type model from "@/api/model";
+import type { model } from "@/api";
+import { fetchMethodCurry, getWalletError, keysFactory } from "@/api/api";
 import { clsxString, utils, type StyleProps } from "@/common";
+import { BottomDialog } from "@/features/BottomDialog";
 import {
   ArrowPointDownIcon,
-  UnlinkIcon,
-  CloseIcon,
-  YoCoinIcon,
   ArrowUpIcon,
+  CloseIcon,
   RefreshIcon,
   SuccessIcon,
+  UnlinkIcon,
+  YoCoinIcon,
 } from "@/icons";
-import { useTonConnectUI } from "@/lib/ton-connect-solid";
-import {
-  useQueryClient,
-  createMutation,
-  createQuery,
-} from "@tanstack/solid-query";
-import { postEvent } from "@tma.js/sdk";
-import { AxiosError } from "axios";
-import {
-  createSignal,
-  createEffect,
-  Show,
-  batch,
-  Switch,
-  Match,
-  type ComponentProps,
-  createMemo,
-  type Accessor,
-} from "solid-js";
-import { disconnectWallet, walletLinkedTarget } from "../SetupTonWallet";
-import { LoadingSvg } from "../LoadingSvg";
 import {
   SignalHelper,
   createTransitionPresence,
   mergeRefs,
   useCleanup,
 } from "@/lib/solid";
+import { useTonConnectUI } from "@/lib/ton-connect-solid";
+import {
+  createMutation,
+  createQuery,
+  useQueryClient,
+} from "@tanstack/solid-query";
+import { postEvent } from "@tma.js/sdk";
+import { AxiosError } from "axios";
+import {
+  Match,
+  Show,
+  Switch,
+  batch,
+  createEffect,
+  createMemo,
+  createSignal,
+  type ComponentProps,
+} from "solid-js";
+import { LoadingSvg } from "../LoadingSvg";
+import { disconnectWallet, walletLinkedTarget } from "../SetupTonWallet";
 
 const buttonClass =
   "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-button-text text-center rounded-xl self-stretch";
@@ -50,10 +49,10 @@ const trimAddress = (address: string) =>
   `${address.slice(0, 4)}...${address.slice(-4)}`;
 
 const CheckboxUI = () => (
-  <div class="w-5 isolate flex items-center justify-center aspect-square border-accent border-[1.5px] rounded-md relative">
-    <div class="absolute -z-10 inset-0 bg-accent group-[[data-checked]]:opacity-100 opacity-0 transition-opacity" />
+  <div class="relative isolate flex aspect-square w-5 items-center justify-center rounded-md border-[1.5px] border-accent">
+    <div class="absolute inset-0 -z-10 bg-accent opacity-0 transition-opacity group-[[data-checked]]:opacity-100" />
     <svg
-      class="text-white transition-opacity opacity-0 group-[[data-checked]]:opacity-100"
+      class="text-white opacity-0 transition-opacity group-[[data-checked]]:opacity-100"
       width="10"
       height="8"
       viewBox="0 0 10 8"
@@ -97,12 +96,12 @@ function PostInput(
         props.onSubmit();
       }}
       class={clsxString(
-        "p-4 bg-section-bg border-[#AAA] border mx-4 border-opacity-15 rounded-[20px] flex flex-col gap-[10px] items-stretch overflow-hidden cursor-text justify-between",
+        "mx-4 flex cursor-text flex-col items-stretch justify-between gap-[10px] overflow-hidden rounded-[20px] border border-[#AAA] border-opacity-15 bg-section-bg p-4",
         props.class ?? "",
       )}
     >
       <div
-        class='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"]'
+        class='grid flex-1 grid-cols-1 font-inter text-[16px] leading-[21px] after:invisible after:whitespace-pre-wrap after:break-words after:font-[inherit] after:content-[attr(data-value)_"_"] after:[grid-area:1/1/2/2] [&>textarea]:[grid-area:1/1/2/2]'
         data-value={props.value}
       >
         <textarea
@@ -120,13 +119,13 @@ function PostInput(
             }
           }}
           ref={inputRef}
-          class="bg-transparent w-full placeholder:select-none overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
+          class="w-full max-w-full resize-none overflow-hidden break-words border-none bg-transparent placeholder:select-none focus:border-none focus:outline-none"
         />
       </div>
-      <div class="bg-gray-300/50 w-full h-[1px]" />
-      <div class="flex flex-row justify-between items-center p-[2px]">
+      <div class="h-[1px] w-full bg-gray-300/50" />
+      <div class="flex flex-row items-center justify-between p-[2px]">
         <label
-          class="group select-none flex flex-row items-center cursor-pointer"
+          class="group flex cursor-pointer select-none flex-row items-center"
           data-checked={props.isAnonymous ? "" : undefined}
         >
           <input
@@ -135,21 +134,21 @@ function PostInput(
             }}
             checked={props.isAnonymous}
             type="checkbox"
-            class="invisible w-0 h-0"
+            class="invisible h-0 w-0"
           />
           <CheckboxUI />
 
-          <div class="ml-2 font-inter text-subtitle text-[16px] leading-[22px]">
+          <div class="ml-2 font-inter text-[16px] leading-[22px] text-subtitle">
             Send anonymously
           </div>
         </label>
         <button
           disabled={isEmpty() || props.isLoading}
-          class="relative ml-auto mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
+          class="relative ml-auto mt-auto flex aspect-square w-7 items-center justify-center overflow-hidden rounded-full [&:disabled>svg>path]:fill-gray-400 [&>svg>path]:fill-accent"
         >
           <Show fallback={<ArrowUpIcon />} when={props.isLoading}>
             <div role="status">
-              <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
+              <LoadingSvg class="w-7 fill-gray-300 text-gray-600" />
               <span class="sr-only">Loading...</span>
             </div>
           </Show>
@@ -205,7 +204,7 @@ const WalletControlPopup = (
     <div
       ref={mergeRefs(setDivRef, props.ref)}
       class={clsxString(
-        "absolute select-none left-1/2 translate-x-[-50%] flex flex-col gap-[10px] items-center",
+        "absolute left-1/2 flex translate-x-[-50%] select-none flex-col items-center gap-[10px]",
         props.class ?? "",
       )}
     >
@@ -213,7 +212,7 @@ const WalletControlPopup = (
         onClick={() => {
           setShow((curShow) => !curShow);
         }}
-        class="flex gap-1 transition-transform active:scale-[97%] flex-row font-inter text-[12px] bg-bg text-text items-center px-[10px] py-[6px] rounded-[10px]"
+        class="flex flex-row items-center gap-1 rounded-[10px] bg-bg px-[10px] py-[6px] font-inter text-[12px] text-text transition-transform active:scale-[97%]"
       >
         {trimAddress(props.address)}
         <ArrowPointDownIcon />
@@ -233,8 +232,8 @@ const WalletControlPopup = (
             props.onUnlink();
           }}
           class={clsxString(
-            "text-destructive-text absolute top-[calc(100%+10px)] transition-transform -mx-[40px]",
-            "bg-section-bg font-inter text-[15px] leading-[18px] text-center px-2 py-[10px] flex flex-row gap-1 rounded-xl active:scale-[97%] animate-duration-300",
+            "absolute top-[calc(100%+10px)] -mx-[40px] text-destructive-text transition-transform",
+            "flex flex-row gap-1 rounded-xl bg-section-bg px-2 py-[10px] text-center font-inter text-[15px] leading-[18px] animate-duration-300 active:scale-[97%]",
             status() === "hiding" ? "animate-fade-out" : "animate-fade",
           )}
         >
@@ -259,8 +258,8 @@ const ModalContent = (props: {
   const [tonConnectUI] = useTonConnectUI();
 
   return (
-    <div class="min-h-[432px] flex flex-col pb-2">
-      <section class="pt-5 pb-3 relative flex items-center justify-end">
+    <div class="flex min-h-[432px] flex-col pb-2">
+      <section class="relative flex items-center justify-end pb-3 pt-5">
         <Show when={meQuery.data?.wallet}>
           {(wallet) => (
             <WalletControlPopup
@@ -286,17 +285,17 @@ const ModalContent = (props: {
       <Switch>
         <Match when={status().data}>
           {(walletError) => (
-            <section class="mt-5 flex flex-col flex-1 items-center">
+            <section class="mt-5 flex flex-1 flex-col items-center">
               <YoCoinIcon class="mb-6" />
 
               <p
                 data-checked=""
-                class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
+                class="group flex items-center gap-2 text-center font-inter text-[20px] font-semibold leading-7 text-text"
               >
                 <CheckboxUI />
                 Send anonymously
               </p>
-              <p class="text-hint font-inter text-[17px] leading-[22px] text-center mt-2">
+              <p class="mt-2 text-center font-inter text-[17px] leading-[22px] text-hint">
                 To ask a question, you need{" "}
                 <span class="text-text">
                   {yokenAmountToFloat(
@@ -315,12 +314,12 @@ const ModalContent = (props: {
                 <Match
                   when={walletError().error.reason === "insufficient_balance"}
                 >
-                  <article class="flex flex-row gap-1 mt-5 mb-auto">
-                    <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
-                      <div class="text-subtitle font-inter text-[12px] leading-4">
+                  <article class="mb-auto mt-5 flex flex-row gap-1">
+                    <div class="flex flex-col rounded-[10px] bg-section-bg px-[10px] py-[6px]">
+                      <div class="font-inter text-[12px] leading-4 text-subtitle">
                         Your balance
                       </div>
-                      <div class="text-text font-inter text-[13px] leading-[18px]">
+                      <div class="font-inter text-[13px] leading-[18px] text-text">
                         {yokenAmountToFloat(
                           meQuery.data?.wallet?.tokens.yo ?? "0",
                         ).toFixed(0)}{" "}
@@ -328,11 +327,11 @@ const ModalContent = (props: {
                       </div>
                     </div>
 
-                    <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
-                      <div class="text-subtitle font-inter text-[12px] leading-4">
+                    <div class="flex flex-col rounded-[10px] bg-section-bg px-[10px] py-[6px]">
+                      <div class="font-inter text-[12px] leading-4 text-subtitle">
                         lacks
                       </div>
-                      <div class="text-text font-inter text-[13px] leading-[18px]">
+                      <div class="font-inter text-[13px] leading-[18px] text-text">
                         {Math.ceil(
                           yokenAmountToFloat(
                             walletError().error.payload.requiredBalance,
@@ -351,11 +350,11 @@ const ModalContent = (props: {
                         meQuery.refetch();
                       }}
                       inert={meQuery.isFetching}
-                      class="text-text font-inter text-[13px] leading-[18px] items-center h-full py-[14px] px-[10px] bg-section-bg rounded-[10px] active:scale-[97%] transition-transform flex flex-row gap-1"
+                      class="flex h-full flex-row items-center gap-1 rounded-[10px] bg-section-bg px-[10px] py-[14px] font-inter text-[13px] leading-[18px] text-text transition-transform active:scale-[97%]"
                     >
                       <RefreshIcon
                         class={clsxString(
-                          "text-accent animate-spin animate-reverse origin-center",
+                          "origin-center animate-spin text-accent animate-reverse",
                           meQuery.isFetching ? "" : "animate-stop",
                         )}
                       />
@@ -365,7 +364,7 @@ const ModalContent = (props: {
 
                   <button
                     type="button"
-                    class={clsxString("mt-7 mb-4", buttonClass)}
+                    class={clsxString("mb-4 mt-7", buttonClass)}
                     onClick={() => {
                       utils.openLink("https://app.dedust.io/swap/TON/YO");
                     }}
@@ -376,7 +375,7 @@ const ModalContent = (props: {
                 <Match
                   when={walletError().error.reason === "no_connected_wallet"}
                 >
-                  <div class="flex flex-col mt-7 flex-1 justify-center self-stretch">
+                  <div class="mt-7 flex flex-1 flex-col justify-center self-stretch">
                     <button
                       type="button"
                       class={clsxString(buttonClass)}
@@ -394,7 +393,7 @@ const ModalContent = (props: {
                     </button>
                     <button
                       type="button"
-                      class="pt-[14px] mb-2 active:opacity-70 transition-opacity text-center text-accent font-inter text-[17px] leading-[22px]"
+                      class="mb-2 pt-[14px] text-center font-inter text-[17px] leading-[22px] text-accent transition-opacity active:opacity-70"
                       onClick={() => {
                         props.onSendPublic();
                       }}
@@ -409,24 +408,24 @@ const ModalContent = (props: {
         </Match>
 
         <Match when={status().type === "success"}>
-          <section class="mt-5 flex flex-col flex-1 items-center">
+          <section class="mt-5 flex flex-1 flex-col items-center">
             <SuccessIcon class="mb-6" />
 
             <p
               data-checked=""
-              class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
+              class="group flex items-center gap-2 text-center font-inter text-[20px] font-semibold leading-7 text-text"
             >
               Send anonymously
             </p>
-            <p class="text-hint font-inter text-[17px] leading-[22px] text-center mx-4 mt-2">
+            <p class="mx-4 mt-2 text-center font-inter text-[17px] leading-[22px] text-hint">
               You have successfully added the required number of Yo tokens
             </p>
 
-            <div class="flex self-center mb-auto mt-5 flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
-              <div class="text-subtitle font-inter text-[12px] leading-4">
+            <div class="mb-auto mt-5 flex flex-col self-center rounded-[10px] bg-section-bg px-[10px] py-[6px]">
+              <div class="font-inter text-[12px] leading-4 text-subtitle">
                 Your balance
               </div>
-              <div class="text-text font-inter self-center text-center text-[13px] leading-[18px]">
+              <div class="self-center text-center font-inter text-[13px] leading-[18px] text-text">
                 {yokenAmountToFloat(
                   meQuery.data?.wallet?.tokens.yo ?? "0",
                 ).toFixed(0)}{" "}
@@ -436,7 +435,7 @@ const ModalContent = (props: {
 
             <button
               type="button"
-              class={clsxString("mt-7 mb-4", buttonClass)}
+              class={clsxString("mb-4 mt-7", buttonClass)}
               onClick={() => {
                 props.onSend();
               }}
