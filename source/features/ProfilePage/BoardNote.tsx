@@ -79,7 +79,7 @@ const BoardNoteDivider = (props: StyleProps) => (
 const BoardNoteContent = (props: ParentProps<StyleProps>) => (
   <div
     class={clsxString(
-      "whitespace-pre-wrap font-inter text-[16px] leading-[21px]",
+      "whitespace-pre-wrap font-inter text-[16px] leading-[21px] overflow-hidden",
       props.class ?? "",
     )}
   >
