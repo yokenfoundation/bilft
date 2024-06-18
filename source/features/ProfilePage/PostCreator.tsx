@@ -51,7 +51,7 @@ const trimAddress = (address: string) =>
 
 const CheckboxUI = () => (
   <div class="w-5 isolate flex items-center justify-center aspect-square border-accent border-[1.5px] rounded-md relative">
-    <div class="absolute -z-10 inset-0 bg-accent group-[[data-checked]]:opacity-100 opacity-0 transition-opacity" />
+    <div class="absolute -z-10 inset-0 bg-accent group-[[data-checked]]:opacity-100 opacity-0 rounded-[3px] transition-opacity" />
     <svg
       class="text-white transition-opacity opacity-0 group-[[data-checked]]:opacity-100"
       width="10"
@@ -560,24 +560,6 @@ export const PostCreator = (props: { boardId: string }) => {
       setWalletError(ctx?.curWalletError ?? null);
     },
   }));
-
-  useCleanup((signal) => {
-    walletLinkedTarget.addEventListener(
-      "wallet-linked",
-      () => {
-        if (walletError()) {
-          addNoteMutation.mutate({
-            board: props.boardId,
-            content: inputValue(),
-            type: isAnonymous() ? "public-anonymous" : "public",
-          });
-        }
-      },
-      {
-        signal,
-      },
-    );
-  });
 
   const meQuery = createQuery(() => keysFactory.me);
 
