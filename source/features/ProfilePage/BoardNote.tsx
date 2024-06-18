@@ -70,7 +70,7 @@ const BoardNoteAnonymousHeader = (props: { createdAt: DateString }) => (
 const BoardNoteDivider = (props: StyleProps) => (
   <div
     class={clsxString(
-      "mx-[2px] my-[10px] bg-gray-300/50 h-[1px]",
+      "mx-[2px] my-[10px] bg-separator h-separator",
       props.class ?? "",
     )}
   />

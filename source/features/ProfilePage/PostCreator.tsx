@@ -123,7 +123,7 @@ function PostInput(
           class="bg-transparent w-full placeholder:select-none overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
         />
       </div>
-      <div class="bg-gray-300/50 w-full h-[1px]" />
+      <div class="bg-separator w-full h-separator" />
       <div class="flex flex-row justify-between items-center p-[2px]">
         <label
           class="group select-none flex flex-row items-center cursor-pointer"
