@@ -71,6 +71,9 @@ const CheckboxUI = () => (
   </div>
 );
 
+// [TODO]: share number with backend
+
+const MAX_POST_LENGTH = 1200;
 function PostInput(
   props: StyleProps & {
     value: string;
@@ -82,7 +85,9 @@ function PostInput(
   },
 ) {
   let inputRef!: HTMLTextAreaElement | undefined;
-  const isEmpty = () => props.value.trim().length === 0;
+  const trimmedText = createMemo(() => props.value.trim());
+  const isEmpty = () => trimmedText().length === 0;
+  const symbolsRemaining = () => MAX_POST_LENGTH - trimmedText().length;
 
   return (
     <form
@@ -124,9 +129,9 @@ function PostInput(
         />
       </div>
       <div class="bg-separator w-full h-separator" />
-      <div class="flex flex-row justify-between items-center p-[2px]">
+      <div class="flex flex-row items-center p-[2px]">
         <label
-          class="group select-none flex flex-row items-center cursor-pointer"
+          class="group select-none flex flex-row items-center cursor-pointer mr-auto"
           data-checked={props.isAnonymous ? "" : undefined}
         >
           <input
@@ -143,9 +148,20 @@ function PostInput(
             Send anonymously
           </div>
         </label>
+
+        <Show when={symbolsRemaining() < MAX_POST_LENGTH / 4}>
+          <p
+            class={clsxString(
+              "ml-auto font-inter text-[16px] leading-[16px]",
+              symbolsRemaining() > 0 ? "text-hint" : "text-destructive-text",
+            )}
+          >
+            {symbolsRemaining()}
+          </p>
+        </Show>
         <button
-          disabled={isEmpty() || props.isLoading}
-          class="relative ml-auto mt-auto w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
+          disabled={isEmpty() || props.isLoading || symbolsRemaining() <= 0}
+          class="relative ml-2 w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
         >
           <Show fallback={<ArrowUpIcon />} when={props.isLoading}>
             <div role="status">
