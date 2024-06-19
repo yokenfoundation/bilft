@@ -2,6 +2,7 @@ import { defineConfig, loadEnv, type Plugin } from "vite";
 
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import tsconfigPaths from "vite-tsconfig-paths";
+import terminal from "vite-plugin-terminal";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
 
@@ -71,6 +72,11 @@ export default defineConfig(async ({ mode, command }) => {
       port: 1234,
     },
     plugins: [
+      command !== "build" &&
+        terminal({
+          console: "terminal",
+          output: ["console", "terminal"],
+        }),
       tonConnectPlugin(env.VITE_SELF_WEBAPP_URL),
       solid(),
       tsconfigPaths(),
