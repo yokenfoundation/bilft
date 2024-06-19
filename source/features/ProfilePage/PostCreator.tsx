@@ -107,11 +107,7 @@ function PostInput(
               (e.target instanceof Element || e.target instanceof Document) &&
               !formRef?.contains(e.target)
             ) {
-              const curInputMode = inputRef.inputMode;
-              inputRef.inputMode = "none";
-              setTimeout(() => {
-                inputRef.inputMode = curInputMode;
-              });
+              inputRef.blur();
             }
           },
           {
@@ -143,7 +139,7 @@ function PostInput(
       )}
     >
       <div
-        class='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"] max-h-[40vh] overflow-auto'
+        class='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"] max-h-[40vh] overflow-y-auto pr-3 [scrollbar-gutter:stable] -mr-4'
         data-value={props.value}
       >
         <textarea
@@ -216,93 +212,6 @@ function PostInput(
     </form>
   );
 }
-
-const WalletControlPopup = (
-  props: StyleProps & { address: string; onUnlink(): void } & Pick<
-      ComponentProps<"div">,
-      "ref"
-    >,
-) => {
-  const [show, setShow] = createSignal(false);
-  const [divRef, setDivRef] = createSignal<HTMLDivElement>();
-
-  createEffect(() => {
-    if (!show()) {
-      return;
-    }
-
-    useCleanup((signal) => {
-      window.addEventListener(
-        "click",
-        (ev) => {
-          if (
-            ev.target instanceof HTMLElement &&
-            !divRef()?.contains(ev.target)
-          ) {
-            setShow(false);
-            ev.preventDefault();
-            ev.stopPropagation();
-          }
-        },
-        {
-          signal,
-          capture: true,
-        },
-      );
-    });
-  });
-
-  const [buttonRef, setButtonRef] = createSignal<HTMLButtonElement>();
-
-  const { present, status } = createTransitionPresence({
-    element: buttonRef,
-    when: show,
-  });
-
-  return (
-    <div
-      ref={mergeRefs(setDivRef, props.ref)}
-      class={clsxString(
-        "absolute select-none left-1/2 translate-x-[-50%] flex flex-col gap-[10px] items-center",
-        props.class ?? "",
-      )}
-    >
-      <button
-        onClick={() => {
-          setShow((curShow) => !curShow);
-        }}
-        class="flex gap-1 transition-transform active:scale-[97%] flex-row font-inter text-[12px] bg-bg text-text items-center px-[10px] py-[6px] rounded-[10px]"
-      >
-        {trimAddress(props.address)}
-        <ArrowPointDownIcon />
-      </button>
-
-      <Show when={present()}>
-        <button
-          ref={setButtonRef}
-          onPointerDown={() => {
-            postEvent("web_app_trigger_haptic_feedback", {
-              type: "impact",
-              impact_style: "heavy",
-            });
-          }}
-          onClick={() => {
-            setShow(false);
-            props.onUnlink();
-          }}
-          class={clsxString(
-            "text-destructive-text absolute top-[calc(100%+10px)] transition-transform -mx-[40px]",
-            "bg-section-bg font-inter text-[15px] leading-[18px] text-center px-2 py-[10px] flex flex-row gap-1 rounded-xl active:scale-[97%] animate-duration-300",
-            status() === "hiding" ? "animate-fade-out" : "animate-fade",
-          )}
-        >
-          Unlink wallet
-          <UnlinkIcon />
-        </button>
-      </Show>
-    </div>
-  );
-};
 
 const ModalContent = (props: {
   status: ModalStatus;
