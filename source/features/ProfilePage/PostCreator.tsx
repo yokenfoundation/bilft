@@ -154,7 +154,6 @@ function PostInput(
             props.onChange(e.target.value);
           }}
           onFocus={() => {
-            console.log("onfocus");
             setIsFocused(true);
           }}
           onBlur={() => {
@@ -218,6 +217,296 @@ function PostInput(
   );
 }
 
+const WalletControlPopup = (
+  props: StyleProps & { address: string; onUnlink(): void } & Pick<
+      ComponentProps<"div">,
+      "ref"
+    >,
+) => {
+  const [show, setShow] = createSignal(false);
+  const [divRef, setDivRef] = createSignal<HTMLDivElement>();
+
+  createEffect(() => {
+    if (!show()) {
+      return;
+    }
+
+    useCleanup((signal) => {
+      window.addEventListener(
+        "click",
+        (ev) => {
+          if (
+            ev.target instanceof HTMLElement &&
+            !divRef()?.contains(ev.target)
+          ) {
+            setShow(false);
+            ev.preventDefault();
+            ev.stopPropagation();
+          }
+        },
+        {
+          signal,
+          capture: true,
+        },
+      );
+    });
+  });
+
+  const [buttonRef, setButtonRef] = createSignal<HTMLButtonElement>();
+
+  const { present, status } = createTransitionPresence({
+    element: buttonRef,
+    when: show,
+  });
+
+  return (
+    <div
+      ref={mergeRefs(setDivRef, props.ref)}
+      class={clsxString(
+        "absolute select-none left-1/2 translate-x-[-50%] flex flex-col gap-[10px] items-center",
+        props.class ?? "",
+      )}
+    >
+      <button
+        onClick={() => {
+          setShow((curShow) => !curShow);
+        }}
+        class="flex gap-1 transition-transform active:scale-[97%] flex-row font-inter text-[12px] bg-bg text-text items-center px-[10px] py-[6px] rounded-[10px]"
+      >
+        {trimAddress(props.address)}
+        <ArrowPointDownIcon />
+      </button>
+
+      <Show when={present()}>
+        <button
+          ref={setButtonRef}
+          onPointerDown={() => {
+            postEvent("web_app_trigger_haptic_feedback", {
+              type: "impact",
+              impact_style: "heavy",
+            });
+          }}
+          onClick={() => {
+            setShow(false);
+            props.onUnlink();
+          }}
+          class={clsxString(
+            "text-destructive-text absolute top-[calc(100%+10px)] transition-transform -mx-[40px]",
+            "bg-section-bg font-inter text-[15px] leading-[18px] text-center px-2 py-[10px] flex flex-row gap-1 rounded-xl active:scale-[97%] animate-duration-300",
+            status() === "hiding" ? "animate-fade-out" : "animate-fade",
+          )}
+        >
+          Unlink wallet
+          <UnlinkIcon />
+        </button>
+      </Show>
+    </div>
+  );
+};
+
+const ModalContent = (props: {
+  status: ModalStatus;
+  onClose(): void;
+  onUnlinkWallet(): void;
+  onSendPublic(): void;
+  onSend(): void;
+}) => {
+  const status = () => props.status;
+  const meQuery = createQuery(() => keysFactory.me);
+
+  const [tonConnectUI] = useTonConnectUI();
+
+  return (
+    <div class="min-h-[432px] flex flex-col pb-2">
+      <section class="pt-5 pb-3 relative flex items-center justify-end">
+        <Show when={meQuery.data?.wallet}>
+          {(wallet) => (
+            <WalletControlPopup
+              onUnlink={() => {
+                props.onUnlinkWallet();
+              }}
+              address={wallet().friendlyAddress}
+            />
+          )}
+        </Show>
+
+        <button
+          onClick={() => {
+            props.onClose();
+          }}
+          type="button"
+        >
+          <span class="sr-only">Close</span>
+          <CloseIcon class="text-accent" />
+        </button>
+      </section>
+
+      <Switch>
+        <Match when={status().data}>
+          {(walletError) => (
+            <section class="mt-5 flex flex-col flex-1 items-center">
+              <YoCoinIcon class="mb-6" />
+
+              <p
+                data-checked=""
+                class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
+              >
+                <CheckboxUI />
+                Send anonymously
+              </p>
+              <p class="text-hint font-inter text-[17px] leading-[22px] text-center mt-2">
+                To ask a question, you need{" "}
+                <span class="text-text">
+                  {yokenAmountToFloat(
+                    walletError().error.payload.requiredBalance,
+                  ).toFixed(0)}{" "}
+                  Yo Tokens.
+                </span>
+                <Show
+                  when={walletError().error.reason === "insufficient_balance"}
+                >
+                  <br /> Please top up your balance.
+                </Show>
+              </p>
+
+              <Switch>
+                <Match
+                  when={walletError().error.reason === "insufficient_balance"}
+                >
+                  <article class="flex flex-row gap-1 mt-5 mb-auto">
+                    <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
+                      <div class="text-subtitle font-inter text-[12px] leading-4">
+                        Your balance
+                      </div>
+                      <div class="text-text font-inter text-[13px] leading-[18px]">
+                        {yokenAmountToFloat(
+                          meQuery.data?.wallet?.tokens.yo ?? "0",
+                        ).toFixed(0)}{" "}
+                        Yo
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
+                      <div class="text-subtitle font-inter text-[12px] leading-4">
+                        lacks
+                      </div>
+                      <div class="text-text font-inter text-[13px] leading-[18px]">
+                        {Math.ceil(
+                          yokenAmountToFloat(
+                            walletError().error.payload.requiredBalance,
+                          ) -
+                            yokenAmountToFloat(
+                              meQuery.data?.wallet?.tokens.yo ?? "0",
+                            ),
+                        )}{" "}
+                        Yo
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        meQuery.refetch();
+                      }}
+                      inert={meQuery.isFetching}
+                      class="text-text font-inter text-[13px] leading-[18px] items-center h-full py-[14px] px-[10px] bg-section-bg rounded-[10px] active:scale-[97%] transition-transform flex flex-row gap-1"
+                    >
+                      <RefreshIcon
+                        class={clsxString(
+                          "text-accent animate-spin animate-reverse origin-center",
+                          meQuery.isFetching ? "" : "animate-stop",
+                        )}
+                      />
+                      Refresh
+                    </button>
+                  </article>
+
+                  <button
+                    type="button"
+                    class={clsxString("mt-7 mb-4", buttonClass)}
+                    onClick={() => {
+                      utils.openLink("https://app.dedust.io/swap/TON/YO");
+                    }}
+                  >
+                    Top up
+                  </button>
+                </Match>
+                <Match
+                  when={walletError().error.reason === "no_connected_wallet"}
+                >
+                  <div class="flex flex-col mt-7 flex-1 justify-center self-stretch">
+                    <button
+                      type="button"
+                      class={clsxString(buttonClass)}
+                      onClick={async () => {
+                        const ton = tonConnectUI();
+                        if (!ton) {
+                          return;
+                        }
+
+                        await disconnectWallet(ton);
+                        ton.modal.open();
+                      }}
+                    >
+                      Connect Wallet
+                    </button>
+                    <button
+                      type="button"
+                      class="pt-[14px] mb-2 active:opacity-70 transition-opacity text-center text-accent font-inter text-[17px] leading-[22px]"
+                      onClick={() => {
+                        props.onSendPublic();
+                      }}
+                    >
+                      Ask not anonymously
+                    </button>
+                  </div>
+                </Match>
+              </Switch>
+            </section>
+          )}
+        </Match>
+
+        <Match when={status().type === "success"}>
+          <section class="mt-5 flex flex-col flex-1 items-center">
+            <SuccessIcon class="mb-6" />
+
+            <p
+              data-checked=""
+              class="group flex gap-2 items-center font-inter font-semibold text-[20px] leading-7 text-center text-text"
+            >
+              Send anonymously
+            </p>
+            <p class="text-hint font-inter text-[17px] leading-[22px] text-center mx-4 mt-2">
+              You have successfully added the required number of Yo tokens
+            </p>
+
+            <div class="flex self-center mb-auto mt-5 flex-col px-[10px] py-[6px] bg-section-bg rounded-[10px]">
+              <div class="text-subtitle font-inter text-[12px] leading-4">
+                Your balance
+              </div>
+              <div class="text-text font-inter self-center text-center text-[13px] leading-[18px]">
+                {yokenAmountToFloat(
+                  meQuery.data?.wallet?.tokens.yo ?? "0",
+                ).toFixed(0)}{" "}
+                Yo
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class={clsxString("mt-7 mb-4", buttonClass)}
+              onClick={() => {
+                props.onSend();
+              }}
+            >
+              Send
+            </button>
+          </section>
+        </Match>
+      </Switch>
+    </div>
+  );
+};
 
 type ModalStatus =
   | {
