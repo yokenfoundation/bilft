@@ -1,13 +1,12 @@
 import model from "./model";
 import axios from "axios";
 
-import { queryOptions } from "@tanstack/solid-query";
-import { infiniteQueryOptions } from "@/queryClientTypes";
+import { queryOptions, infiniteQueryOptions } from "@tanstack/solid-query";
 import { authData } from "@/common";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
-  timeout: 10000,
+  timeout: 15000,
 });
 
 type RequestResponse<Request, Response> = {
@@ -15,12 +14,28 @@ type RequestResponse<Request, Response> = {
   response: Response;
 };
 
-type AvailableRequests = "/board/resolve" | "/board/createNote" | "/board/getNotes";
 type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
-  "/board/createNote": RequestResponse<{ board: string; content: string }, model.Note>;
+  "/board/createNote": RequestResponse<
+    { board: string; content: string; type: "private" | "public" | "public-anonymous" },
+    model.Note
+  >;
   "/board/getNotes": RequestResponse<{ board: string; next?: string }, model.NoteArray>;
+  "/me": RequestResponse<
+    void,
+    {
+      wallet?: model.Wallet;
+    }
+  >;
+  "/me/linkWallet": RequestResponse<
+    model.WalletConfirmation,
+    {
+      wallet: model.Wallet;
+    }
+  >;
+  "/me/unlinkWallet": RequestResponse<void, void>;
 };
+type AvailableRequests = keyof RequestResponseMappings;
 
 type PickRequest<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["request"];
 type PickResponse<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["response"];
@@ -36,6 +51,26 @@ export const fetchMethod = async <T extends AvailableRequests>(
     })
     .then((it) => it.data);
 
+export const getWalletError = (response: { status: number; data: unknown }): model.WalletError | null => {
+  if (response.status !== 403) {
+    return null;
+  }
+  if (!response.data || typeof response.data !== "object") {
+    return null;
+  }
+  const data: {
+    error?: {
+      reason?: string;
+    };
+  } = response.data;
+
+  if (data?.error?.reason !== "no_connected_wallet" && data.error?.reason !== "insufficient_balance") {
+    return null;
+  }
+
+  return data as model.WalletError;
+};
+
 export const fetchMethodCurry =
   <T extends AvailableRequests>(path: T) =>
   (data: PickRequest<T>) =>
@@ -43,10 +78,10 @@ export const fetchMethodCurry =
 
 export const keysFactory = {
   board: (params: PickRequest<"/board/resolve">) =>
-    queryOptions(() => ({
+    queryOptions({
       queryFn: () => fetchMethod("/board/resolve", params),
       queryKey: ["board", params],
-    })),
+    }),
   notes: ({ board }: Omit<PickRequest<"/board/getNotes">, "next">) =>
     infiniteQueryOptions({
       queryKey: ["notes", board],
@@ -56,6 +91,10 @@ export const keysFactory = {
           board,
           next: pageParam,
         }),
-      getNextPageParam: ({ next }) => next,
+      getNextPageParam: (response) => response?.next,
     }),
+  me: queryOptions({
+    queryFn: () => fetchMethod("/me", undefined),
+    queryKey: ["me"],
+  }),
 };
