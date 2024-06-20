@@ -25,7 +25,8 @@
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
 
-    "jsx": "react-jsx",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
 
     "rootDir": "./",
     "outDir": "./bundle",

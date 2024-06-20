@@ -1,14 +1,12 @@
-import WebApp from "@twa-dev/sdk";
-import model from "./model";
 import axios from "axios";
+import type { model } from ".";
 
-import { useState } from "react";
-import { useApplicationContext } from "@/context/context";
+import { authData } from "@/common";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/solid-query";
 
 const instance = axios.create({
-  // baseURL: "https://redsun.yoken.io/api",
-  baseURL: "https://6f5d51adf2a3.ngrok.app/api",
-  timeout: 10000,
+  baseURL: import.meta.env.VITE_BACKEND_URL,
+  timeout: 15000,
 });
 
 type RequestResponse<Request, Response> = {
@@ -16,63 +14,106 @@ type RequestResponse<Request, Response> = {
   response: Response;
 };
 
-type AvailableRequests = "/board/resolve" | "/board/createNote" | "/board/getNotes";
 type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
-  "/board/createNote": RequestResponse<{ board: string; content: string }, model.Board>;
-  "/board/getNotes": RequestResponse<{ board: string; next?: string }, model.NoteArray>;
+  "/board/createNote": RequestResponse<
+    {
+      board: string;
+      content: string;
+      type: "private" | "public" | "public-anonymous";
+    },
+    model.Note
+  >;
+  "/board/getNotes": RequestResponse<
+    { board: string; next?: string },
+    model.NoteArray
+  >;
+  "/me": RequestResponse<
+    void,
+    {
+      wallet?: model.Wallet;
+    }
+  >;
+  "/me/linkWallet": RequestResponse<
+    model.WalletConfirmation,
+    {
+      wallet: model.Wallet;
+    }
+  >;
+  "/me/unlinkWallet": RequestResponse<void, void>;
+};
+type AvailableRequests = keyof RequestResponseMappings;
+
+type PickRequest<T extends AvailableRequests> = Pick<
+  RequestResponseMappings,
+  T
+>[T]["request"];
+type PickResponse<T extends AvailableRequests> = Pick<
+  RequestResponseMappings,
+  T
+>[T]["response"];
+
+export const fetchMethod = async <T extends AvailableRequests>(
+  path: T,
+  data: PickRequest<T>,
+): Promise<PickResponse<T>> =>
+  instance
+    .post(path, {
+      ...data,
+      authentication_data: authData,
+    })
+    .then((it) => it.data);
+
+export const getWalletError = (response: {
+  status: number;
+  data: unknown;
+}): model.WalletError | null => {
+  if (response.status !== 403) {
+    return null;
+  }
+  if (!response.data || typeof response.data !== "object") {
+    return null;
+  }
+  const data: {
+    error?: {
+      reason?: string;
+    };
+  } = response.data;
+
+  if (
+    data?.error?.reason !== "no_connected_wallet" &&
+    data.error?.reason !== "insufficient_balance"
+  ) {
+    return null;
+  }
+
+  return data as model.WalletError;
 };
 
-type PickRequest<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["request"];
-type PickResponse<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["response"];
-type PickMethodResult<T extends AvailableRequests> = PickResponse<T> | model.Error | undefined;
+export const fetchMethodCurry =
+  <T extends AvailableRequests>(path: T) =>
+  (data: PickRequest<T>) =>
+    fetchMethod(path, data);
 
-const useMethod = <T extends AvailableRequests>(path: T, data: PickRequest<T>): [PickMethodResult<T>, () => void] => {
-  const context = useApplicationContext();
-  const [response, setResponse] = useState<PickMethodResult<T>>(undefined);
-
-  const authentication = { authentication_data: WebApp.initData };
-  const body = { ...authentication, ...data };
-
-  const execute = () => {
-    context.loading.increment();
-    instance
-      .post(path, body)
-      .then((result) => {
-        if (result.status >= 400) {
-          let message = `${result.status}`;
-          if ("error" in result.data && "message" in result.data.error) {
-            message = `${result.status}: ${result.data.error.message}`;
-          } else {
-            message = `${result.status}`;
-          }
-          throw new Error(message);
-        } else {
-          setResponse(result.data as PickResponse<T>);
-        }
-      })
-      .catch((error) => {
-        const _error = error as {
-          response?: {
-            status?: number;
-            data?: { error?: { message?: string } };
-          };
-        };
-
-        const _status = _error.response?.status;
-        const _message = _error.response?.data?.error?.message;
-        if (!_message) {
-          setResponse({ error });
-        } else {
-          setResponse({ error: new Error(`${_status ?? 0}: ${_message}`) });
-        }
-      })
-      .finally(() => {
-        context.loading.decrement();
-      });
-  };
-
-  return [response, execute];
+export const keysFactory = {
+  board: (params: PickRequest<"/board/resolve">) =>
+    queryOptions({
+      queryFn: () => fetchMethod("/board/resolve", params),
+      queryKey: ["board", params],
+    }),
+  notes: ({ board }: Omit<PickRequest<"/board/getNotes">, "next">) =>
+    infiniteQueryOptions({
+      queryKey: ["notes", board],
+      initialPageParam: undefined,
+      queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
+        fetchMethod("/board/getNotes", {
+          board,
+          next: pageParam,
+        }),
+      getNextPageParam: (response) => response?.next,
+    }),
+  me: queryOptions({
+    queryFn: () => fetchMethod("/me", undefined),
+    queryKey: ["me"],
+  }),
 };
-
-export { useMethod };
