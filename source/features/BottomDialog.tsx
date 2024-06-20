@@ -1,10 +1,29 @@
+import {
+  createDisposeEffect,
+  createTransitionPresence,
+  useCleanup,
+} from "@/lib/solid";
 import { useNavigate, useSearchParams } from "@solidjs/router";
-import { type Accessor, type JSX, createSignal, createMemo, untrack, createEffect, Show, onCleanup } from "solid-js";
-import { type StyleProps } from "../common";
+import {
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  untrack,
+  type Accessor,
+  type JSX,
+} from "solid-js";
 import { Portal } from "solid-js/web";
-import { createDisposeEffect, createTransitionPresence, useCleanup } from "@/lib/solid";
+import { type StyleProps } from "../common";
 
-const useModalNavigation = ({ onClose, show: _show }: { onClose(): void; show: Accessor<boolean> }) => {
+const useModalNavigation = ({
+  onClose,
+  show: _show,
+}: {
+  onClose(): void;
+  show: Accessor<boolean>;
+}) => {
   const show = createMemo(_show);
 
   const [params, setParams] = useSearchParams<{
@@ -106,7 +125,8 @@ export const BottomDialog = <T,>(
         <Portal>
           <div
             style={
-              transitionPresence.status() === "hiding" || transitionPresence.status() === "presenting"
+              transitionPresence.status() === "hiding" ||
+              transitionPresence.status() === "presenting"
                 ? {
                     "--opacity": 0,
                     "--translateY": "100%",
@@ -117,15 +137,15 @@ export const BottomDialog = <T,>(
                   }
             }
             ref={setDialogRef}
-            class="z-50 flex flex-col fixed inset-0"
+            class="fixed inset-0 z-50 flex flex-col"
           >
             <button
-              class="bg-black/60 absolute inset-0 transition-opacity duration-300 opacity-[var(--opacity,0)]"
+              class="absolute inset-0 bg-black/60 opacity-[var(--opacity,0)] transition-opacity duration-300"
               onClick={() => {
                 props.onClose();
               }}
             />
-            <div class="transition-transform translate-y-[var(--translateY,100%)] duration-300 px-4 mt-auto bg-secondary-bg rounded-t-[30px]">
+            <div class="mt-auto translate-y-[var(--translateY,100%)] rounded-t-[30px] bg-secondary-bg px-4 transition-transform duration-300">
               {props.children(data)}
             </div>
           </div>

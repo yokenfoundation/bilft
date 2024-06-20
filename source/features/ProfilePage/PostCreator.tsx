@@ -1,7 +1,7 @@
 import type { model } from "@/api";
 import { fetchMethodCurry, getWalletError, keysFactory } from "@/api/api";
-import { BottomDialog } from "@/features/BottomDialog";
 import { clsxString, platform, utils, type StyleProps } from "@/common";
+import { BottomDialog } from "@/features/BottomDialog";
 import {
   ArrowPointDownIcon,
   ArrowUpIcon,
@@ -36,7 +36,7 @@ import {
   type ComponentProps,
 } from "solid-js";
 import { LoadingSvg } from "../LoadingSvg";
-import { disconnectWallet, walletLinkedTarget } from "../SetupTonWallet";
+import { disconnectWallet } from "../SetupTonWallet";
 
 const buttonClass =
   "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-button-text text-center rounded-xl self-stretch";
@@ -49,8 +49,8 @@ const trimAddress = (address: string) =>
   `${address.slice(0, 4)}...${address.slice(-4)}`;
 
 const CheckboxUI = () => (
-  <div class="w-5 isolate flex items-center justify-center aspect-square border-accent border-[1.5px] rounded-md relative">
-    <div class="absolute -z-10 inset-0 bg-accent group-[[data-checked]]:opacity-100 opacity-0 rounded-[3px] transition-opacity" />
+  <div class="relative isolate flex aspect-square w-5 items-center justify-center rounded-md border-[1.5px] border-accent">
+    <div class="absolute inset-0 -z-10 rounded-[3px] bg-accent opacity-0 transition-opacity group-[[data-checked]]:opacity-100" />
     <svg
       class="text-white opacity-0 transition-opacity group-[[data-checked]]:opacity-100"
       width="10"
@@ -215,12 +215,12 @@ function PostInput(
       }}
       ref={formRef}
       class={clsxString(
-        "p-4 bg-section-bg border-[#AAA] border mx-4 border-opacity-15 rounded-[20px] flex flex-col gap-[10px] items-stretch overflow-hidden justify-between",
+        "mx-4 flex flex-col items-stretch justify-between gap-[10px] overflow-hidden rounded-[20px] border border-[#AAA] border-opacity-15 bg-section-bg p-4",
         props.class ?? "",
       )}
     >
       <div
-        class='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"] max-h-[calc(var(--tgvh)*40)] overflow-y-auto pr-3 [scrollbar-gutter:stable] -mr-4'
+        class='-mr-4 grid max-h-[calc(var(--tgvh)*40)] flex-1 grid-cols-1 overflow-y-auto pr-3 font-inter text-[16px] leading-[21px] [scrollbar-gutter:stable] after:invisible after:whitespace-pre-wrap after:break-words after:font-[inherit] after:content-[attr(data-value)_"_"] after:[grid-area:1/1/2/2] [&>textarea]:[grid-area:1/1/2/2]'
         data-value={props.value}
       >
         <textarea
@@ -244,13 +244,13 @@ function PostInput(
             }
           }}
           ref={inputRef}
-          class="bg-transparent w-full placeholder:select-none overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
+          class="w-full max-w-full resize-none overflow-hidden break-words border-none bg-transparent placeholder:select-none focus:border-none focus:outline-none"
         />
       </div>
-      <div class="bg-separator w-full h-separator" />
+      <div class="h-separator w-full bg-separator" />
       <div class="flex flex-row items-center p-[2px]">
         <label
-          class="group select-none flex flex-row items-center cursor-pointer mr-auto"
+          class="group mr-auto flex cursor-pointer select-none flex-row items-center"
           data-checked={props.isAnonymous ? "" : undefined}
         >
           <input
@@ -259,11 +259,11 @@ function PostInput(
             }}
             checked={props.isAnonymous}
             type="checkbox"
-            class="invisible w-0 h-0"
+            class="invisible h-0 w-0"
           />
           <CheckboxUI />
 
-          <div class="ml-2 font-inter text-subtitle text-[16px] leading-[22px]">
+          <div class="ml-2 font-inter text-[16px] leading-[22px] text-subtitle">
             Send anonymously
           </div>
         </label>
@@ -280,11 +280,11 @@ function PostInput(
         </Show>
         <button
           disabled={isEmpty() || props.isLoading || symbolsRemaining() <= 0}
-          class="relative ml-2 w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
+          class="relative ml-2 flex aspect-square w-7 items-center justify-center overflow-hidden rounded-full [&:disabled>svg>path]:fill-gray-400 [&>svg>path]:fill-accent"
         >
           <Show fallback={<ArrowUpIcon />} when={props.isLoading}>
             <div role="status">
-              <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
+              <LoadingSvg class="w-7 fill-gray-300 text-gray-600" />
               <span class="sr-only">Loading...</span>
             </div>
           </Show>

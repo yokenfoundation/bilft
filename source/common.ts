@@ -1,5 +1,4 @@
-import { initThemeParams, retrieveLaunchParams, initUtils } from "@tma.js/sdk";
-import { onCleanup } from "solid-js";
+import { initThemeParams, initUtils, retrieveLaunchParams } from "@tma.js/sdk";
 
 export type StyleProps = {
   class?: string;

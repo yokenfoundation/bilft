@@ -1,4 +1,9 @@
-import type { TonConnectUI, WalletsModal, TonConnectUiOptions } from "@tonconnect/ui";
+import { createDisposeEffect } from "@/lib/solid";
+import type {
+  TonConnectUI,
+  TonConnectUiOptions,
+  WalletsModal,
+} from "@tonconnect/ui";
 import {
   createContext,
   createMemo,
@@ -9,7 +14,6 @@ import {
   type ParentProps,
   type Setter,
 } from "solid-js";
-import { createDisposeEffect } from "@/lib/solid";
 
 const TonContext = createContext<null | (() => TonConnectUI | null)>(null);
 
@@ -65,7 +69,10 @@ export const useTonWallet = (): Accessor<TonConnectUI["wallet"]> => {
   return wallet;
 };
 
-export const useTonConnectUI = (): [Accessor<TonConnectUI | null>, Setter<TonConnectUiOptions>] => {
+export const useTonConnectUI = (): [
+  Accessor<TonConnectUI | null>,
+  Setter<TonConnectUiOptions>,
+] => {
   const ctx = useTonContext();
 
   return [
@@ -76,7 +83,8 @@ export const useTonConnectUI = (): [Accessor<TonConnectUI | null>, Setter<TonCon
         throw new Error("Cannot set props of unexisting ConnectUI");
       }
 
-      tonConnectUI.uiOptions = typeof data === "function" ? data(tonConnectUI.uiOptions) : data;
+      tonConnectUI.uiOptions =
+        typeof data === "function" ? data(tonConnectUI.uiOptions) : data;
 
       return tonConnectUI.uiOptions;
     },
@@ -88,7 +96,9 @@ export const TonConnectProvider = (
     manifestUrl: string;
   }>,
 ) => {
-  const [tonConnectModuleResource] = createResource(() => import("@tonconnect/ui"));
+  const [tonConnectModuleResource] = createResource(
+    () => import("@tonconnect/ui"),
+  );
 
   const tonConnectUI = createMemo(() => {
     if (!tonConnectModuleResource.latest) {
@@ -102,5 +112,9 @@ export const TonConnectProvider = (
     return ui;
   });
 
-  return <TonContext.Provider value={tonConnectUI}>{props.children}</TonContext.Provider>;
+  return (
+    <TonContext.Provider value={tonConnectUI}>
+      {props.children}
+    </TonContext.Provider>
+  );
 };

@@ -1,5 +1,5 @@
-import { type StyleProps, clsxString } from "@/common";
-import { createSignal, createComputed, Show } from "solid-js";
+import { clsxString, type StyleProps } from "@/common";
+import { Show, createComputed, createSignal } from "solid-js";
 
 const isImageAlreadyLoaded = (imageSrc: string) => {
   const img = document.createElement("img");
@@ -8,8 +8,16 @@ const isImageAlreadyLoaded = (imageSrc: string) => {
   return img.complete;
 };
 
-export const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string | null; lazy?: boolean }) => {
-  const [isImageLoaded, setIsImageLoaded] = createSignal(props.url ? isImageAlreadyLoaded(props.url) : false);
+export const AvatarIcon = (
+  props: StyleProps & {
+    isLoading: boolean;
+    url: string | null;
+    lazy?: boolean;
+  },
+) => {
+  const [isImageLoaded, setIsImageLoaded] = createSignal(
+    props.url ? isImageAlreadyLoaded(props.url) : false,
+  );
 
   createComputed((prev) => {
     if (props.url && props.url !== prev) {
@@ -22,7 +30,12 @@ export const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string
   const isLoading = () => props.isLoading && !isImageLoaded();
 
   return (
-    <div class={clsxString("aspect-square rounded-full overflow-hidden relative select-none", props.class ?? "")}>
+    <div
+      class={clsxString(
+        "relative aspect-square select-none overflow-hidden rounded-full",
+        props.class ?? "",
+      )}
+    >
       <div
         class={clsxString(
           "absolute inset-0 bg-gray-400 transition-opacity",
@@ -41,7 +54,10 @@ export const AvatarIcon = (props: StyleProps & { isLoading: boolean; url: string
             }}
             alt="Avatar"
             src={url()}
-            class={clsxString("object-cover inset-0", isLoading() ? "opacity-0" : "")}
+            class={clsxString(
+              "inset-0 object-cover",
+              isLoading() ? "opacity-0" : "",
+            )}
           />
         )}
       </Show>
