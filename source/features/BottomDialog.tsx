@@ -73,8 +73,6 @@ const useModalNavigation = ({
   });
 };
 
-const raf = () => new Promise((resolve) => requestAnimationFrame(resolve));
-
 export const BottomDialog = <T,>(
   props: StyleProps & {
     when: T | undefined | null | false;

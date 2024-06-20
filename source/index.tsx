@@ -39,7 +39,7 @@ bindThemeParamsCSSVars(themeParams);
 
 const App = () => {
   const isOpenedSelfProfile = isEqualIds(getSelfUserId(), getProfileId());
-  const selfEntry: BrowserNavigatorAnyHistoryItem<any> = {
+  const selfEntry: BrowserNavigatorAnyHistoryItem<unknown> = {
     pathname: `/board/${removePrefix(getSelfUserId())}`,
   };
   const navigator = initNavigator("app-navigator-state");
