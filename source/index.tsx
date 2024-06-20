@@ -5,10 +5,22 @@ import { render } from "solid-js/web";
 import { ProfilePage } from "@/features/ProfilePage/ProfilePage";
 import { AppQueryClientProvider } from "./queryClient";
 import { Route } from "@solidjs/router";
-import { postEvent, initNavigator, type BrowserNavigatorAnyHistoryItem, bindThemeParamsCSSVars } from "@tma.js/sdk";
+import {
+  postEvent,
+  initNavigator,
+  type BrowserNavigatorAnyHistoryItem,
+  bindThemeParamsCSSVars,
+  on,
+} from "@tma.js/sdk";
 import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
-import { getProfileId, getSelfUserId, isEqualIds, removePrefix, themeParams } from "@/common";
+import {
+  getProfileId,
+  getSelfUserId,
+  isEqualIds,
+  removePrefix,
+  themeParams,
+} from "@/common";
 import { TonConnectProvider } from "@/lib/ton-connect-solid";
 import { SetupTonWallet } from "@/features/SetupTonWallet";
 
@@ -50,6 +62,18 @@ const App = () => {
     postEvent("web_app_ready");
     postEvent("web_app_expand");
   });
+
+  onCleanup(
+    on("viewport_changed", (e) => {
+      if (e.is_state_stable) {
+        document.documentElement.style.setProperty(
+          "--tg-screen-size",
+          `${e.height}px`,
+        );
+      }
+    }),
+  );
+  postEvent("web_app_request_viewport");
 
   return (
     <AppQueryClientProvider>

@@ -1,7 +1,7 @@
 import type { model } from "@/api";
 import { fetchMethodCurry, getWalletError, keysFactory } from "@/api/api";
-import { clsxString, utils, type StyleProps } from "@/common";
 import { BottomDialog } from "@/features/BottomDialog";
+import { clsxString, platform, utils, type StyleProps } from "@/common";
 import {
   ArrowPointDownIcon,
   ArrowUpIcon,
@@ -49,8 +49,8 @@ const trimAddress = (address: string) =>
   `${address.slice(0, 4)}...${address.slice(-4)}`;
 
 const CheckboxUI = () => (
-  <div class="relative isolate flex aspect-square w-5 items-center justify-center rounded-md border-[1.5px] border-accent">
-    <div class="absolute inset-0 -z-10 bg-accent opacity-0 transition-opacity group-[[data-checked]]:opacity-100" />
+  <div class="w-5 isolate flex items-center justify-center aspect-square border-accent border-[1.5px] rounded-md relative">
+    <div class="absolute -z-10 inset-0 bg-accent group-[[data-checked]]:opacity-100 opacity-0 rounded-[3px] transition-opacity" />
     <svg
       class="text-white opacity-0 transition-opacity group-[[data-checked]]:opacity-100"
       width="10"
@@ -69,94 +69,6 @@ const CheckboxUI = () => (
     </svg>
   </div>
 );
-
-function PostInput(
-  props: StyleProps & {
-    value: string;
-    onChange: (s: string) => void;
-    onSubmit: () => void;
-    isLoading: boolean;
-    isAnonymous: boolean;
-    setIsAnonymous: (status: boolean) => void;
-  },
-) {
-  let inputRef!: HTMLTextAreaElement | undefined;
-  const isEmpty = () => props.value.length === 0;
-
-  return (
-    <form
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          inputRef?.focus();
-        }
-      }}
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        props.onSubmit();
-      }}
-      class={clsxString(
-        "mx-4 flex cursor-text flex-col items-stretch justify-between gap-[10px] overflow-hidden rounded-[20px] border border-[#AAA] border-opacity-15 bg-section-bg p-4",
-        props.class ?? "",
-      )}
-    >
-      <div
-        class='grid flex-1 grid-cols-1 font-inter text-[16px] leading-[21px] after:invisible after:whitespace-pre-wrap after:break-words after:font-[inherit] after:content-[attr(data-value)_"_"] after:[grid-area:1/1/2/2] [&>textarea]:[grid-area:1/1/2/2]'
-        data-value={props.value}
-      >
-        <textarea
-          placeholder="Text me here..."
-          rows={1}
-          value={props.value}
-          onInput={(e) => {
-            props.onChange(e.target.value);
-          }}
-          inert={props.isLoading}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.ctrlKey && props.value.length > 0) {
-              e.preventDefault();
-              props.onSubmit();
-            }
-          }}
-          ref={inputRef}
-          class="w-full max-w-full resize-none overflow-hidden break-words border-none bg-transparent placeholder:select-none focus:border-none focus:outline-none"
-        />
-      </div>
-      <div class="h-[1px] w-full bg-gray-300/50" />
-      <div class="flex flex-row items-center justify-between p-[2px]">
-        <label
-          class="group flex cursor-pointer select-none flex-row items-center"
-          data-checked={props.isAnonymous ? "" : undefined}
-        >
-          <input
-            onChange={(e) => {
-              props.setIsAnonymous(e.target.checked);
-            }}
-            checked={props.isAnonymous}
-            type="checkbox"
-            class="invisible h-0 w-0"
-          />
-          <CheckboxUI />
-
-          <div class="ml-2 font-inter text-[16px] leading-[22px] text-subtitle">
-            Send anonymously
-          </div>
-        </label>
-        <button
-          disabled={isEmpty() || props.isLoading}
-          class="relative ml-auto mt-auto flex aspect-square w-7 items-center justify-center overflow-hidden rounded-full [&:disabled>svg>path]:fill-gray-400 [&>svg>path]:fill-accent"
-        >
-          <Show fallback={<ArrowUpIcon />} when={props.isLoading}>
-            <div role="status">
-              <LoadingSvg class="w-7 fill-gray-300 text-gray-600" />
-              <span class="sr-only">Loading...</span>
-            </div>
-          </Show>
-        </button>
-      </div>
-    </form>
-  );
-}
 
 const WalletControlPopup = (
   props: StyleProps & { address: string; onUnlink(): void } & Pick<
@@ -244,6 +156,143 @@ const WalletControlPopup = (
     </div>
   );
 };
+
+// [TODO]: share number with backend
+
+const MAX_POST_LENGTH = 1200;
+function PostInput(
+  props: StyleProps & {
+    value: string;
+    onChange: (s: string) => void;
+    onSubmit: () => void;
+    isLoading: boolean;
+    isAnonymous: boolean;
+    setIsAnonymous: (status: boolean) => void;
+  },
+) {
+  let inputRef!: HTMLTextAreaElement | undefined;
+  let formRef!: HTMLFormElement | undefined;
+  const trimmedText = createMemo(() => props.value.trim());
+  const isEmpty = () => trimmedText().length === 0;
+  const symbolsRemaining = () => MAX_POST_LENGTH - trimmedText().length;
+  const [isFocused, setIsFocused] = createSignal(false);
+
+  if (platform === "ios") {
+    createEffect(() => {
+      if (!isFocused()) {
+        return;
+      }
+
+      useCleanup((signal) => {
+        window.addEventListener(
+          "scroll",
+          (e) => {
+            if (
+              inputRef &&
+              e.target &&
+              (e.target instanceof Element || e.target instanceof Document) &&
+              !formRef?.contains(e.target)
+            ) {
+              inputRef.blur();
+            }
+          },
+          {
+            passive: true,
+            signal,
+            capture: true,
+          },
+        );
+      });
+    });
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        props.onSubmit();
+      }}
+      ref={formRef}
+      class={clsxString(
+        "p-4 bg-section-bg border-[#AAA] border mx-4 border-opacity-15 rounded-[20px] flex flex-col gap-[10px] items-stretch overflow-hidden justify-between",
+        props.class ?? "",
+      )}
+    >
+      <div
+        class='flex-1 grid grid-cols-1 [&>textarea]:[grid-area:1/1/2/2] after:[grid-area:1/1/2/2] font-inter text-[16px] leading-[21px] after:font-[inherit] after:invisible after:whitespace-pre-wrap after:break-words after:content-[attr(data-value)_"_"] max-h-[calc(var(--tgvh)*40)] overflow-y-auto pr-3 [scrollbar-gutter:stable] -mr-4'
+        data-value={props.value}
+      >
+        <textarea
+          placeholder="Text me here..."
+          rows={1}
+          value={props.value}
+          onInput={(e) => {
+            props.onChange(e.target.value);
+          }}
+          onFocus={() => {
+            setIsFocused(true);
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+          }}
+          inert={props.isLoading}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.ctrlKey && props.value.length > 0) {
+              e.preventDefault();
+              props.onSubmit();
+            }
+          }}
+          ref={inputRef}
+          class="bg-transparent w-full placeholder:select-none overflow-hidden break-words max-w-full resize-none border-none focus:border-none focus:outline-none"
+        />
+      </div>
+      <div class="bg-separator w-full h-separator" />
+      <div class="flex flex-row items-center p-[2px]">
+        <label
+          class="group select-none flex flex-row items-center cursor-pointer mr-auto"
+          data-checked={props.isAnonymous ? "" : undefined}
+        >
+          <input
+            onChange={(e) => {
+              props.setIsAnonymous(e.target.checked);
+            }}
+            checked={props.isAnonymous}
+            type="checkbox"
+            class="invisible w-0 h-0"
+          />
+          <CheckboxUI />
+
+          <div class="ml-2 font-inter text-subtitle text-[16px] leading-[22px]">
+            Send anonymously
+          </div>
+        </label>
+
+        <Show when={symbolsRemaining() < MAX_POST_LENGTH / 4}>
+          <p
+            class={clsxString(
+              "ml-auto font-inter text-[16px] leading-[16px]",
+              symbolsRemaining() > 0 ? "text-hint" : "text-destructive-text",
+            )}
+          >
+            {symbolsRemaining()}
+          </p>
+        </Show>
+        <button
+          disabled={isEmpty() || props.isLoading || symbolsRemaining() <= 0}
+          class="relative ml-2 w-7 aspect-square flex items-center justify-center [&>svg>path]:fill-accent [&:disabled>svg>path]:fill-gray-400  rounded-full overflow-hidden"
+        >
+          <Show fallback={<ArrowUpIcon />} when={props.isLoading}>
+            <div role="status">
+              <LoadingSvg class="text-gray-600 w-7 fill-gray-300" />
+              <span class="sr-only">Loading...</span>
+            </div>
+          </Show>
+        </button>
+      </div>
+    </form>
+  );
+}
 
 const ModalContent = (props: {
   status: ModalStatus;
@@ -560,24 +609,6 @@ export const PostCreator = (props: { boardId: string }) => {
     },
   }));
 
-  useCleanup((signal) => {
-    walletLinkedTarget.addEventListener(
-      "wallet-linked",
-      () => {
-        if (walletError()) {
-          addNoteMutation.mutate({
-            board: props.boardId,
-            content: inputValue(),
-            type: isAnonymous() ? "public-anonymous" : "public",
-          });
-        }
-      },
-      {
-        signal,
-      },
-    );
-  });
-
   const meQuery = createQuery(() => keysFactory.me);
 
   const hasEnoughMoney = createMemo(() => {
@@ -606,6 +637,12 @@ export const PostCreator = (props: { boardId: string }) => {
               data: error,
             },
     );
+  const sendContent = (anonymous: boolean) =>
+    addNoteMutation.mutate({
+      board: props.boardId,
+      content: inputValue(),
+      type: anonymous ? "public-anonymous" : "public",
+    });
 
   return (
     <>
@@ -619,11 +656,7 @@ export const PostCreator = (props: { boardId: string }) => {
             return;
           }
 
-          addNoteMutation.mutate({
-            board: props.boardId,
-            content: inputValue(),
-            type: isAnonymous() ? "public-anonymous" : "public",
-          });
+          sendContent(isAnonymous());
         }}
         value={inputValue()}
         onChange={setInputValue}
@@ -637,11 +670,7 @@ export const PostCreator = (props: { boardId: string }) => {
         {(status) => (
           <ModalContent
             onSend={() => {
-              addNoteMutation.mutate({
-                board: props.boardId,
-                type: "private",
-                content: inputValue(),
-              });
+              sendContent(isAnonymous());
               setWalletError(null);
             }}
             status={status()}
@@ -652,11 +681,7 @@ export const PostCreator = (props: { boardId: string }) => {
               unlinkMutation.mutate();
             }}
             onSendPublic={() => {
-              addNoteMutation.mutate({
-                board: props.boardId,
-                type: "public",
-                content: inputValue(),
-              });
+              sendContent(false);
             }}
           />
         )}
