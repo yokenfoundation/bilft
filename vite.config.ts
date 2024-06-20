@@ -93,7 +93,7 @@ export default defineConfig(async ({ mode, command }) => {
       "process.env": {},
     },
     build: {
-      outDir: "docs",
+      outDir: "dist",
     },
   };
 });
