@@ -1,9 +1,9 @@
 import { defineConfig, loadEnv, type Plugin } from "vite";
 
-import { nodePolyfills } from "vite-plugin-node-polyfills";
-import tsconfigPaths from "vite-tsconfig-paths";
-import terminal from "vite-plugin-terminal";
 import { rm } from "node:fs/promises";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
+import terminal from "vite-plugin-terminal";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { z } from "zod";
 
 import solid from "vite-plugin-solid";

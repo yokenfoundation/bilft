@@ -29,9 +29,7 @@ export const useCleanup = (callback: (signal: AbortSignal) => void) => {
 
 export type RefFunction<T> = (el: T) => void;
 export type Ref<T> = T | undefined | RefFunction<T>;
-export const mergeRefs = <T extends any>(
-  ...refsFuncs: Ref<T>[]
-): RefFunction<T> => {
+export const mergeRefs = <T,>(...refsFuncs: Ref<T>[]): RefFunction<T> => {
   return (arg) => {
     for (const ref of refsFuncs) {
       ref && (ref as RefFunction<T>)(arg);

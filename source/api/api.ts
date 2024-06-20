@@ -1,8 +1,8 @@
-import model from "./model";
 import axios from "axios";
+import type { model } from ".";
 
-import { queryOptions, infiniteQueryOptions } from "@tanstack/solid-query";
 import { authData } from "@/common";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/solid-query";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -17,10 +17,17 @@ type RequestResponse<Request, Response> = {
 type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
   "/board/createNote": RequestResponse<
-    { board: string; content: string; type: "private" | "public" | "public-anonymous" },
+    {
+      board: string;
+      content: string;
+      type: "private" | "public" | "public-anonymous";
+    },
     model.Note
   >;
-  "/board/getNotes": RequestResponse<{ board: string; next?: string }, model.NoteArray>;
+  "/board/getNotes": RequestResponse<
+    { board: string; next?: string },
+    model.NoteArray
+  >;
   "/me": RequestResponse<
     void,
     {
@@ -37,8 +44,14 @@ type RequestResponseMappings = {
 };
 type AvailableRequests = keyof RequestResponseMappings;
 
-type PickRequest<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["request"];
-type PickResponse<T extends AvailableRequests> = Pick<RequestResponseMappings, T>[T]["response"];
+type PickRequest<T extends AvailableRequests> = Pick<
+  RequestResponseMappings,
+  T
+>[T]["request"];
+type PickResponse<T extends AvailableRequests> = Pick<
+  RequestResponseMappings,
+  T
+>[T]["response"];
 
 export const fetchMethod = async <T extends AvailableRequests>(
   path: T,
@@ -51,7 +64,10 @@ export const fetchMethod = async <T extends AvailableRequests>(
     })
     .then((it) => it.data);
 
-export const getWalletError = (response: { status: number; data: unknown }): model.WalletError | null => {
+export const getWalletError = (response: {
+  status: number;
+  data: unknown;
+}): model.WalletError | null => {
   if (response.status !== 403) {
     return null;
   }
@@ -64,7 +80,10 @@ export const getWalletError = (response: { status: number; data: unknown }): mod
     };
   } = response.data;
 
-  if (data?.error?.reason !== "no_connected_wallet" && data.error?.reason !== "insufficient_balance") {
+  if (
+    data?.error?.reason !== "no_connected_wallet" &&
+    data.error?.reason !== "insufficient_balance"
+  ) {
     return null;
   }
 

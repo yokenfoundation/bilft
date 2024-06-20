@@ -1,13 +1,13 @@
 import {
-  type StyleProps,
-  type DateString,
   clsxString,
   themeParams,
+  type DateString,
+  type StyleProps,
 } from "@/common";
+import { AnonymousAvatarIcon } from "@/icons";
 import { A } from "@solidjs/router";
 import type { ParentProps } from "solid-js";
 import { AvatarIcon } from "./AvatarIcon";
-import { AnonymousAvatarIcon } from "@/icons";
 
 const formatPostDate = (createdAt: DateString) =>
   new Date(createdAt).toLocaleDateString(undefined, {
@@ -33,11 +33,11 @@ const BoardNotePublicHeader = (props: {
   <A
     href={`/board/${props.authorId}`}
     onClick={props.onClick}
-    class="flex gap-[10px] items-center"
+    class="flex items-center gap-[10px]"
   >
     <AvatarIcon lazy isLoading={false} url={props.avatarUrl} class="w-10" />
     <div class="flex flex-col">
-      <div class="font-inter font-medium text-[17px] leading-[22px]">
+      <div class="font-inter text-[17px] font-medium leading-[22px]">
         {props.name}
       </div>
       <div class="font-inter text-[13px] leading-4 text-subtitle">
@@ -48,16 +48,16 @@ const BoardNotePublicHeader = (props: {
   </A>
 );
 const BoardNoteAnonymousHeader = (props: { createdAt: DateString }) => (
-  <div class="flex gap-[10px] items-center">
+  <div class="flex items-center gap-[10px]">
     <AnonymousAvatarIcon
       class={clsxString(
         themeParams.isDark
-          ? "text-white fill-[#1C1C1D]"
-          : "text-black fill-slate-200",
+          ? "fill-[#1C1C1D] text-white"
+          : "fill-slate-200 text-black",
       )}
     />
     <div class="flex flex-col">
-      <div class="font-inter font-medium text-[17px] leading-[22px]">
+      <div class="font-inter text-[17px] font-medium leading-[22px]">
         Anonymously
       </div>
       <div class="font-inter text-[13px] leading-4 text-subtitle">
@@ -70,7 +70,7 @@ const BoardNoteAnonymousHeader = (props: { createdAt: DateString }) => (
 const BoardNoteDivider = (props: StyleProps) => (
   <div
     class={clsxString(
-      "mx-[2px] my-[10px] bg-separator h-separator",
+      "mx-[2px] my-[10px] h-separator bg-separator",
       props.class ?? "",
     )}
   />
@@ -79,7 +79,7 @@ const BoardNoteDivider = (props: StyleProps) => (
 const BoardNoteContent = (props: ParentProps<StyleProps>) => (
   <div
     class={clsxString(
-      "whitespace-pre-wrap font-inter text-[16px] leading-[21px] overflow-hidden",
+      "overflow-hidden whitespace-pre-wrap font-inter text-[16px] leading-[21px]",
       props.class ?? "",
     )}
   >
@@ -91,7 +91,7 @@ function BoardNoteRoot(props: ParentProps<StyleProps>) {
   return (
     <article
       class={clsxString(
-        "mx-4 bg-section-bg px-[14px] pb-4 pt-[14px] rounded-3xl flex flex-col transition-transform has-[a:active]:scale-[0.98]",
+        "mx-4 flex flex-col rounded-3xl bg-section-bg px-[14px] pb-4 pt-[14px] transition-transform has-[a:active]:scale-[0.98]",
         props.class ?? "",
       )}
     >

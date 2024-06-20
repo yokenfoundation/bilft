@@ -1,35 +1,32 @@
+import { useParams } from "@solidjs/router";
+import { createInfiniteQuery, createQuery } from "@tanstack/solid-query";
 import {
-  type ParentProps,
-  createComputed,
-  createMemo,
-  createSignal,
   For,
   Match,
   Show,
   Switch,
+  createMemo,
+  type ParentProps,
 } from "solid-js";
+import { keysFactory } from "../../api/api";
 import {
   addPrefix,
   clsxString,
   getSelfUserId,
   isEqualIds,
   removePrefix,
-  type DateString,
   type StyleProps,
 } from "../../common";
-import { createInfiniteQuery, createQuery } from "@tanstack/solid-query";
-import { useParams } from "@solidjs/router";
 import { ArrowPointUp } from "../../icons";
-import { PostCreator } from "./PostCreator";
-import { keysFactory } from "../../api/api";
 import { LoadingSvg } from "../LoadingSvg";
 import { AvatarIcon } from "./AvatarIcon";
 import { BoardNote } from "./BoardNote";
+import { PostCreator } from "./PostCreator";
 
 const UserStatus = (props: ParentProps<StyleProps>) => (
   <article class={clsxString("relative flex flex-col", props.class ?? "")}>
     <svg
-      class="absolute text-accent left-0 top-0"
+      class="absolute left-0 top-0 text-accent"
       width="21"
       height="20"
       viewBox="0 0 21 20"
@@ -41,7 +38,7 @@ const UserStatus = (props: ParentProps<StyleProps>) => (
         fill="currentColor"
       />
     </svg>
-    <div class="px-4 py-2 self-start rounded-3xl ml-1 bg-accent min-h-[38px]">
+    <div class="ml-1 min-h-[38px] self-start rounded-3xl bg-accent px-4 py-2">
       {props.children}
     </div>
   </article>
@@ -70,18 +67,18 @@ const UserProfilePage = (props: {
   );
 
   return (
-    <main class="pb-6 pt-4 flex flex-col text-text min-h-screen">
-      <section class="sticky bg-secondary-bg z-10 top-0 px-6 py-2 flex flex-row gap-3 items-center">
+    <main class="flex min-h-screen flex-col pb-6 pt-4 text-text">
+      <section class="sticky top-0 z-10 flex flex-row items-center gap-3 bg-secondary-bg px-6 py-2">
         <AvatarIcon
           class="w-12"
           isLoading={boardQuery.isLoading}
           url={boardQuery.data?.profile?.photo ?? null}
         />
-        <div class="flex flex-col flex-1">
-          <p class="font-bold font-inter text-[20px] leading-6 relative">
+        <div class="flex flex-1 flex-col">
+          <p class="relative font-inter text-[20px] font-bold leading-6">
             {boardQuery.data?.profile?.title ?? boardQuery.data?.name ?? " "}
             <Show when={boardQuery.isLoading}>
-              <div class="rounded-xl animate-pulse absolute left-0 right-[50%] inset-y-1 bg-gray-600" />
+              <div class="absolute inset-y-1 left-0 right-[50%] animate-pulse rounded-xl bg-gray-600" />
             </Show>
           </p>
           {/* TODO: add date */}
@@ -89,7 +86,7 @@ const UserProfilePage = (props: {
         </div>
       </section>
 
-      <UserStatus class="mt-2 mx-4 text-button-text">
+      <UserStatus class="mx-4 mt-2 text-button-text">
         {boardQuery.isLoading
           ? "Loading..."
           : boardQuery.data?.profile?.description}
@@ -97,24 +94,24 @@ const UserProfilePage = (props: {
 
       <PostCreator boardId={getBoardId()} />
 
-      <section class="flex mt-6 flex-col flex-1">
+      <section class="mt-6 flex flex-1 flex-col">
         <Switch>
           <Match when={notesQuery.isLoading}>
-            <div class="flex flex-1 w-full items-center justify-center">
-              <LoadingSvg class="fill-accent w-8 text-transparent" />
+            <div class="flex w-full flex-1 items-center justify-center">
+              <LoadingSvg class="w-8 fill-accent text-transparent" />
             </div>
           </Match>
           <Match when={notes().length === 0}>
-            <div class="p-8 flex flex-col items-center">
+            <div class="flex flex-col items-center p-8">
               <img
                 src="/assets/empty-notes.webp"
-                class="w-32 aspect-square"
+                class="aspect-square w-32"
                 alt="Questioning banana"
               />
-              <strong class="font-inter text-center font-medium text-[20px] leading-[25px] mt-6">
+              <strong class="mt-6 text-center font-inter text-[20px] font-medium leading-[25px]">
                 It's still empty
               </strong>
-              <p class="text-subtitle font-inter text-center text-[17px] leading-[22px]">
+              <p class="text-center font-inter text-[17px] leading-[22px] text-subtitle">
                 Be the first to post here!
               </p>
             </div>
@@ -157,7 +154,7 @@ const UserProfilePage = (props: {
 
             {notesQuery.isFetchingNextPage ? (
               <div role="status" class="mx-auto mt-6">
-                <LoadingSvg class="fill-accent w-8 text-transparent" />
+                <LoadingSvg class="w-8 fill-accent text-transparent" />
                 <span class="sr-only">Next boards is loading</span>
               </div>
             ) : notes().length >= 8 ? (
@@ -168,7 +165,7 @@ const UserProfilePage = (props: {
                     top: 0,
                   });
                 }}
-                class="font-inter flex items-center gap-x-2 mt-6 text-[17px] active:opacity-70 transition-opacity leading-[22px] mx-auto text-accent"
+                class="mx-auto mt-6 flex items-center gap-x-2 font-inter text-[17px] leading-[22px] text-accent transition-opacity active:opacity-70"
               >
                 Back to top
                 <ArrowPointUp />

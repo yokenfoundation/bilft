@@ -1,7 +1,7 @@
 import { fetchMethodCurry, keysFactory } from "@/api/api";
 import { createDisposeEffect } from "@/lib/solid";
 import { useTonConnectUI } from "@/lib/ton-connect-solid";
-import { useQueryClient, createMutation } from "@tanstack/solid-query";
+import { createMutation, useQueryClient } from "@tanstack/solid-query";
 import type { TonConnectUI } from "@tonconnect/ui";
 import { createEffect } from "solid-js";
 
@@ -57,7 +57,11 @@ export const SetupTonWallet = () => {
 
   createDisposeEffect(() =>
     tonConnectUI()?.onStatusChange((e) => {
-      if (e?.connectItems?.tonProof && "proof" in e.connectItems.tonProof && e.account.publicKey) {
+      if (
+        e?.connectItems?.tonProof &&
+        "proof" in e.connectItems.tonProof &&
+        e.account.publicKey
+      ) {
         linkWalletMutation.mutate({
           address: e.account.address,
           proof: e.connectItems.tonProof.proof,
