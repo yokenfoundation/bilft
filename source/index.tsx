@@ -22,6 +22,7 @@ import {
 } from "@tma.js/sdk";
 import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
+import { Toaster } from "solid-sonner";
 import { AppQueryClientProvider } from "./queryClient";
 
 const getTonconnectManifestUrl = () => {
@@ -83,6 +84,18 @@ const App = () => {
           <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
         </Router>
       </TonConnectProvider>
+
+      <Toaster
+        position="top-center"
+        richColors
+        toastOptions={{
+          classes: {
+            title: "font-inter",
+            toast: "rounded-xl",
+          },
+        }}
+        theme={themeParams.isDark ? "dark" : "light"}
+      />
     </AppQueryClientProvider>
   );
 };
