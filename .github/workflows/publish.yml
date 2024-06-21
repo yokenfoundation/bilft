@@ -41,6 +41,9 @@ jobs:
         run: pnpm install
 
       - name: Build
+        env:
+          VITE_SELF_WEBAPP_URL: https://t.bilft.com
+          VITE_BACKEND_URL: https://redsun.yoken.io/api
         run: pnpm run build
 
       - name: Publish
