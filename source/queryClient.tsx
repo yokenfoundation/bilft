@@ -1,7 +1,59 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
+import {
+  MutationCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/solid-query";
+import { isAxiosError } from "axios";
 import type { ParentProps } from "solid-js";
+import { toast } from "solid-sonner";
 
-export const queryClient = new QueryClient();
+/**
+ *
+ * extract message. error can have shape: {
+ *   error: {
+ *     message: string;
+ *   };
+ * }
+ */
+const getErrorMessage = (error: unknown) => {
+  if (typeof error !== "object" || error === null) {
+    return "Unknown error";
+  }
+  const err = error as { error?: { message?: unknown } };
+  if (typeof err.error !== "object" || err.error === null) {
+    return "Unknown error";
+  }
+
+  const { message } = err.error;
+  if (typeof message !== "string") {
+    return "Unknown error";
+  }
+
+  return message;
+};
+
+export const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error) => {
+      if (!isAxiosError(error)) {
+        return;
+      }
+      const resp = error.response;
+      if (!resp) {
+        console.error("something went wrong", error);
+        return;
+      }
+      if (resp.status >= 500) {
+        toast.error("Server error, try again later");
+        return;
+      }
+      if (resp.status >= 400) {
+        toast.error(getErrorMessage(resp.data));
+        return;
+      }
+    },
+  }),
+});
 
 export const AppQueryClientProvider = (props: ParentProps) => (
   <QueryClientProvider client={queryClient}>
