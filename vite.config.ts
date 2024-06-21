@@ -6,14 +6,25 @@ import terminal from "vite-plugin-terminal";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { z } from "zod";
 
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import solid from "vite-plugin-solid";
 
-const tonConnectPlugin = (webAppUrl: string): Plugin[] => {
+const tonConnectPlugin = async (webAppUrl: string): Promise<Plugin[]> => {
   const fileName = "tonconnect-manifest.json";
+  const url = new URL(webAppUrl);
+  url.pathname = "/assets/ton-manifest-logo.png";
+  if (
+    !existsSync(
+      resolve(import.meta.dirname, "./public/assets/ton-manifest-logo.png"),
+    )
+  ) {
+    throw new Error("ton-manifest-logo.png not found");
+  }
   const fileContent = JSON.stringify({
     url: webAppUrl,
     name: "BILFT",
-    iconUrl: "https://ton.vote/logo.png",
+    iconUrl: url.toString(),
   });
 
   return [
