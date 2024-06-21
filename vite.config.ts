@@ -12,8 +12,8 @@ import solid from "vite-plugin-solid";
 
 const tonConnectPlugin = async (webAppUrl: string): Promise<Plugin[]> => {
   const fileName = "tonconnect-manifest.json";
-  const url = new URL(webAppUrl);
-  url.pathname = "/assets/ton-manifest-logo.png";
+  const iconUrl = new URL(webAppUrl);
+  iconUrl.pathname = "/assets/ton-manifest-logo.png";
   if (
     !existsSync(
       resolve(import.meta.dirname, "./public/assets/ton-manifest-logo.png"),
@@ -24,7 +24,7 @@ const tonConnectPlugin = async (webAppUrl: string): Promise<Plugin[]> => {
   const fileContent = JSON.stringify({
     url: webAppUrl,
     name: "BILFT",
-    iconUrl: url.toString(),
+    iconUrl: iconUrl.toString(),
   });
 
   return [
