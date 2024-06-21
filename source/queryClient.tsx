@@ -36,11 +36,18 @@ export const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error) => {
       if (!isAxiosError(error)) {
+        toast.error("Unknown error");
+        console.error("unknown error", error);
         return;
       }
       const resp = error.response;
+      if (error.code === "ERR_NETWORK") {
+        toast.error("Network error, check your connection");
+        return;
+      }
       if (!resp) {
-        console.error("something went wrong", error);
+        toast.error("Unknown error");
+        console.error(error);
         return;
       }
       if (resp.status >= 500) {
