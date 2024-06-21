@@ -2,17 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "bun",
-      "runtime": "bun",
-      "request": "launch",
       "name": "Debug",
-      "cwd": "${workspaceRoot}",
-      "program": "debug.ts",
-      "strictEnv": false,
-      "watchMode": true,
-      "stopOnEntry": false,
-      "noDebug": false,
-      "internalConsoleOptions": "openOnSessionStart"
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "bun:debug",
+      "url": "http://localhost:1234",
+      "webRoot": "${workspaceFolder}/source",
+      "sourceMaps": true,
+      "runtimeArgs": ["--remote-debugging-port=9222"]
     }
   ]
 }

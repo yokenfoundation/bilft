@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tg-screen-size: 100vh;
+  --tgvh: calc(var(--tg-screen-size, 100vh) / 100);
+}
