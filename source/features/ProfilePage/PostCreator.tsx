@@ -33,6 +33,9 @@ import {
   createEffect,
   createMemo,
   createSignal,
+  onCleanup,
+  untrack,
+  type Accessor,
   type ComponentProps,
 } from "solid-js";
 import { LoadingSvg } from "../LoadingSvg";
@@ -294,6 +297,35 @@ function PostInput(
   );
 }
 
+const createDelayed = <T extends number | boolean | string | null | undefined>(
+  source: Accessor<T>,
+  shouldDelay: () => boolean,
+  delayMs: number,
+) => {
+  const [sig, setSig] = createSignal(source());
+
+  createEffect(() => {
+    const newSig = source();
+    if (newSig === untrack(sig)) {
+      return;
+    }
+    if (!untrack(shouldDelay)) {
+      setSig(() => newSig);
+      return;
+    }
+
+    const id = setTimeout(() => {
+      setSig(() => newSig);
+    }, delayMs);
+
+    onCleanup(() => {
+      clearTimeout(id);
+    });
+  });
+
+  return sig;
+};
+
 const ModalContent = (props: {
   status: ModalStatus;
   onClose(): void;
@@ -305,6 +337,30 @@ const ModalContent = (props: {
   const meQuery = createQuery(() => keysFactory.me);
 
   const [tonConnectUI] = useTonConnectUI();
+
+  const renderRequiredBalance = (requiredBalance: string) => (
+    <span class="text-text">
+      {yokenAmountToFloat(requiredBalance).toFixed(0)} YO
+    </span>
+  );
+
+  const SendAnonymous = (props: StyleProps) => (
+    <p
+      data-checked=""
+      class={clsxString(
+        "group flex items-center gap-2 text-center font-inter text-[20px] font-semibold leading-7 text-text",
+        props.class ?? "",
+      )}
+    >
+      <CheckboxUI />
+      Send anonymously
+    </p>
+  );
+  const delayedIsRefetching = createDelayed(
+    () => meQuery.isRefetching,
+    () => !meQuery.isRefetching,
+    300,
+  );
 
   return (
     <div class="flex min-h-[432px] flex-col pb-2">
@@ -336,29 +392,26 @@ const ModalContent = (props: {
           {(walletError) => (
             <section class="mt-5 flex flex-1 flex-col items-center">
               <YoCoinIcon class="mb-6" />
-
-              <p
-                data-checked=""
-                class="group flex items-center gap-2 text-center font-inter text-[20px] font-semibold leading-7 text-text"
-              >
-                <CheckboxUI />
-                Send anonymously
-              </p>
+              <SendAnonymous />
               <p class="mt-2 text-center font-inter text-[17px] leading-[22px] text-hint">
-                To ask a question, you need{" "}
-                <span class="text-text">
-                  {yokenAmountToFloat(
-                    walletError().error.payload.requiredBalance,
-                  ).toFixed(0)}{" "}
-                  Yo Tokens.
-                </span>
-                <Show
-                  when={walletError().error.reason === "insufficient_balance"}
-                >
-                  <br /> Please top up your balance.
-                </Show>
+                To send a post anonymously, you need to have at least{" "}
+                {renderRequiredBalance(
+                  walletError().error.payload.requiredBalance,
+                )}
+                <Switch>
+                  <Match
+                    when={walletError().error.reason === "insufficient_balance"}
+                  >
+                    . Please top up your balance
+                  </Match>
+                  <Match
+                    when={walletError().error.reason === "no_connected_wallet"}
+                  >
+                    {" "}
+                    in your wallet balance
+                  </Match>
+                </Switch>
               </p>
-
               <Switch>
                 <Match
                   when={walletError().error.reason === "insufficient_balance"}
@@ -403,8 +456,8 @@ const ModalContent = (props: {
                     >
                       <RefreshIcon
                         class={clsxString(
-                          "origin-center animate-spin text-accent animate-reverse",
-                          meQuery.isFetching ? "" : "animate-stop",
+                          "origin-center animate-spin text-accent animate-duration-[750ms]",
+                          delayedIsRefetching() ? "" : "animate-stop",
                         )}
                       />
                       Refresh
@@ -418,7 +471,7 @@ const ModalContent = (props: {
                       utils.openLink("https://app.dedust.io/swap/TON/YO");
                     }}
                   >
-                    Top up
+                    Get YO
                   </button>
                 </Match>
                 <Match
@@ -447,7 +500,7 @@ const ModalContent = (props: {
                         props.onSendPublic();
                       }}
                     >
-                      Ask not anonymously
+                      Never mind, I'll post publicly
                     </button>
                   </div>
                 </Match>
@@ -460,14 +513,10 @@ const ModalContent = (props: {
           <section class="mt-5 flex flex-1 flex-col items-center">
             <SuccessIcon class="mb-6" />
 
-            <p
-              data-checked=""
-              class="group flex items-center gap-2 text-center font-inter text-[20px] font-semibold leading-7 text-text"
-            >
-              Send anonymously
-            </p>
-            <p class="mx-4 mt-2 text-center font-inter text-[17px] leading-[22px] text-hint">
-              You have successfully added the required number of Yo tokens
+            <SendAnonymous />
+            <p class="mt-2 text-center font-inter text-[17px] leading-[22px] text-hint">
+              Awesome! Now you have enough YO to post anonymously. Click "Send"
+              to post
             </p>
 
             <div class="mb-auto mt-5 flex flex-col self-center rounded-[10px] bg-section-bg px-[10px] py-[6px]">
