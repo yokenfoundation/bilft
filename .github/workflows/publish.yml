@@ -46,11 +46,6 @@ jobs:
           VITE_BACKEND_URL: https://redsun.yoken.io/api
         run: pnpm run build
 
-      - name: Publish
-        uses: JamesIves/github-pages-deploy-action@4.1.4
-        with:
-          branch: github-pages
-          folder: build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
