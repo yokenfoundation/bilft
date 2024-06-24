@@ -30,6 +30,7 @@ export const usePageTransition = ({
       }
       idToScrollPosition.set(e.from.id, window.scrollY);
 
+      // garbage collecting obsolete pages scroll positions
       if (idToScrollPosition.size > 100) {
         const currentPagesIds = new Set<string>();
 
