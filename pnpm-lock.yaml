@@ -12,8 +12,8 @@ importers:
         specifier: ^5.0.18
         version: 5.0.18
       '@solidjs/router':
-        specifier: ^0.13.3
-        version: 0.13.3(solid-js@1.8.17)
+        specifier: ^0.13.6
+        version: 0.13.6(solid-js@1.8.17)
       '@tanstack/solid-query':
         specifier: 5.44.0
         version: 5.44.0(solid-js@1.8.17)
@@ -22,7 +22,7 @@ importers:
         version: 2.5.0
       '@tma.js/solid-router-integration':
         specifier: ^5.0.2
-        version: 5.0.2(@solidjs/router@0.13.3(solid-js@1.8.17))(@tma.js/sdk@2.5.0)(solid-js@1.8.17)
+        version: 5.0.2(@solidjs/router@0.13.6(solid-js@1.8.17))(@tma.js/sdk@2.5.0)(solid-js@1.8.17)
       '@tonconnect/ui':
         specifier: ^2.0.3
         version: 2.0.3
@@ -78,6 +78,9 @@ importers:
       typescript-eslint:
         specifier: ^7.13.0
         version: 7.13.0(eslint@9.2.0)(typescript@5.4.5)
+      view-transitions-api-types:
+        specifier: ^0.1.1
+        version: 0.1.1
       vite:
         specifier: ^5.2.10
         version: 5.2.11(@types/node@20.12.11)
@@ -531,8 +534,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@solidjs/router@0.13.3':
-    resolution: {integrity: sha512-p8zznlvnN3KySMXqT8irhubgDNTETNa/guaGHU/cZl7kuiPO3PmkWNYfoNCygtEpoxLmLpf62/ZKeyhFdZexsw==}
+  '@solidjs/router@0.13.6':
+    resolution: {integrity: sha512-CdpFsBYoiJ/FQ4wZIamj3KEFRkmrYu5sVXM6PouNkmSENta1YJamsm9wa/VjaPmkw2RsnDnO0UvZ705v6EgOXQ==}
     peerDependencies:
       solid-js: ^1.8.6
 
@@ -1958,6 +1961,9 @@ packages:
   validate-html-nesting@1.2.2:
     resolution: {integrity: sha512-hGdgQozCsQJMyfK5urgFcWEqsSSrK63Awe0t/IMR0bZ0QMtnuaiHzThW81guu3qx9abLi99NEuiaN6P9gVYsNg==}
 
+  view-transitions-api-types@0.1.1:
+    resolution: {integrity: sha512-rYNK+5px8sPfTMiWvRuh02JciNOfZN1kQp+uQNG+jv3D8DcCJ9MYkgTpou4sXc9YXLbV5Px4B+KN33A7/2ba9g==}
+
   vite-plugin-node-polyfills@0.21.0:
     resolution: {integrity: sha512-Sk4DiKnmxN8E0vhgEhzLudfJQfaT8k4/gJ25xvUPG54KjLJ6HAmDKbr4rzDD/QWEY+Lwg80KE85fGYBQihEPQA==}
     peerDependencies:
@@ -2443,7 +2449,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.17.2':
     optional: true
 
-  '@solidjs/router@0.13.3(solid-js@1.8.17)':
+  '@solidjs/router@0.13.6(solid-js@1.8.17)':
     dependencies:
       solid-js: 1.8.17
 
@@ -2456,9 +2462,9 @@ snapshots:
 
   '@tma.js/sdk@2.5.0': {}
 
-  '@tma.js/solid-router-integration@5.0.2(@solidjs/router@0.13.3(solid-js@1.8.17))(@tma.js/sdk@2.5.0)(solid-js@1.8.17)':
+  '@tma.js/solid-router-integration@5.0.2(@solidjs/router@0.13.6(solid-js@1.8.17))(@tma.js/sdk@2.5.0)(solid-js@1.8.17)':
     dependencies:
-      '@solidjs/router': 0.13.3(solid-js@1.8.17)
+      '@solidjs/router': 0.13.6(solid-js@1.8.17)
       '@tma.js/sdk': 2.5.0
       solid-js: 1.8.17
 
@@ -3957,6 +3963,8 @@ snapshots:
       which-typed-array: 1.1.15
 
   validate-html-nesting@1.2.2: {}
+
+  view-transitions-api-types@0.1.1: {}
 
   vite-plugin-node-polyfills@0.21.0(rollup@4.17.2)(vite@5.2.11(@types/node@20.12.11)):
     dependencies:
