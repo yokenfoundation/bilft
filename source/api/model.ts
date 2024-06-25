@@ -29,7 +29,6 @@ export type Board = {
   isme: boolean;
   name?: string;
   profile?: BoardProfile;
-  notes: NoteArray;
 };
 
 export type Wallet = {
