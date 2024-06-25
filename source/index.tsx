@@ -23,6 +23,7 @@ import {
 import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
 import { Toaster } from "solid-sonner";
+import { usePageTransition } from "./features/pageTransitions";
 import { AppQueryClientProvider } from "./queryClient";
 
 const getTonconnectManifestUrl = () => {
@@ -53,7 +54,12 @@ const App = () => {
       pathname: `/board/${removePrefix(getProfileId())}`,
     });
   }
-  void navigator.attach();
+  navigator.attach();
+
+  usePageTransition({
+    dangerousWillBePatched_navigator: navigator,
+  });
+
   onCleanup(() => {
     void navigator.detach();
   });

@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.0.18",
-    "@solidjs/router": "^0.13.3",
+    "@solidjs/router": "^0.13.6",
     "@tanstack/solid-query": "5.44.0",
     "@tma.js/sdk": "^2.5.0",
     "@tma.js/solid-router-integration": "^5.0.2",
@@ -38,6 +38,7 @@
     "tailwindcss-animated": "^1.1.0",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.13.0",
+    "view-transitions-api-types": "^0.1.1",
     "vite": "^5.2.10",
     "vite-plugin-node-polyfills": "^0.21.0",
     "vite-plugin-terminal": "^1.2.0",
