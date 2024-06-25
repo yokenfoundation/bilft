@@ -16,10 +16,10 @@ const formatPostDate = (createdAt: DateString) => {
   const isSameMonth =
     todayDate.getMonth() === date.getMonth() &&
     todayDate.getFullYear() === date.getFullYear();
-  if (isSameMonth && todayDate.getDay() === date.getDay()) {
+  if (isSameMonth && todayDate.getDate() === date.getDate()) {
     return "today";
   }
-  if (isSameMonth && todayDate.getDay() - 1 === date.getDay()) {
+  if (isSameMonth && todayDate.getDate() - 1 === date.getDate()) {
     return "yesterday";
   }
 
