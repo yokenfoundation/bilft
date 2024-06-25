@@ -20,10 +20,10 @@ import {
   postEvent,
   type BrowserNavigatorAnyHistoryItem,
 } from "@tma.js/sdk";
-import { createRouter } from "@tma.js/solid-router-integration";
 import { onCleanup, onMount } from "solid-js";
 import { Toaster } from "solid-sonner";
-import { usePageTransition } from "./features/pageTransitions";
+import { CommentsPage } from "./features/CommentsPage/CommentsPage";
+import { createRouterWithPageTransition } from "./features/pageTransitions";
 import { AppQueryClientProvider } from "./queryClient";
 
 const getTonconnectManifestUrl = () => {
@@ -55,15 +55,13 @@ const App = () => {
     });
   }
   navigator.attach();
-
-  usePageTransition({
-    dangerousWillBePatched_navigator: navigator,
-  });
-
   onCleanup(() => {
     void navigator.detach();
   });
-  const Router = createRouter(navigator);
+
+  const Router = createRouterWithPageTransition({
+    dangerousWillBePatched_navigator: navigator,
+  });
 
   onMount(() => {
     postEvent("web_app_ready");
@@ -88,6 +86,7 @@ const App = () => {
         <SetupTonWallet />
         <Router>
           <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
+          <Route component={CommentsPage} path={"/comments/:noteId"} />
         </Router>
       </TonConnectProvider>
 
