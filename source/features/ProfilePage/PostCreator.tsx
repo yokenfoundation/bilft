@@ -1,5 +1,11 @@
 import type { model } from "@/api";
-import { fetchMethodCurry, getWalletError, keysFactory } from "@/api/api";
+import {
+  fetchMethod,
+  fetchMethodCurry,
+  getWalletError,
+  keysFactory,
+  type CreateNoteRequest,
+} from "@/api/api";
 import { clsxString, platform, utils, type StyleProps } from "@/common";
 import { BottomDialog } from "@/features/BottomDialog";
 import {
@@ -557,6 +563,35 @@ type ModalStatus =
       data: null;
     };
 
+const ErrorHelper = {
+  tryCatchAsync: async <T, TPossibleError>(
+    callback: () => Promise<Exclude<T, null>>,
+    isPossibleError: (value: unknown) => value is Exclude<TPossibleError, null>,
+  ): Promise<[null, TPossibleError] | [T, null]> =>
+    ErrorHelper.tryCatchAsyncMap(callback, (error) => {
+      const isError = isPossibleError(error);
+      if (!isError) {
+        return null;
+      }
+      return error;
+    }),
+  tryCatchAsyncMap: async <T, TPossibleError>(
+    callback: () => Promise<Exclude<T, null>>,
+    mapAndFilterError: (value: unknown) => null | Exclude<TPossibleError, null>,
+  ): Promise<[null, TPossibleError] | [T, null]> => {
+    try {
+      return [await callback(), null];
+    } catch (err) {
+      const target = mapAndFilterError(err);
+
+      if (target === null) {
+        throw err;
+      }
+      return [null, target];
+    }
+  },
+};
+
 export const PostCreator = (props: { boardId: string }) => {
   const queryClient = useQueryClient();
 
@@ -566,7 +601,26 @@ export const PostCreator = (props: { boardId: string }) => {
     null,
   );
   const addNoteMutation = createMutation(() => ({
-    mutationFn: fetchMethodCurry("/board/createNote"),
+    mutationFn: (request: CreateNoteRequest) => {
+      return ErrorHelper.tryCatchAsyncMap(
+        () => fetchMethod("/board/createNote", request),
+        (error) => {
+          if (typeof error !== "object" && error === null) {
+            return null;
+          }
+
+          if (!(error instanceof AxiosError) || !error.response) {
+            return null;
+          }
+          const walletError = getWalletError(error.response);
+          if (!walletError) {
+            return null;
+          }
+
+          return walletError;
+        },
+      );
+    },
     onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: keysFactory.notes({
@@ -579,7 +633,11 @@ export const PostCreator = (props: { boardId: string }) => {
         setWalletError(null);
       }
     },
-    onSuccess: (note: model.Note) => {
+    onSuccess: ([note, walletError]) => {
+      if (!note) {
+        setWalletError(walletError);
+        return;
+      }
       queryClient.setQueryData(
         keysFactory.notes({
           board: props.boardId,
@@ -608,21 +666,6 @@ export const PostCreator = (props: { boardId: string }) => {
         setIsAnonymous(false);
         setWalletError(null);
       });
-    },
-    onError: (error) => {
-      if (!(error instanceof AxiosError) || !error.response) {
-        return;
-      }
-      const walletError = getWalletError(error.response);
-      if (!walletError) {
-        return;
-      }
-      try {
-        setWalletError(walletError);
-      } catch (err) {
-        console.error(err);
-        throw err;
-      }
     },
   }));
 

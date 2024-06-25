@@ -14,16 +14,15 @@ type RequestResponse<Request, Response> = {
   response: Response;
 };
 
+export type CreateNoteRequest = {
+  board: string;
+  content: string;
+  type: "private" | "public" | "public-anonymous";
+};
+
 type RequestResponseMappings = {
   "/board/resolve": RequestResponse<{ value: string }, model.Board>;
-  "/board/createNote": RequestResponse<
-    {
-      board: string;
-      content: string;
-      type: "private" | "public" | "public-anonymous";
-    },
-    model.Note
-  >;
+  "/board/createNote": RequestResponse<CreateNoteRequest, model.Note>;
   "/board/getNotes": RequestResponse<
     { board: string; next?: string },
     model.NoteArray
