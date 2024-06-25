@@ -85,7 +85,7 @@ export default defineConfig(async ({ mode, command }) => {
     plugins: [
       command !== "build" &&
         terminal({
-          // console: "terminal",
+          console: "terminal",
           output: ["console", "terminal"],
         }),
       tonConnectPlugin(env.VITE_SELF_WEBAPP_URL),
