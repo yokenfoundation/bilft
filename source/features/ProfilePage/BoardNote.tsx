@@ -9,12 +9,26 @@ import { A } from "@solidjs/router";
 import type { ParentProps } from "solid-js";
 import { AvatarIcon } from "./AvatarIcon";
 
-const formatPostDate = (createdAt: DateString) =>
-  new Date(createdAt).toLocaleDateString(undefined, {
+const todayDate = new Date();
+const formatPostDate = (createdAt: DateString) => {
+  const date = new Date(createdAt);
+
+  const isSameMonth =
+    todayDate.getMonth() === date.getMonth() &&
+    todayDate.getFullYear() === date.getFullYear();
+  if (isSameMonth && todayDate.getDay() === date.getDay()) {
+    return "today";
+  }
+  if (isSameMonth && todayDate.getDay() - 1 === date.getDay()) {
+    return "yesterday";
+  }
+
+  return date.toLocaleDateString(undefined, {
     month: "2-digit",
     day: "2-digit",
     year: "numeric",
   });
+};
 
 const formatPostTime = (createdAt: DateString) =>
   new Date(createdAt).toLocaleTimeString(undefined, {
