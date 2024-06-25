@@ -1,7 +1,9 @@
 import {
+  createBeforeLeave,
   createRouter as createSolidRouter,
   type BaseRouterProps,
 } from "@solidjs/router";
+
 import type { BrowserNavigator, BrowserNavigatorEvents } from "@tma.js/sdk";
 import { getHash, urlToPath } from "@tma.js/sdk";
 import type { Component } from "solid-js";
@@ -49,6 +51,8 @@ export function createRouter<State>(
   navigator: BrowserNavigator<State>,
   on: BrowserNavigator<State>["on"],
 ): Component<BaseRouterProps> {
+  const { confirm, subscribe } = createBeforeLeave();
+
   return createSolidRouter({
     get: () => navigator.path,
     init: (notify) =>
@@ -75,6 +79,25 @@ export function createRouter<State>(
       go: (delta) => navigator.go(delta),
       renderPath: (path) => navigator.renderPath(path),
       parsePath: (path) => urlToPath(navigator.parsePath(path)),
+      beforeLeave: {
+        subscribe,
+        confirm: (to, options) => {
+          const isConfirmed = confirm(to, options);
+          if (!isConfirmed) {
+            return false;
+          }
+
+          // redirecting via tma.js, to startViewTransition first
+          if (typeof to === "number") {
+            navigator.go(to);
+          } else {
+            // [TODO]: handle state param or never use it
+            navigator.push(to);
+          }
+
+          return false;
+        },
+      },
     },
   });
 }
@@ -94,6 +117,7 @@ export const createRouterWithPageTransition = ({
     let lastViewTransitionFinish: Promise<void> | null = null;
     onCleanup(
       navigator.on("change", (e: ChangeEvent) => {
+        console.log("change tma.js", e);
         if (
           (e.from.hash === e.to.hash &&
             e.from.pathname === e.to.pathname &&
