@@ -117,7 +117,6 @@ export const createRouterWithPageTransition = ({
     let lastViewTransitionFinish: Promise<void> | null = null;
     onCleanup(
       navigator.on("change", (e: ChangeEvent) => {
-        console.log("change tma.js", e);
         if (
           (e.from.hash === e.to.hash &&
             e.from.pathname === e.to.pathname &&
