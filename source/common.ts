@@ -26,6 +26,12 @@ export const clsxString = (...items: string[]) => {
   return res;
 };
 
+export function assertOk(value: unknown): asserts value {
+  if (!value) {
+    throw new Error("Assertion failed " + value);
+  }
+}
+
 export const addPrefix = (id: string) => (id.startsWith("id") ? id : `id${id}`);
 export const removePrefix = (id: string) =>
   id.startsWith("id") ? id.slice(2) : id;

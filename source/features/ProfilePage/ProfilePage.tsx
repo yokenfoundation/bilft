@@ -1,4 +1,4 @@
-import { useParams } from "@solidjs/router";
+import { useNavigate, useParams } from "@solidjs/router";
 import { createInfiniteQuery, createQuery } from "@tanstack/solid-query";
 import {
   For,
@@ -18,9 +18,9 @@ import {
   type StyleProps,
 } from "../../common";
 import { ArrowPointUp } from "../../icons";
+import { AvatarIcon } from "../BoardNote/AvatarIcon";
+import { BoardNote } from "../BoardNote/BoardNote";
 import { LoadingSvg } from "../LoadingSvg";
-import { AvatarIcon } from "./AvatarIcon";
-import { BoardNote } from "./BoardNote";
 import { PostCreator } from "./PostCreator";
 
 const UserStatus = (props: ParentProps<StyleProps>) => (
@@ -65,6 +65,7 @@ const UserProfilePage = (props: {
   const notes = createMemo(() =>
     notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : [],
   );
+  const navigate = useNavigate();
 
   return (
     <main class="flex min-h-screen flex-col pb-6 pt-4 text-text">
@@ -119,7 +120,7 @@ const UserProfilePage = (props: {
           <Match when={notes().length > 0}>
             <For each={notes()}>
               {(note) => (
-                <BoardNote class="mb-4">
+                <BoardNote class="relative mx-4 mb-[42px]">
                   {/* extends to match based on type */}
                   <Switch
                     fallback={
@@ -148,29 +149,43 @@ const UserProfilePage = (props: {
                   </Switch>
                   <BoardNote.Divider />
                   <BoardNote.Content>{note.content}</BoardNote.Content>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate(
+                        `/comments/${note.id}?note=${JSON.stringify(note)}`,
+                      );
+                    }}
+                    class="absolute right-4 top-[calc(100%+8px)] font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-50"
+                  >
+                    post you reply
+                  </button>
                 </BoardNote>
               )}
             </For>
 
-            {notesQuery.isFetchingNextPage ? (
-              <div role="status" class="mx-auto mt-6">
-                <LoadingSvg class="w-8 fill-accent text-transparent" />
-                <span class="sr-only">Next boards is loading</span>
-              </div>
-            ) : notes().length >= 8 ? (
-              <button
-                onClick={() => {
-                  window.scrollTo({
-                    behavior: "smooth",
-                    top: 0,
-                  });
-                }}
-                class="mx-auto mt-6 flex items-center gap-x-2 font-inter text-[17px] leading-[22px] text-accent transition-opacity active:opacity-70"
-              >
-                Back to top
-                <ArrowPointUp />
-              </button>
-            ) : null}
+            <Switch>
+              <Match when={notesQuery.isFetchingNextPage}>
+                <div role="status" class="mx-auto mt-6">
+                  <LoadingSvg class="w-8 fill-accent text-transparent" />
+                  <span class="sr-only">Next boards is loading</span>
+                </div>
+              </Match>
+              <Match when={notes().length >= 8}>
+                <button
+                  onClick={() => {
+                    window.scrollTo({
+                      behavior: "smooth",
+                      top: 0,
+                    });
+                  }}
+                  class="mx-auto mt-6 flex items-center gap-x-2 font-inter text-[17px] leading-[22px] text-accent transition-opacity active:opacity-70"
+                >
+                  Back to top
+                  <ArrowPointUp />
+                </button>
+              </Match>
+            </Switch>
           </Match>
         </Switch>
       </section>

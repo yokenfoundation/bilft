@@ -3,6 +3,7 @@ import type { model } from ".";
 
 import { authData } from "@/common";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/solid-query";
+import type { Comment } from "./model";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -40,6 +41,25 @@ type RequestResponseMappings = {
     }
   >;
   "/me/unlinkWallet": RequestResponse<void, void>;
+  "/note/createComment": RequestResponse<
+    {
+      noteID: string;
+      content: string;
+      type: Comment["type"];
+    },
+    Comment
+  >;
+  "/note/getComments": RequestResponse<
+    {
+      noteID: string;
+      page: number;
+      pageSize: number;
+    },
+    {
+      count: number;
+      items: Comment[];
+    }
+  >;
 };
 type AvailableRequests = keyof RequestResponseMappings;
 
@@ -115,4 +135,18 @@ export const keysFactory = {
     queryFn: () => fetchMethod("/me", undefined),
     queryKey: ["me"],
   }),
+  comments: ({ noteId }: { noteId: string }) =>
+    infiniteQueryOptions({
+      queryKey: ["comments", noteId],
+      initialPageParam: 1,
+      queryFn: ({ pageParam }) =>
+        fetchMethod("/note/getComments", {
+          noteID: noteId,
+          page: pageParam,
+          pageSize: 30,
+        }),
+      getNextPageParam: ({ items }, _, lastPageParam) =>
+        items.length > 0 ? lastPageParam + 1 : undefined,
+      reconcile: "id",
+    }),
 };

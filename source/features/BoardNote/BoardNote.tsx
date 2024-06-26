@@ -105,7 +105,7 @@ function BoardNoteRoot(props: ParentProps<StyleProps>) {
   return (
     <article
       class={clsxString(
-        "mx-4 flex flex-col rounded-3xl bg-section-bg px-[14px] pb-4 pt-[14px] transition-transform has-[a:active]:scale-[0.98]",
+        "flex flex-col rounded-3xl bg-section-bg px-[14px] pb-4 pt-[14px] transition-transform has-[a:active]:scale-[0.98]",
         props.class ?? "",
       )}
     >

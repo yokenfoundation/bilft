@@ -1,6 +1,6 @@
 import type { DateString } from "@/common";
 
-export type NoteAuthor = {
+export type ContentAuthor = {
   id: string;
   name: string;
   photo: string;
@@ -8,7 +8,7 @@ export type NoteAuthor = {
 
 export type Note = {
   id: string;
-  author?: NoteAuthor;
+  author?: ContentAuthor;
   createdAt: DateString;
   content: string;
 };
@@ -67,4 +67,12 @@ export type WalletError = {
       requiredBalance: string;
     };
   };
+};
+
+export type Comment = {
+  id: string;
+  content: string;
+  type: "public" | "anonymous";
+  createdAt: string;
+  author?: ContentAuthor;
 };
