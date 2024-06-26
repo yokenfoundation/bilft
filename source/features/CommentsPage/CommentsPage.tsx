@@ -1,11 +1,14 @@
 import { keysFactory } from "@/api/api";
 import type { Note } from "@/api/model";
-import { assertOk } from "@/common";
-import { useSearchParams } from "@solidjs/router";
+import { assertOk, clsxString, formatPostDate, formatPostTime } from "@/common";
+import { AnonymousAvatarIcon } from "@/icons";
+import { A, useSearchParams } from "@solidjs/router";
 import { createInfiniteQuery } from "@tanstack/solid-query";
 import { For, Match, Show, Switch, createMemo } from "solid-js";
+import { AvatarIcon } from "../BoardNote/AvatarIcon";
 import { BoardNote } from "../BoardNote/BoardNote";
 import { LoadingSvg } from "../LoadingSvg";
+import { CommentCreator } from "../ProfilePage/PostCreator";
 
 export const CommentsPage = () => {
   const [searchParams] = useSearchParams();
@@ -28,7 +31,7 @@ export const CommentsPage = () => {
   );
 
   return (
-    <main class="px-4">
+    <main class="flex min-h-screen flex-col bg-secondary-bg px-4">
       <BoardNote class="my-4">
         <Switch
           fallback={<BoardNote.PrivateHeader createdAt={note().createdAt} />}
@@ -73,7 +76,48 @@ export const CommentsPage = () => {
         </Match>
         <Match when={comments().length > 0}>
           <For each={comments()}>
-            {(comment) => <div>{comment.content}</div>}
+            {(comment, index) => (
+              <article
+                data-not-last={
+                  index() !== comments().length - 1 ? "" : undefined
+                }
+                class={clsxString(
+                  "mb-4 grid grid-cols-[36px,1fr] grid-rows-[auto,auto,auto] gap-y-[2px] pb-4 [&[data-not-last]]:border-b-[0.4px] [&[data-not-last]]:border-b-separator",
+                )}
+              >
+                <Switch>
+                  <Match when={comment.author}>
+                    {(author) => (
+                      <A
+                        class="col-span-full flex flex-row items-center gap-x-[6px] pl-2 font-inter text-[17px] font-medium leading-[22px] text-text transition-opacity active:opacity-70"
+                        href={`/board/${author().id}`}
+                      >
+                        <AvatarIcon
+                          lazy
+                          class="h-[22px] w-[22px]"
+                          isLoading={false}
+                          url={comment.author?.photo ?? null}
+                        />
+                        {author().name}
+                      </A>
+                    )}
+                  </Match>
+                  <Match when={comment.type === "anonymous"}>
+                    <div class="col-span-full flex flex-row items-center gap-x-[6px] pl-2 font-inter text-[17px] font-medium leading-[22px] text-text transition-opacity">
+                      <AnonymousAvatarIcon class="h-[22px] w-[22px]" />
+                      Anonymously
+                    </div>
+                  </Match>
+                </Switch>
+                <div class="col-start-2 font-inter text-[16px] leading-[22px]">
+                  {comment.content}
+                </div>
+                <div class="col-start-2 font-inter text-[13px] leading-[18px] text-hint">
+                  {formatPostDate(comment.createdAt)} at{" "}
+                  {formatPostTime(comment.createdAt)}
+                </div>
+              </article>
+            )}
           </For>
 
           <Show when={commentsQuery.isFetchingNextPage}>
@@ -84,6 +128,21 @@ export const CommentsPage = () => {
           </Show>
         </Match>
       </Switch>
+
+      <div class="sticky bottom-0 -mx-4 mt-auto bg-secondary-bg px-4 pb-4">
+        <CommentCreator
+          noteId={note().id}
+          onCreated={() => {
+            // wait for render
+            requestAnimationFrame(() => {
+              window.scrollTo({
+                behavior: "smooth",
+                top: window.innerHeight,
+              });
+            });
+          }}
+        />
+      </div>
     </main>
   );
 };

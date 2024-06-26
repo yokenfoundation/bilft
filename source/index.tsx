@@ -23,6 +23,7 @@ import {
 import { onCleanup, onMount } from "solid-js";
 import { Toaster } from "solid-sonner";
 import { CommentsPage } from "./features/CommentsPage/CommentsPage";
+import { onStableSizeChange } from "./features/keyboardStatus";
 import { createRouterWithPageTransition } from "./features/pageTransitions";
 import { AppQueryClientProvider } from "./queryClient";
 
@@ -71,6 +72,8 @@ const App = () => {
   onCleanup(
     on("viewport_changed", (e) => {
       if (e.is_state_stable) {
+        onStableSizeChange(e.height);
+
         document.documentElement.style.setProperty(
           "--tg-screen-size",
           `${e.height}px`,

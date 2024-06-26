@@ -6,7 +6,14 @@ import {
   keysFactory,
   type CreateNoteRequest,
 } from "@/api/api";
-import { clsxString, platform, utils, type StyleProps } from "@/common";
+import type { CreateCommentRequest } from "@/api/model";
+import {
+  assertOk,
+  clsxString,
+  platform,
+  utils,
+  type StyleProps,
+} from "@/common";
 import { BottomDialog } from "@/features/BottomDialog";
 import {
   ArrowPointDownIcon,
@@ -46,6 +53,7 @@ import {
 } from "solid-js";
 import { LoadingSvg } from "../LoadingSvg";
 import { disconnectWallet } from "../SetupTonWallet";
+import { isKeyboardOpen } from "../keyboardStatus";
 
 const buttonClass =
   "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-button-text text-center rounded-xl self-stretch";
@@ -224,7 +232,7 @@ function PostInput(
       }}
       ref={formRef}
       class={clsxString(
-        "mx-4 flex flex-col items-stretch justify-between gap-[10px] overflow-hidden rounded-[20px] border border-[#AAA] border-opacity-15 bg-section-bg p-4",
+        "flex flex-col items-stretch justify-between gap-[10px] overflow-hidden rounded-[20px] border border-[#AAA] border-opacity-15 bg-section-bg p-4",
         props.class ?? "",
       )}
     >
@@ -240,6 +248,7 @@ function PostInput(
             props.onChange(e.target.value);
           }}
           onFocus={() => {
+            console.log("focus");
             setIsFocused(true);
           }}
           onBlur={() => {
@@ -264,6 +273,10 @@ function PostInput(
         >
           <input
             onChange={(e) => {
+              // preventing keyboard from closing
+              if (isKeyboardOpen()) {
+                inputRef?.focus();
+              }
               props.setIsAnonymous(e.target.checked);
             }}
             checked={props.isAnonymous}
@@ -592,7 +605,204 @@ const ErrorHelper = {
   },
 };
 
-export const PostCreator = (props: { boardId: string }) => {
+// hard to generalize
+export const CommentCreator = (
+  props: { noteId: string; onCreated(): void } & StyleProps,
+) => {
+  const queryClient = useQueryClient();
+
+  const [inputValue, setInputValue] = createSignal("");
+  const [isAnonymous, setIsAnonymous] = createSignal(false);
+  const [walletError, setWalletError] = createSignal<model.WalletError | null>(
+    null,
+  );
+  const addCommentMutation = createMutation(() => ({
+    mutationFn: (request: CreateCommentRequest) => {
+      return ErrorHelper.tryCatchAsyncMap(
+        () => fetchMethod("/note/createComment", request),
+        (error) => {
+          if (typeof error !== "object" && error === null) {
+            return null;
+          }
+
+          if (!(error instanceof AxiosError) || !error.response) {
+            return null;
+          }
+          const walletError = getWalletError(error.response);
+          if (!walletError) {
+            return null;
+          }
+
+          return walletError;
+        },
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: keysFactory.comments({
+          noteId: props.noteId,
+        }).queryKey,
+      });
+      // [TODO]: invalidate board data with last comment
+    },
+    onMutate: ({ type }) => {
+      if (type === "public") {
+        setWalletError(null);
+      }
+    },
+    onSuccess: ([comment, walletError]) => {
+      if (!comment) {
+        setWalletError(walletError);
+        return;
+      }
+      queryClient.setQueryData(
+        keysFactory.comments({
+          noteId: props.noteId,
+        }).queryKey,
+        (data) => {
+          if (!data || !data.pages || data.pages.length < 1) {
+            return data;
+          }
+          const lastPage = data.pages.at(-1);
+          assertOk(lastPage);
+
+          const pages = data.pages.slice(0, -1);
+
+          pages.push({
+            count: lastPage.count,
+            items: [...lastPage.items, comment],
+          });
+
+          return {
+            pageParams: data.pageParams,
+            pages,
+          };
+        },
+      );
+
+      batch(() => {
+        setInputValue("");
+        setIsAnonymous(false);
+        setWalletError(null);
+        props.onCreated();
+      });
+    },
+  }));
+
+  const unlinkMutation = createMutation(() => ({
+    mutationFn: fetchMethodCurry("/me/unlinkWallet"),
+    onMutate: () => {
+      const curWalletError = walletError();
+      if (curWalletError) {
+        setWalletError({
+          error: {
+            reason: "no_connected_wallet",
+            payload: curWalletError.error.payload,
+          },
+        });
+      }
+      const curData = queryClient.getQueryData(keysFactory.me.queryKey);
+
+      queryClient.setQueryData(keysFactory.me.queryKey, (data) =>
+        data ? { ...data, wallet: undefined } : undefined,
+      );
+
+      return {
+        curWalletError,
+        curData,
+      };
+    },
+    onError: (_, __, ctx) => {
+      queryClient.setQueryData(keysFactory.me.queryKey, ctx?.curData);
+      if (!walletError()) {
+        return;
+      }
+      setWalletError(ctx?.curWalletError ?? null);
+    },
+  }));
+
+  const meQuery = createQuery(() => keysFactory.me);
+
+  const hasEnoughMoney = createMemo(() => {
+    const curWalletError = walletError();
+    const tokensBalance = meQuery.data?.wallet?.tokens.yo;
+    if (!curWalletError || !tokensBalance) {
+      return;
+    }
+    return (
+      BigInt(curWalletError.error.payload.requiredBalance) <=
+      BigInt(tokensBalance)
+    );
+  });
+
+  const modalStatus = (): ModalStatus | null =>
+    SignalHelper.map(walletError, (error) =>
+      !error
+        ? null
+        : hasEnoughMoney()
+          ? {
+              type: "success",
+              data: null,
+            }
+          : {
+              type: "error",
+              data: error,
+            },
+    );
+  const sendContent = (anonymous: boolean) =>
+    addCommentMutation.mutate({
+      noteID: props.noteId,
+      content: inputValue(),
+      type: anonymous ? "anonymous" : "public",
+    });
+
+  return (
+    <>
+      <PostInput
+        isAnonymous={isAnonymous()}
+        setIsAnonymous={setIsAnonymous}
+        class={props.class}
+        isLoading={addCommentMutation.isPending}
+        onSubmit={() => {
+          if (!inputValue) {
+            return;
+          }
+
+          sendContent(isAnonymous());
+        }}
+        value={inputValue()}
+        onChange={setInputValue}
+      />
+      <BottomDialog
+        onClose={() => {
+          setWalletError(null);
+        }}
+        when={modalStatus()}
+      >
+        {(status) => (
+          <ModalContent
+            onSend={() => {
+              sendContent(isAnonymous());
+              setWalletError(null);
+            }}
+            status={status()}
+            onClose={() => {
+              setWalletError(null);
+            }}
+            onUnlinkWallet={() => {
+              unlinkMutation.mutate();
+            }}
+            onSendPublic={() => {
+              sendContent(false);
+            }}
+          />
+        )}
+      </BottomDialog>
+    </>
+  );
+};
+
+export const PostCreator = (props: { boardId: string } & StyleProps) => {
   const queryClient = useQueryClient();
 
   const [inputValue, setInputValue] = createSignal("");
@@ -741,7 +951,7 @@ export const PostCreator = (props: { boardId: string }) => {
       <PostInput
         isAnonymous={isAnonymous()}
         setIsAnonymous={setIsAnonymous}
-        class="mt-6"
+        class={props.class}
         isLoading={addNoteMutation.isPending}
         onSubmit={() => {
           if (!inputValue) {

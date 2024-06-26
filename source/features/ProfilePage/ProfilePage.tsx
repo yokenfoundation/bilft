@@ -93,7 +93,7 @@ const UserProfilePage = (props: {
           : boardQuery.data?.profile?.description}
       </UserStatus>
 
-      <PostCreator boardId={getBoardId()} />
+      <PostCreator class="mt-6 mx-4" boardId={getBoardId()} />
 
       <section class="mt-6 flex flex-1 flex-col">
         <Switch>

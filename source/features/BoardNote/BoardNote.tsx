@@ -1,5 +1,7 @@
 import {
   clsxString,
+  formatPostDate,
+  formatPostTime,
   themeParams,
   type DateString,
   type StyleProps,
@@ -8,33 +10,6 @@ import { AnonymousAvatarIcon } from "@/icons";
 import { A } from "@solidjs/router";
 import type { ParentProps } from "solid-js";
 import { AvatarIcon } from "./AvatarIcon";
-
-const todayDate = new Date();
-const formatPostDate = (createdAt: DateString) => {
-  const date = new Date(createdAt);
-
-  const isSameMonth =
-    todayDate.getMonth() === date.getMonth() &&
-    todayDate.getFullYear() === date.getFullYear();
-  if (isSameMonth && todayDate.getDate() === date.getDate()) {
-    return "today";
-  }
-  if (isSameMonth && todayDate.getDate() - 1 === date.getDate()) {
-    return "yesterday";
-  }
-
-  return date.toLocaleDateString(undefined, {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
-  });
-};
-
-const formatPostTime = (createdAt: DateString) =>
-  new Date(createdAt).toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
 
 const BoardNotePublicHeader = (props: {
   name: string;

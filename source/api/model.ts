@@ -73,6 +73,12 @@ export type Comment = {
   id: string;
   content: string;
   type: "public" | "anonymous";
-  createdAt: string;
+  createdAt: DateString;
   author?: ContentAuthor;
+};
+
+export type CreateCommentRequest = {
+  noteID: string;
+  content: string;
+  type: Comment["type"];
 };

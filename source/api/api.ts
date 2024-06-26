@@ -3,7 +3,7 @@ import type { model } from ".";
 
 import { authData } from "@/common";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/solid-query";
-import type { Comment } from "./model";
+import type { Comment, CreateCommentRequest } from "./model";
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -41,14 +41,7 @@ type RequestResponseMappings = {
     }
   >;
   "/me/unlinkWallet": RequestResponse<void, void>;
-  "/note/createComment": RequestResponse<
-    {
-      noteID: string;
-      content: string;
-      type: Comment["type"];
-    },
-    Comment
-  >;
+  "/note/createComment": RequestResponse<CreateCommentRequest, Comment>;
   "/note/getComments": RequestResponse<
     {
       noteID: string;
