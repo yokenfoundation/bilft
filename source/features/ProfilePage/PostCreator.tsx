@@ -29,6 +29,7 @@ import {
   createTransitionPresence,
   mergeRefs,
   useCleanup,
+  type Ref,
 } from "@/lib/solid";
 import { useTonConnectUI } from "@/lib/ton-connect-solid";
 import {
@@ -53,7 +54,7 @@ import {
 } from "solid-js";
 import { LoadingSvg } from "../LoadingSvg";
 import { disconnectWallet } from "../SetupTonWallet";
-import { isKeyboardOpen } from "../keyboardStatus";
+import { useKeyboardStatus } from "../keyboardStatus";
 
 const buttonClass =
   "transition-transform duration-200 active:scale-[98%] bg-accent p-[12px] font-inter text-[17px] leading-[22px] text-button-text text-center rounded-xl self-stretch";
@@ -185,6 +186,7 @@ function PostInput(
     isLoading: boolean;
     isAnonymous: boolean;
     setIsAnonymous: (status: boolean) => void;
+    ref?: Ref<HTMLFormElement>;
   },
 ) {
   let inputRef!: HTMLTextAreaElement | undefined;
@@ -193,6 +195,8 @@ function PostInput(
   const isEmpty = () => trimmedText().length === 0;
   const symbolsRemaining = () => MAX_POST_LENGTH - trimmedText().length;
   const [isFocused, setIsFocused] = createSignal(false);
+
+  let prevFocusTimestamp = 0;
 
   if (platform === "ios") {
     createEffect(() => {
@@ -206,6 +210,7 @@ function PostInput(
           (e) => {
             if (
               inputRef &&
+              Date.now() - prevFocusTimestamp > 250 &&
               e.target &&
               (e.target instanceof Element || e.target instanceof Document) &&
               !formRef?.contains(e.target)
@@ -222,6 +227,7 @@ function PostInput(
       });
     });
   }
+  const { isKeyboardOpen } = useKeyboardStatus();
 
   return (
     <form
@@ -230,7 +236,7 @@ function PostInput(
         e.stopPropagation();
         props.onSubmit();
       }}
-      ref={formRef}
+      ref={mergeRefs(formRef, props.ref)}
       class={clsxString(
         "flex flex-col items-stretch justify-between gap-[10px] overflow-hidden rounded-[20px] border border-[#AAA] border-opacity-15 bg-section-bg p-4",
         props.class ?? "",
@@ -248,7 +254,7 @@ function PostInput(
             props.onChange(e.target.value);
           }}
           onFocus={() => {
-            console.log("focus");
+            prevFocusTimestamp = Date.now();
             setIsFocused(true);
           }}
           onBlur={() => {
@@ -607,7 +613,9 @@ const ErrorHelper = {
 
 // hard to generalize
 export const CommentCreator = (
-  props: { noteId: string; onCreated(): void } & StyleProps,
+  props: { noteId: string; onCreated(): void } & StyleProps & {
+      ref?: Ref<HTMLFormElement>;
+    },
 ) => {
   const queryClient = useQueryClient();
 
@@ -759,6 +767,7 @@ export const CommentCreator = (
   return (
     <>
       <PostInput
+        ref={props.ref}
         isAnonymous={isAnonymous()}
         setIsAnonymous={setIsAnonymous}
         class={props.class}

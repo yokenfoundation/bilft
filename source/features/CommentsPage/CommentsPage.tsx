@@ -1,14 +1,32 @@
 import { keysFactory } from "@/api/api";
 import type { Note } from "@/api/model";
-import { assertOk, clsxString, formatPostDate, formatPostTime } from "@/common";
+import {
+  assertOk,
+  clsxString,
+  formatPostDate,
+  formatPostTime,
+  platform,
+} from "@/common";
 import { AnonymousAvatarIcon } from "@/icons";
+import { useCleanup } from "@/lib/solid";
 import { A, useSearchParams } from "@solidjs/router";
 import { createInfiniteQuery } from "@tanstack/solid-query";
-import { For, Match, Show, Switch, createMemo } from "solid-js";
+import {
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+} from "solid-js";
+import { Portal } from "solid-js/web";
 import { AvatarIcon } from "../BoardNote/AvatarIcon";
 import { BoardNote } from "../BoardNote/BoardNote";
 import { LoadingSvg } from "../LoadingSvg";
 import { CommentCreator } from "../ProfilePage/PostCreator";
+import { useScreenSize } from "../screenSize";
 
 export const CommentsPage = () => {
   const [searchParams] = useSearchParams();
@@ -129,20 +147,105 @@ export const CommentsPage = () => {
         </Match>
       </Switch>
 
-      <div class="sticky bottom-0 -mx-4 mt-auto bg-secondary-bg px-4 pb-4">
-        <CommentCreator
-          noteId={note().id}
-          onCreated={() => {
-            // wait for render
-            requestAnimationFrame(() => {
-              window.scrollTo({
-                behavior: "smooth",
-                top: window.innerHeight,
-              });
-            });
-          }}
-        />
-      </div>
+      <Switch>
+        {/* [TODO]: remove always true */}
+        <Match when={true}>
+          <IosCommentCreator noteId={note().id} />
+        </Match>
+        <Match when={platform !== "ios"}>
+          <div class="sticky bottom-0 -mx-4 mt-auto bg-secondary-bg px-4 pb-6 pt-2">
+            <CommentCreator
+              noteId={note().id}
+              onCreated={() => {
+                // wait for render
+                requestAnimationFrame(() => {
+                  window.scrollTo({
+                    behavior: "smooth",
+                    top: window.innerHeight,
+                  });
+                });
+              }}
+            />
+          </div>
+        </Match>
+      </Switch>
     </main>
+  );
+};
+
+const IosCommentCreator = (props: { noteId: string }) => {
+  const [placeHeight, setPlaceHeight] = createSignal(0);
+  const [inputElement, setInputElement] = createSignal<HTMLDivElement>();
+  createEffect(() => {
+    const el = inputElement();
+    if (!el) {
+      return;
+    }
+
+    let prevHeight = el.getBoundingClientRect().height;
+    const mutObserver = new ResizeObserver(() => {
+      const curHeight = el.getBoundingClientRect().height;
+      if (Math.abs(curHeight - prevHeight) > 2) {
+        window.scrollBy({
+          top: curHeight - prevHeight,
+          behavior: "instant",
+        });
+      }
+      prevHeight = curHeight;
+
+      setPlaceHeight(curHeight);
+    });
+
+    mutObserver.observe(el);
+
+    onCleanup(() => mutObserver.disconnect());
+  });
+
+  const useInnerHeight = () => {
+    const [innerHeight, setInnerHeight] = createSignal(window.innerHeight);
+    useCleanup((signal) => {
+      window.addEventListener(
+        "resize",
+        () => {
+          setInnerHeight(window.innerHeight);
+        },
+        {
+          signal,
+        },
+      );
+    });
+
+    return innerHeight;
+  };
+
+  const { height } = useScreenSize();
+  const innerHeight = useInnerHeight();
+
+  return (
+    <>
+      <div style={{ height: `${placeHeight()}px` }} />
+      <Portal>
+        <div
+          ref={setInputElement}
+          class="fixed inset-x-0 bg-secondary-bg px-4 pb-6 pt-2"
+          style={{
+            bottom: `${innerHeight() - height()}px`,
+          }}
+        >
+          <CommentCreator
+            noteId={props.noteId}
+            onCreated={() => {
+              // wait for render
+              requestAnimationFrame(() => {
+                window.scrollTo({
+                  behavior: "smooth",
+                  top: window.innerHeight,
+                });
+              });
+            }}
+          />
+        </div>
+      </Portal>
+    </>
   );
 };

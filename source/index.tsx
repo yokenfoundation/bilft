@@ -20,11 +20,12 @@ import {
   postEvent,
   type BrowserNavigatorAnyHistoryItem,
 } from "@tma.js/sdk";
-import { onCleanup, onMount } from "solid-js";
+import { createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { Toaster } from "solid-sonner";
 import { CommentsPage } from "./features/CommentsPage/CommentsPage";
-import { onStableSizeChange } from "./features/keyboardStatus";
+import { KeyboardStatusProvider } from "./features/keyboardStatus";
 import { createRouterWithPageTransition } from "./features/pageTransitions";
+import { ScreenSizeProvider } from "./features/screenSize";
 import { AppQueryClientProvider } from "./queryClient";
 
 const getTonconnectManifestUrl = () => {
@@ -39,6 +40,26 @@ const getTonconnectManifestUrl = () => {
 };
 
 bindThemeParamsCSSVars(themeParams);
+
+const createTgScreenSize = () => {
+  const [width, setWidth] = createSignal(window.innerWidth);
+  const [height, setHeight] = createSignal(window.innerHeight);
+
+  onCleanup(
+    on("viewport_changed", (e) => {
+      if (e.is_state_stable) {
+        setHeight(e.height);
+        setWidth(e.width);
+      }
+    }),
+  );
+  postEvent("web_app_request_viewport");
+
+  return {
+    width,
+    height,
+  };
+};
 
 const App = () => {
   const isOpenedSelfProfile = isEqualIds(getSelfUserId(), getProfileId());
@@ -69,41 +90,39 @@ const App = () => {
     postEvent("web_app_expand");
   });
 
-  onCleanup(
-    on("viewport_changed", (e) => {
-      if (e.is_state_stable) {
-        onStableSizeChange(e.height);
-
-        document.documentElement.style.setProperty(
-          "--tg-screen-size",
-          `${e.height}px`,
-        );
-      }
-    }),
-  );
-  postEvent("web_app_request_viewport");
+  const windowSize = createTgScreenSize();
+  createEffect(() => {
+    document.documentElement.style.setProperty(
+      "--tg-screen-size",
+      `${windowSize.height()}px`,
+    );
+  });
 
   return (
     <AppQueryClientProvider>
-      <TonConnectProvider manifestUrl={getTonconnectManifestUrl()}>
-        <SetupTonWallet />
-        <Router>
-          <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
-          <Route component={CommentsPage} path={"/comments/:noteId"} />
-        </Router>
-      </TonConnectProvider>
+      <ScreenSizeProvider value={windowSize}>
+        <KeyboardStatusProvider>
+          <TonConnectProvider manifestUrl={getTonconnectManifestUrl()}>
+            <SetupTonWallet />
+            <Router>
+              <Route component={ProfilePage} path={"/board/:idWithoutPrefix"} />
+              <Route component={CommentsPage} path={"/comments/:noteId"} />
+            </Router>
+          </TonConnectProvider>
 
-      <Toaster
-        position="top-center"
-        richColors
-        toastOptions={{
-          classes: {
-            title: "font-inter",
-            toast: "rounded-xl",
-          },
-        }}
-        theme={themeParams.isDark ? "dark" : "light"}
-      />
+          <Toaster
+            position="top-center"
+            richColors
+            toastOptions={{
+              classes: {
+                title: "font-inter",
+                toast: "rounded-xl",
+              },
+            }}
+            theme={themeParams.isDark ? "dark" : "light"}
+          />
+        </KeyboardStatusProvider>
+      </ScreenSizeProvider>
     </AppQueryClientProvider>
   );
 };

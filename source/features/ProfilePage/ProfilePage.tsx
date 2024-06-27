@@ -18,6 +18,7 @@ import {
   type StyleProps,
 } from "../../common";
 import { ArrowPointUp } from "../../icons";
+
 import { AvatarIcon } from "../BoardNote/AvatarIcon";
 import { BoardNote } from "../BoardNote/BoardNote";
 import { LoadingSvg } from "../LoadingSvg";
@@ -93,7 +94,7 @@ const UserProfilePage = (props: {
           : boardQuery.data?.profile?.description}
       </UserStatus>
 
-      <PostCreator class="mt-6 mx-4" boardId={getBoardId()} />
+      <PostCreator class="mx-4 mt-6" boardId={getBoardId()} />
 
       <section class="mt-6 flex flex-1 flex-col">
         <Switch>
