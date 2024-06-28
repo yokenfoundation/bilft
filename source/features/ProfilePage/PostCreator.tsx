@@ -613,7 +613,7 @@ const ErrorHelper = {
 
 // hard to generalize
 export const CommentCreator = (
-  props: { noteId: string; onCreated(): void } & StyleProps & {
+  props: { noteId: string; onCreated(): void; boardId: string } & StyleProps & {
       ref?: Ref<HTMLFormElement>;
     },
 ) => {
@@ -651,7 +651,11 @@ export const CommentCreator = (
           noteId: props.noteId,
         }).queryKey,
       });
-      // [TODO]: invalidate board data with last comment
+      queryClient.invalidateQueries({
+        queryKey: keysFactory.notes({
+          board: props.boardId,
+        }).queryKey,
+      });
     },
     onMutate: ({ type }) => {
       if (type === "public") {
@@ -871,7 +875,13 @@ export const PostCreator = (props: { boardId: string } & StyleProps) => {
             pageParams: data.pageParams,
             pages: [
               {
-                data: [note, ...firstPage.data],
+                data: [
+                  {
+                    ...note,
+                    commentsCount: 0,
+                  },
+                  ...firstPage.data,
+                ],
                 next: firstPage.next,
               },
               ...data.pages.slice(1),

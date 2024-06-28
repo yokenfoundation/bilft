@@ -12,10 +12,14 @@ export type Note = {
   createdAt: DateString;
   content: string;
 };
+export type NoteWithComment = Note & {
+  lastComment?: Omit<Comment, "createdAt">;
+  commentsCount: number;
+};
 
 export type NoteArray = {
   next?: string;
-  data: Note[];
+  data: NoteWithComment[];
 };
 
 export type BoardProfile = {

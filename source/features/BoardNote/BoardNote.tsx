@@ -76,20 +76,35 @@ const BoardNoteContent = (props: ParentProps<StyleProps>) => (
   </div>
 );
 
-function BoardNoteRoot(props: ParentProps<StyleProps>) {
+function BoardNoteCard(props: ParentProps<StyleProps>) {
   return (
-    <article
+    <section
       class={clsxString(
         "flex flex-col rounded-3xl bg-section-bg px-[14px] pb-4 pt-[14px] transition-transform has-[a:active]:scale-[0.98]",
         props.class ?? "",
       )}
     >
       {props.children}
-    </article>
+    </section>
   );
 }
 
+const BoardNoteRoot = (props: ParentProps<StyleProps>) => (
+  <article class={clsxString(props.class ?? "")}>{props.children}</article>
+);
+
+/**
+ * @example
+ * <BoardNote>
+ *  <BoardNote.Card>
+ *    <BoardNote.PublicHeader />
+ *    <BoardNote.Divider />
+ *    <BoardNote.Content />
+ *  </BoardNote.Card>
+ * </BoardNote>
+ */
 export const BoardNote = Object.assign(BoardNoteRoot, {
+  Card: BoardNoteCard,
   PublicHeader: BoardNotePublicHeader,
   PrivateHeader: BoardNoteAnonymousHeader,
   Divider: BoardNoteDivider,

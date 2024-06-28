@@ -35,6 +35,10 @@ export const CommentsPage = () => {
     assertOk(searchParams.note);
     return JSON.parse(searchParams.note) as Note;
   });
+  const boardId = createMemo(() => {
+    assertOk(searchParams.note);
+    return JSON.parse(searchParams.note) as Note;
+  });
 
   const commentsQuery = createInfiniteQuery(() =>
     keysFactory.comments({
@@ -51,24 +55,26 @@ export const CommentsPage = () => {
   return (
     <main class="flex min-h-screen flex-col bg-secondary-bg px-4">
       <BoardNote class="my-4">
-        <Switch
-          fallback={<BoardNote.PrivateHeader createdAt={note().createdAt} />}
-        >
-          <Match when={note().author}>
-            {(author) => (
-              <BoardNote.PublicHeader
-                name={author().name}
-                avatarUrl={author().photo}
-                authorId={author().id}
-                createdAt={note().createdAt}
-              />
-            )}
-          </Match>
-        </Switch>
+        <BoardNote.Card>
+          <Switch
+            fallback={<BoardNote.PrivateHeader createdAt={note().createdAt} />}
+          >
+            <Match when={note().author}>
+              {(author) => (
+                <BoardNote.PublicHeader
+                  name={author().name}
+                  avatarUrl={author().photo}
+                  authorId={author().id}
+                  createdAt={note().createdAt}
+                />
+              )}
+            </Match>
+          </Switch>
 
-        <BoardNote.Divider />
+          <BoardNote.Divider />
 
-        <BoardNote.Content>{note().content}</BoardNote.Content>
+          <BoardNote.Content>{note().content}</BoardNote.Content>
+        </BoardNote.Card>
       </BoardNote>
 
       <Switch>
@@ -127,7 +133,7 @@ export const CommentsPage = () => {
                     </div>
                   </Match>
                 </Switch>
-                <div class="col-start-2 font-inter text-[16px] leading-[22px]">
+                <div class="col-start-2 whitespace-pre-wrap max-w-full overflow-hidden font-inter text-[16px] leading-[22px]">
                   {comment.content}
                 </div>
                 <div class="col-start-2 font-inter text-[13px] leading-[18px] text-hint">
@@ -223,7 +229,7 @@ const IosCommentCreator = (props: { noteId: string }) => {
 
   return (
     <>
-      <div style={{ height: `${placeHeight()}px` }} />
+      <div style={{ height: `${placeHeight()}px`, background: 'transparent' }} />
       <Portal>
         <div
           ref={setInputElement}
@@ -239,7 +245,7 @@ const IosCommentCreator = (props: { noteId: string }) => {
               requestAnimationFrame(() => {
                 window.scrollTo({
                   behavior: "smooth",
-                  top: window.innerHeight,
+                  top: document.body.scrollHeight,
                 });
               });
             }}
