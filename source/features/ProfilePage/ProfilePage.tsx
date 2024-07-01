@@ -155,7 +155,7 @@ const UserProfilePage = (props: {
                   <div class="mx-4 mt-2 flex self-stretch">
                     <Switch>
                       <Match when={note.lastComment}>
-                        {(firstComment) => (
+                        {(lastComment) => (
                           <div class="relative min-w-full overflow-hidden [-webkit-box-orient:vertical] [-webkit-line-clamp:2] [display:-webkit-box]">
                             <Show
                               fallback={
@@ -165,8 +165,8 @@ const UserProfilePage = (props: {
                                 </div>
                               }
                               when={
-                                firstComment().type === "public" &&
-                                firstComment().author
+                                lastComment().type === "public" &&
+                                lastComment().author
                               }
                             >
                               {(author) => (
@@ -184,14 +184,14 @@ const UserProfilePage = (props: {
                               )}
                             </Show>
                             <span class="ml-1 select-none overflow-hidden font-inter text-[14px] leading-[18px]">
-                              {firstComment().content}
+                              {lastComment().content}
                             </span>
 
                             <button
                               type="button"
                               onClick={() => {
                                 navigate(
-                                  `/comments/${note.id}?note=${JSON.stringify(note)}`,
+                                  `/comments/${note.id}?note=${JSON.stringify(note)}&boardId=${boardQuery.data?.id}`,
                                 );
                               }}
                               class="absolute bottom-0 right-0 bg-secondary-bg pl-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
@@ -217,7 +217,7 @@ const UserProfilePage = (props: {
                           type="button"
                           onClick={() => {
                             navigate(
-                              `/comments/${note.id}?note=${JSON.stringify(note)}`,
+                              `/comments/${note.id}?note=${JSON.stringify(note)}&boardId=${boardQuery.data?.id}`,
                             );
                           }}
                           class="ml-auto font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"

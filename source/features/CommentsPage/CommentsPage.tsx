@@ -6,6 +6,7 @@ import {
   formatPostDate,
   formatPostTime,
   platform,
+  unwrapSignals,
 } from "@/common";
 import { AnonymousAvatarIcon } from "@/icons";
 import { useCleanup } from "@/lib/solid";
@@ -36,8 +37,8 @@ export const CommentsPage = () => {
     return JSON.parse(searchParams.note) as Note;
   });
   const boardId = createMemo(() => {
-    assertOk(searchParams.note);
-    return JSON.parse(searchParams.note) as Note;
+    assertOk(searchParams.boardId);
+    return searchParams.boardId;
   });
 
   const commentsQuery = createInfiniteQuery(() =>
@@ -133,7 +134,7 @@ export const CommentsPage = () => {
                     </div>
                   </Match>
                 </Switch>
-                <div class="col-start-2 whitespace-pre-wrap max-w-full overflow-hidden font-inter text-[16px] leading-[22px]">
+                <div class="col-start-2 max-w-full overflow-hidden whitespace-pre-wrap font-inter text-[16px] leading-[22px]">
                   {comment.content}
                 </div>
                 <div class="col-start-2 font-inter text-[13px] leading-[18px] text-hint">
@@ -156,11 +157,12 @@ export const CommentsPage = () => {
       <Switch>
         {/* [TODO]: remove always true */}
         <Match when={true}>
-          <IosCommentCreator noteId={note().id} />
+          <IosCommentCreator boardId={boardId()} noteId={note().id} />
         </Match>
         <Match when={platform !== "ios"}>
           <div class="sticky bottom-0 -mx-4 mt-auto bg-secondary-bg px-4 pb-6 pt-2">
             <CommentCreator
+              boardId={boardId()}
               noteId={note().id}
               onCreated={() => {
                 // wait for render
@@ -179,7 +181,7 @@ export const CommentsPage = () => {
   );
 };
 
-const IosCommentCreator = (props: { noteId: string }) => {
+const IosCommentCreator = (props: { noteId: string; boardId: string }) => {
   const [placeHeight, setPlaceHeight] = createSignal(0);
   const [inputElement, setInputElement] = createSignal<HTMLDivElement>();
   createEffect(() => {
@@ -208,7 +210,19 @@ const IosCommentCreator = (props: { noteId: string }) => {
   });
 
   const useInnerHeight = () => {
+    // innerHeight do not change on Safari even keyboard is open
     const [innerHeight, setInnerHeight] = createSignal(window.innerHeight);
+    createEffect(() => {
+      console.log(
+        unwrapSignals({
+          innerHeight,
+          height,
+        }),
+      );
+    });
+    new ResizeObserver(() => {
+      console.log({ h: window.innerHeight });
+    }).observe(document.body);
     useCleanup((signal) => {
       window.addEventListener(
         "resize",
@@ -226,19 +240,27 @@ const IosCommentCreator = (props: { noteId: string }) => {
 
   const { height } = useScreenSize();
   const innerHeight = useInnerHeight();
+  const initialDiff =
+    innerHeight() - height() > 0 ? innerHeight() - height() : 0;
 
   return (
     <>
-      <div style={{ height: `${placeHeight()}px`, background: 'transparent' }} />
+      <div
+        style={{ height: `${placeHeight()}px`, background: "transparent" }}
+      />
       <Portal>
         <div
           ref={setInputElement}
-          class="fixed inset-x-0 bg-secondary-bg px-4 pb-6 pt-2"
+          class="fixed inset-x-0 bottom-0 bg-secondary-bg px-4 pb-6 pt-2"
           style={{
-            bottom: `${innerHeight() - height()}px`,
+            // bottom: 0,
+            // transform: `translateY(${-1 * (innerHeight() - height() - initialDiff)}px)`,
+            // transform: `translateY(${-1 * initialDiff}px)`,
+            bottom: `${innerHeight() - height() - initialDiff}px`,
           }}
         >
           <CommentCreator
+            boardId={props.boardId}
             noteId={props.noteId}
             onCreated={() => {
               // wait for render

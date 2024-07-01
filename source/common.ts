@@ -1,4 +1,5 @@
 import { initThemeParams, initUtils, retrieveLaunchParams } from "@tma.js/sdk";
+import type { Accessor } from "solid-js";
 
 export type StyleProps = {
   class?: string;
@@ -9,6 +10,30 @@ export const authData = launchParams.initDataRaw;
 export const [themeParams] = initThemeParams();
 export const utils = initUtils();
 export const platform = launchParams.platform;
+
+const findScrollElement = () => {
+  const body = document.body;
+  const childTargets: Element[] = [body];
+
+  for (const childTarget of childTargets) {
+    for (const it of childTarget.children) {
+      // if (it.scrollHeight <= it.clientHeight) {
+      //   childTargets.push(it);
+      //   continue;
+      // }
+      const overflowY = window.getComputedStyle(it).overflowY;
+      if (overflowY !== "auto" && overflowY !== "scroll") {
+        childTargets.push(it);
+        continue;
+      }
+      return it;
+    }
+  }
+};
+
+const _scrollEl = findScrollElement();
+assertOk(_scrollEl);
+export const scrollableElement = _scrollEl as HTMLElement;
 
 export const clsxString = (...items: string[]) => {
   let res = "";
@@ -105,3 +130,25 @@ export const formatPostTime = (createdAt: DateString) =>
     hour: "numeric",
     minute: "2-digit",
   });
+
+type UnwrapSignals<T extends Record<string, unknown>> = {
+  [TKey in keyof T]: T[TKey] extends Accessor<infer TValue> ? TValue : T[TKey];
+};
+export const unwrapSignals = <T extends Record<string, unknown>>(
+  obj: T,
+): UnwrapSignals<T> => {
+  const copy: Partial<UnwrapSignals<T>> = {};
+
+  for (const key in obj) {
+    const val = obj[key];
+    if (typeof val === "function") {
+      copy[key] = val();
+    } else {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      copy[key] = val;
+    }
+  }
+
+  return copy as UnwrapSignals<T>;
+};

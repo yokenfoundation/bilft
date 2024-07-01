@@ -15,7 +15,7 @@ import {
   type JSX,
 } from "solid-js";
 import { Portal } from "solid-js/web";
-import { type StyleProps } from "../common";
+import { scrollableElement, type StyleProps } from "../common";
 
 const useModalNavigation = ({
   onClose,
@@ -96,10 +96,10 @@ export const BottomDialog = <T,>(
       return;
     }
 
-    const curOverflowY = document.body.style.overflowY;
-    document.body.style.overflowY = "clip";
+    const curOverflowY = scrollableElement.style.overflowY;
+    scrollableElement.style.overflowY = "clip";
     onCleanup(() => {
-      document.body.style.overflowY = curOverflowY;
+      scrollableElement.style.overflowY = curOverflowY;
     });
 
     useCleanup((signal) => {
