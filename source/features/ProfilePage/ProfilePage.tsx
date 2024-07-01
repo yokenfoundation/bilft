@@ -19,6 +19,7 @@ import {
 } from "../../common";
 import { AnonymousAvatarIcon, ArrowPointUp } from "../../icons";
 
+import type { NoteWithComment } from "@/api/model";
 import { AvatarIcon } from "../BoardNote/AvatarIcon";
 import { BoardNote } from "../BoardNote/BoardNote";
 import { LoadingSvg } from "../LoadingSvg";
@@ -152,81 +153,11 @@ const UserProfilePage = (props: {
                     <BoardNote.Divider />
                     <BoardNote.Content>{note.content}</BoardNote.Content>
                   </BoardNote.Card>
-                  <div class="mx-4 mt-2 flex self-stretch">
-                    <Switch>
-                      <Match when={note.lastComment}>
-                        {(lastComment) => (
-                          <div class="relative min-w-full overflow-hidden [-webkit-box-orient:vertical] [-webkit-line-clamp:2] [display:-webkit-box]">
-                            <Show
-                              fallback={
-                                <div class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px]">
-                                  <AnonymousAvatarIcon class="h-[18px] w-[18px]" />
-                                  Anonymous
-                                </div>
-                              }
-                              when={
-                                lastComment().type === "public" &&
-                                lastComment().author
-                              }
-                            >
-                              {(author) => (
-                                <A
-                                  class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px] transition-opacity active:opacity-70"
-                                  href={`/board/${author().id}`}
-                                >
-                                  <AvatarIcon
-                                    class="h-[18px] w-[18px]"
-                                    isLoading={false}
-                                    url={author().photo}
-                                  />
-                                  {author().name}
-                                </A>
-                              )}
-                            </Show>
-                            <span class="ml-1 select-none overflow-hidden font-inter text-[14px] leading-[18px]">
-                              {lastComment().content}
-                            </span>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigate(
-                                  `/comments/${note.id}?note=${JSON.stringify(note)}&boardId=${boardQuery.data?.id}`,
-                                );
-                              }}
-                              class="absolute bottom-0 right-0 bg-secondary-bg pl-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
-                            >
-                              show more ({note.commentsCount})
-                            </button>
-                            {/* <button
-                              type="button"
-                              onClick={() => {
-                                navigate(
-                                  `/comments/${note.id}?note=${JSON.stringify(note)}`,
-                                );
-                              }}
-                              class="ml-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
-                            >
-                              show more ({note.commentsCount})
-                            </button> */}
-                          </div>
-                        )}
-                      </Match>
-                      <Match when={note.commentsCount === 0}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate(
-                              `/comments/${note.id}?note=${JSON.stringify(note)}&boardId=${boardQuery.data?.id}`,
-                            );
-                          }}
-                          class="ml-auto font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
-                        >
-                          post you reply
-                        </button>
-                      </Match>
-                    </Switch>
-                  </div>
+                  <Show when={boardQuery.data?.id}>
+                    {(boardId) => (
+                      <CommentFooter note={note} boardId={boardId()} />
+                    )}
+                  </Show>
                 </BoardNote>
               )}
             </For>
@@ -272,3 +203,68 @@ export const ProfilePage = () => {
     />
   );
 };
+function CommentFooter(props: { boardId: string; note: NoteWithComment }) {
+  const navigate = useNavigate();
+
+  const navigateToComment = () => {
+    navigate(
+      `/comments/${props.note.id}?note=${JSON.stringify(props.note)}&boardId=${props.boardId}`,
+    );
+  };
+
+  return (
+    <div class="mx-4 mt-2 flex self-stretch">
+      <Switch>
+        <Match when={props.note.lastComment}>
+          {(lastComment) => (
+            <div class="relative min-w-full overflow-hidden [-webkit-box-orient:vertical] [-webkit-line-clamp:2] [display:-webkit-box]">
+              <Show
+                fallback={
+                  <div class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px]">
+                    <AnonymousAvatarIcon class="h-[18px] w-[18px]" />
+                    Anonymous
+                  </div>
+                }
+                when={lastComment().type === "public" && lastComment().author}
+              >
+                {(author) => (
+                  <A
+                    class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px] transition-opacity active:opacity-70"
+                    href={`/board/${author().id}`}
+                  >
+                    <AvatarIcon
+                      class="h-[18px] w-[18px]"
+                      isLoading={false}
+                      url={author().photo}
+                    />
+                    {author().name}
+                  </A>
+                )}
+              </Show>
+              <span class="ml-1 select-none overflow-hidden font-inter text-[14px] leading-[18px]">
+                {lastComment().content}
+              </span>
+
+              <button
+                type="button"
+                onClick={navigateToComment}
+                class="absolute bottom-0 right-0 bg-secondary-bg pl-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
+              >
+                show more ({props.note.commentsCount})
+              </button>
+            </div>
+          )}
+        </Match>
+        <Match when={props.note.commentsCount === 0}>
+          <button
+            type="button"
+            onClick={navigateToComment}
+            class="ml-auto font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
+          >
+            post you reply
+          </button>
+        </Match>
+      </Switch>
+    </div>
+  );
+}
