@@ -5,12 +5,16 @@ import {
   Match,
   Show,
   Switch,
+  createEffect,
   createMemo,
+  createSignal,
+  on,
   type ParentProps,
 } from "solid-js";
 import { keysFactory } from "../../api/api";
 import {
   addPrefix,
+  assertOk,
   clsxString,
   getSelfUserId,
   isEqualIds,
@@ -19,10 +23,11 @@ import {
 } from "../../common";
 import { AnonymousAvatarIcon, ArrowPointUp } from "../../icons";
 
-import type { NoteWithComment } from "@/api/model";
+import type { Comment, NoteWithComment } from "@/api/model";
 import { AvatarIcon } from "../BoardNote/AvatarIcon";
 import { BoardNote } from "../BoardNote/BoardNote";
 import { LoadingSvg } from "../LoadingSvg";
+import { useScreenSize } from "../screenSize";
 import { PostCreator } from "./PostCreator";
 
 const UserStatus = (props: ParentProps<StyleProps>) => (
@@ -203,6 +208,185 @@ export const ProfilePage = () => {
     />
   );
 };
+
+const cnv = document.createElement("canvas");
+const ctx = cnv.getContext("2d");
+assertOk(ctx);
+
+const binIntSearch = (
+  left: number,
+  right: number,
+  isResultLower: (value: number) => boolean,
+) => {
+  left |= 0;
+  right |= 0;
+  assertOk(right >= left);
+  while (right - left > 1) {
+    const mid = left + (((right - left) / 2) | 0);
+
+    console.log({
+      mid,
+      left,
+      right,
+    });
+    if (isResultLower(mid)) {
+      right = mid;
+    } else {
+      left = mid;
+    }
+  }
+
+  return left;
+};
+// [TODO]: reduce amount of overhead per comment (virtual scroll)
+// 74 px is distance from screen border to comments (on some device)
+const [commentsSize, setCommentSize] = createSignal(
+  document.body.clientWidth - 74,
+);
+let resizeBatched = false;
+const CommentNoteFooterLayout = (props: {
+  lastComment: Omit<Comment, "createdAt">;
+  commentsCount: number;
+  onClick(): void;
+}) => {
+  const author = () =>
+    props.lastComment.type === "public" ? props.lastComment.author : undefined;
+  const authorName = () => author()?.name ?? "Anonymous";
+  const userNameSize = createMemo(() => {
+    ctx.font = "semibold 14px 'Inter Variable'";
+    const metrics = ctx.measureText(authorName());
+
+    return metrics.width;
+  });
+  const avatarSizeWithGap = 18 + 4;
+
+  const showMoreText = () => `show more (${props.commentsCount})`;
+  const showMoreSize = createMemo(() => {
+    ctx.font = "normal 15px 'Inter Variable'";
+    const metrics = ctx.measureText(showMoreText());
+
+    return metrics.width;
+  });
+  const contentMarginLeft = 4;
+  const moreTextPaddingLeft = 8;
+
+  const layout = createMemo(() => {
+    ctx.font = "semibold 14px 'Inter Variable'";
+    const contentSize = ctx.measureText(props.lastComment.content);
+
+    const targetFirstLineSize =
+      commentsSize() -
+      (avatarSizeWithGap +
+        userNameSize() +
+        contentMarginLeft +
+        moreTextPaddingLeft +
+        showMoreSize());
+
+    if (contentSize.width < targetFirstLineSize) {
+      return [props.lastComment.content];
+    }
+
+    const targetFirstLineSizeTwoRows =
+      targetFirstLineSize + showMoreSize() + moreTextPaddingLeft;
+
+    const maxLengthThatCanFitInOneLine = 300;
+
+    const size = binIntSearch(
+      0,
+      Math.min(props.lastComment.content.length, maxLengthThatCanFitInOneLine),
+      (size) =>
+        ctx.measureText(props.lastComment.content.slice(0, size)).width >
+        targetFirstLineSizeTwoRows,
+    );
+
+    return [
+      props.lastComment.content.slice(0, size),
+      props.lastComment.content
+        .slice(size, size + maxLengthThatCanFitInOneLine)
+        .trimStart(),
+    ];
+  });
+
+  let divRef!: HTMLDivElement;
+  createEffect(
+    on(
+      () => useScreenSize().width(),
+      () => {
+        if (resizeBatched) {
+          return;
+        }
+        setCommentSize(divRef.clientWidth);
+        resizeBatched = true;
+        queueMicrotask(() => {
+          resizeBatched = false;
+        });
+      },
+    ),
+  );
+
+  return (
+    <div ref={divRef} class="relative flex min-w-full flex-col overflow-hidden">
+      {/* someone can break layout if name is too long */}
+      <div class="flex items-center gap-1">
+        <Show
+          fallback={
+            <div class="inline-flex shrink-0 gap-1 font-inter text-[14px] font-semibold leading-[18px]">
+              <AnonymousAvatarIcon class="h-[18px] w-[18px]" />
+              {authorName()}
+            </div>
+          }
+          when={author()}
+        >
+          {(author) => (
+            <A
+              class="inline-flex shrink-0 gap-1 font-inter text-[14px] font-semibold leading-[18px] transition-opacity active:opacity-70"
+              href={`/board/${author().id}`}
+            >
+              <AvatarIcon
+                class="h-[18px] w-[18px]"
+                isLoading={false}
+                url={author().photo}
+              />
+              {authorName()}
+            </A>
+          )}
+        </Show>
+
+        <span class="overflow-hidden break-words font-inter text-[14px] leading-[18px]">
+          {layout()[0]}
+        </span>
+      </div>
+      <Show
+        fallback={
+          <button
+            type="button"
+            onClick={() => props.onClick()}
+            class="absolute bottom-0 right-0 bg-secondary-bg pl-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
+          >
+            {showMoreText()}
+          </button>
+        }
+        when={layout()[1]}
+      >
+        {(secondLine) => (
+          <div class="inline-flex">
+            <div class="h-[18px] overflow-hidden text-ellipsis text-nowrap break-words font-inter text-[14px] leading-[18px]">
+              {secondLine()}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => props.onClick()}
+              class="ml-auto shrink-0 pl-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
+            >
+              {showMoreText()}
+            </button>
+          </div>
+        )}
+      </Show>
+    </div>
+  );
+};
 function CommentFooter(props: { boardId: string; note: NoteWithComment }) {
   const navigate = useNavigate();
 
@@ -217,42 +401,11 @@ function CommentFooter(props: { boardId: string; note: NoteWithComment }) {
       <Switch>
         <Match when={props.note.lastComment}>
           {(lastComment) => (
-            <div class="relative min-w-full overflow-hidden [-webkit-box-orient:vertical] [-webkit-line-clamp:2] [display:-webkit-box]">
-              <Show
-                fallback={
-                  <div class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px]">
-                    <AnonymousAvatarIcon class="h-[18px] w-[18px]" />
-                    Anonymous
-                  </div>
-                }
-                when={lastComment().type === "public" && lastComment().author}
-              >
-                {(author) => (
-                  <A
-                    class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px] transition-opacity active:opacity-70"
-                    href={`/board/${author().id}`}
-                  >
-                    <AvatarIcon
-                      class="h-[18px] w-[18px]"
-                      isLoading={false}
-                      url={author().photo}
-                    />
-                    {author().name}
-                  </A>
-                )}
-              </Show>
-              <span class="ml-1 select-none overflow-hidden font-inter text-[14px] leading-[18px]">
-                {lastComment().content}
-              </span>
-
-              <button
-                type="button"
-                onClick={navigateToComment}
-                class="absolute bottom-0 right-0 bg-secondary-bg pl-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
-              >
-                show more ({props.note.commentsCount})
-              </button>
-            </div>
+            <CommentNoteFooterLayout
+              commentsCount={props.note.commentsCount}
+              lastComment={lastComment()}
+              onClick={navigateToComment}
+            />
           )}
         </Match>
         <Match when={props.note.commentsCount === 0}>
