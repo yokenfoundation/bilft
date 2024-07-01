@@ -5,11 +5,13 @@ import {
   Match,
   Show,
   Switch,
+  createComputed,
   createMemo,
   type ParentProps,
 } from "solid-js";
 import { keysFactory } from "../../api/api";
 import {
+  PxString,
   addPrefix,
   clsxString,
   getSelfUserId,
@@ -19,6 +21,8 @@ import {
 } from "../../common";
 import { AnonymousAvatarIcon, ArrowPointUp } from "../../icons";
 
+import { createWindowVirtualizer } from "@tanstack/solid-virtual";
+import { unwrap } from "solid-js/store";
 import { AvatarIcon } from "../BoardNote/AvatarIcon";
 import { BoardNote } from "../BoardNote/BoardNote";
 import { LoadingSvg } from "../LoadingSvg";
@@ -67,6 +71,21 @@ const UserProfilePage = (props: {
     notesQuery.isSuccess ? notesQuery.data.pages.flatMap((it) => it.data) : [],
   );
   const navigate = useNavigate();
+
+  const windowVirtualizer = createWindowVirtualizer({
+    count: notes().length,
+    estimateSize: () => 70,
+  });
+  createComputed(() => {
+    const options = unwrap(windowVirtualizer.options);
+    windowVirtualizer.setOptions({
+      ...options,
+      count: notes().length,
+    });
+  });
+  createComputed(() => {
+    console.log(notes().length, { ...windowVirtualizer.options });
+  });
 
   return (
     <main class="flex min-h-screen flex-col pb-6 pt-4 text-text">
@@ -119,117 +138,154 @@ const UserProfilePage = (props: {
             </div>
           </Match>
           <Match when={notes().length > 0}>
-            <For each={notes()}>
-              {(note) => (
-                <BoardNote class="mx-4 mb-4">
-                  <BoardNote.Card>
-                    {/* extends to match based on type */}
-                    <Switch
-                      fallback={
-                        <BoardNote.PrivateHeader createdAt={note.createdAt} />
-                      }
-                    >
-                      <Match when={note.author}>
-                        {(author) => (
-                          <BoardNote.PublicHeader
-                            name={author().name}
-                            avatarUrl={author().photo}
-                            authorId={author().id}
-                            createdAt={note.createdAt}
-                            onClick={(e) => {
-                              if (author().id === props.idWithoutPrefix) {
-                                e.preventDefault();
-                                window.scrollTo({
-                                  top: 0,
-                                  behavior: "smooth",
-                                });
-                              }
-                            }}
-                          />
-                        )}
-                      </Match>
-                    </Switch>
-                    <BoardNote.Divider />
-                    <BoardNote.Content>{note.content}</BoardNote.Content>
-                  </BoardNote.Card>
-                  <div class="mx-4 mt-2 flex self-stretch">
-                    <Switch>
-                      <Match when={note.lastComment}>
-                        {(lastComment) => (
-                          <div class="relative min-w-full overflow-hidden [-webkit-box-orient:vertical] [-webkit-line-clamp:2] [display:-webkit-box]">
-                            <Show
-                              fallback={
-                                <div class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px]">
-                                  <AnonymousAvatarIcon class="h-[18px] w-[18px]" />
-                                  Anonymous
-                                </div>
-                              }
-                              when={
-                                lastComment().type === "public" &&
-                                lastComment().author
-                              }
-                            >
-                              {(author) => (
-                                <A
-                                  class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px] transition-opacity active:opacity-70"
-                                  href={`/board/${author().id}`}
-                                >
-                                  <AvatarIcon
-                                    class="h-[18px] w-[18px]"
-                                    isLoading={false}
-                                    url={author().photo}
-                                  />
-                                  {author().name}
-                                </A>
-                              )}
-                            </Show>
-                            <span class="ml-1 select-none overflow-hidden font-inter text-[14px] leading-[18px]">
-                              {lastComment().content}
-                            </span>
+            <div
+              class="relative w-full"
+              style={{
+                height: PxString.fromNumber(windowVirtualizer.getTotalSize()),
+              }}
+            >
+              <div
+                class="absolute left-0 top-0 w-full"
+                style={{
+                  transform: `translateY(${PxString.fromNumber(
+                    windowVirtualizer.getVirtualItems()[0].start -
+                      windowVirtualizer.options.scrollMargin,
+                  )})`,
+                }}
+              >
+                <For
+                  each={
+                    // windowVirtualizer.options.count === notes().length && notes()
+                    windowVirtualizer.getVirtualItems()
+                  }
+                >
+                  {(item, index) => {
+                    const note = notes()[index()];
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigate(
-                                  `/comments/${note.id}?note=${JSON.stringify(note)}&boardId=${boardQuery.data?.id}`,
-                                );
-                              }}
-                              class="absolute bottom-0 right-0 bg-secondary-bg pl-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
-                            >
-                              show more ({note.commentsCount})
-                            </button>
-                            {/* <button
-                              type="button"
-                              onClick={() => {
-                                navigate(
-                                  `/comments/${note.id}?note=${JSON.stringify(note)}`,
-                                );
-                              }}
-                              class="ml-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
-                            >
-                              show more ({note.commentsCount})
-                            </button> */}
-                          </div>
-                        )}
-                      </Match>
-                      <Match when={note.commentsCount === 0}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate(
-                              `/comments/${note.id}?note=${JSON.stringify(note)}&boardId=${boardQuery.data?.id}`,
-                            );
-                          }}
-                          class="ml-auto font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
-                        >
-                          post you reply
-                        </button>
-                      </Match>
-                    </Switch>
-                  </div>
-                </BoardNote>
-              )}
-            </For>
+                    console.log(item);
+                    // const item = () =>
+                    //   windowVirtualizer.getVirtualItems()[index()];
+                    //
+                    //
+                    return (
+                      <BoardNote
+                        ref={item.measureElement}
+                        data-index={item.index}
+                        class="mx-4 mb-4"
+                      >
+                        <BoardNote.Card>
+                          {/* extends to match based on type */}
+                          <Switch
+                            fallback={
+                              <BoardNote.PrivateHeader
+                                createdAt={note.createdAt}
+                              />
+                            }
+                          >
+                            <Match when={note.author}>
+                              {(author) => (
+                                <BoardNote.PublicHeader
+                                  name={author().name}
+                                  avatarUrl={author().photo}
+                                  authorId={author().id}
+                                  createdAt={note.createdAt}
+                                  onClick={(e) => {
+                                    if (author().id === props.idWithoutPrefix) {
+                                      e.preventDefault();
+                                      window.scrollTo({
+                                        top: 0,
+                                        behavior: "smooth",
+                                      });
+                                    }
+                                  }}
+                                />
+                              )}
+                            </Match>
+                          </Switch>
+                          <BoardNote.Divider />
+                          <BoardNote.Content>{note.content}</BoardNote.Content>
+                        </BoardNote.Card>
+                        <div class="mx-4 mt-2 flex self-stretch">
+                          <Switch>
+                            <Match when={note.lastComment}>
+                              {(lastComment) => (
+                                <div class="relative min-w-full overflow-hidden [-webkit-box-orient:vertical] [-webkit-line-clamp:2] [display:-webkit-box]">
+                                  <Show
+                                    fallback={
+                                      <div class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px]">
+                                        <AnonymousAvatarIcon class="h-[18px] w-[18px]" />
+                                        Anonymous
+                                      </div>
+                                    }
+                                    when={
+                                      lastComment().type === "public" &&
+                                      lastComment().author
+                                    }
+                                  >
+                                    {(author) => (
+                                      <A
+                                        class="inline-flex translate-y-1 gap-1 font-inter text-[14px] font-semibold leading-[18px] transition-opacity active:opacity-70"
+                                        href={`/board/${author().id}`}
+                                      >
+                                        <AvatarIcon
+                                          class="h-[18px] w-[18px]"
+                                          isLoading={false}
+                                          url={author().photo}
+                                        />
+                                        {author().name}
+                                      </A>
+                                    )}
+                                  </Show>
+                                  <span class="ml-1 select-none overflow-hidden font-inter text-[14px] leading-[18px]">
+                                    {lastComment().content}
+                                  </span>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      navigate(
+                                        `/comments/${note.id}?note=${JSON.stringify(note)}&boardId=${boardQuery.data?.id}`,
+                                      );
+                                    }}
+                                    class="absolute bottom-0 right-0 bg-secondary-bg pl-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
+                                  >
+                                    show more ({note.commentsCount})
+                                  </button>
+                                  {/* <button
+                    type="button"
+                    onClick={() => {
+                      navigate(
+                        `/comments/${note.id}?note=${JSON.stringify(note)}`,
+                      );
+                    }}
+                    class="ml-2 font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
+                  >
+                    show more ({note.commentsCount})
+                  </button> */}
+                                </div>
+                              )}
+                            </Match>
+                            <Match when={note.commentsCount === 0}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigate(
+                                    `/comments/${note.id}?note=${JSON.stringify(note)}&boardId=${boardQuery.data?.id}`,
+                                  );
+                                }}
+                                class="ml-auto font-inter text-[15px] leading-[18px] text-accent transition-opacity active:opacity-70"
+                              >
+                                post you reply
+                              </button>
+                            </Match>
+                          </Switch>
+                        </div>
+                      </BoardNote>
+                    );
+                  }}
+                </For>
+              </div>
+            </div>
 
             <Switch>
               <Match when={notesQuery.isFetchingNextPage}>
