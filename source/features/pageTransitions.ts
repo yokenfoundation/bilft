@@ -1,3 +1,4 @@
+import { scrollableElement } from "@/common";
 import {
   createBeforeLeave,
   createRouter as createSolidRouter,
@@ -126,7 +127,7 @@ export const createRouterWithPageTransition = ({
         ) {
           return;
         }
-        idToScrollPosition.set(e.from.id, window.scrollY);
+        idToScrollPosition.set(e.from.id, scrollableElement.scrollTop);
 
         // garbage collecting obsolete pages scroll positions
         if (idToScrollPosition.size > 100) {
@@ -177,7 +178,7 @@ export const createRouterWithPageTransition = ({
 
         // waiting for layout to scroll work properly
         queueMicrotask(() => {
-          window.scrollTo({
+          scrollableElement.scrollTo({
             behavior: "instant",
             top: idToScrollPosition.get(e.to.id) ?? 0,
           });

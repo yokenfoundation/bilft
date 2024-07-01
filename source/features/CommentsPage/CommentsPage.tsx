@@ -6,6 +6,7 @@ import {
   formatPostDate,
   formatPostTime,
   platform,
+  scrollableElement,
   unwrapSignals,
 } from "@/common";
 import { AnonymousAvatarIcon } from "@/icons";
@@ -167,7 +168,7 @@ export const CommentsPage = () => {
               onCreated={() => {
                 // wait for render
                 requestAnimationFrame(() => {
-                  window.scrollTo({
+                  scrollableElement.scrollTo({
                     behavior: "smooth",
                     top: window.innerHeight,
                   });
@@ -265,7 +266,7 @@ const IosCommentCreator = (props: { noteId: string; boardId: string }) => {
             onCreated={() => {
               // wait for render
               requestAnimationFrame(() => {
-                window.scrollTo({
+                scrollableElement.scrollTo({
                   behavior: "smooth",
                   top: document.body.scrollHeight,
                 });

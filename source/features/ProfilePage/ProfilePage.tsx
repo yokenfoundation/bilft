@@ -19,6 +19,7 @@ import {
   getSelfUserId,
   isEqualIds,
   removePrefix,
+  scrollableElement,
   type StyleProps,
 } from "../../common";
 import { AnonymousAvatarIcon, ArrowPointUp } from "../../icons";
@@ -145,7 +146,7 @@ const UserProfilePage = (props: {
                             onClick={(e) => {
                               if (author().id === props.idWithoutPrefix) {
                                 e.preventDefault();
-                                window.scrollTo({
+                                scrollableElement.scrollTo({
                                   top: 0,
                                   behavior: "smooth",
                                 });
@@ -177,7 +178,7 @@ const UserProfilePage = (props: {
               <Match when={notes().length >= 8}>
                 <button
                   onClick={() => {
-                    window.scrollTo({
+                    scrollableElement.scrollTo({
                       behavior: "smooth",
                       top: 0,
                     });
